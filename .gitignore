@@ -1,0 +1,34 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Local logs and temporary files
+logs/
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
