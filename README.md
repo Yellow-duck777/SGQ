@@ -28,6 +28,6 @@ evidências e rastreabilidade dos processos de qualidade.
 
 ## Status
 
-Projeto em fase de levantamento e definição de requisitos.
+O projeto está em fase de consolidação de requisitos e construção da fundação técnica. A aplicação ASP.NET Core, a autenticação e os cadastros básicos iniciais já foram iniciados.
 
-O desenvolvimento do código ainda não foi iniciado. 
+Os requisitos e decisões de negócio estão documentados em [docs/02-requisitos.md](docs/02-requisitos.md).

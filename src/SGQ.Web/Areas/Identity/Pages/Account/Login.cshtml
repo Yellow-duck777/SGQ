@@ -1,0 +1,45 @@
+@page
+@model SGQ.Web.Areas.Identity.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Entrar";
+}
+
+<section class="auth-page" aria-labelledby="login-title">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <p class="eyebrow">Acesso seguro</p>
+            <h1 id="login-title">Entre no SGQ</h1>
+            <p>Use seu e-mail e senha para acessar o sistema.</p>
+        </div>
+
+        <form id="account" method="post" asp-route-returnUrl="@Model.ReturnUrl">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label">E-mail</label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="nome@empresa.com" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline gap-3">
+                    <label asp-for="Input.Password" class="form-label">Senha</label>
+                    <a class="auth-link" asp-page="./ForgotPassword">Esqueci minha senha</a>
+                </div>
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Digite sua senha" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-4">
+                <input asp-for="Input.RememberMe" class="form-check-input" />
+                <label asp-for="Input.RememberMe" class="form-check-label">Manter meu acesso neste dispositivo</label>
+            </div>
+
+            <button id="login-submit" type="submit" class="btn btn-primary w-100">Entrar</button>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

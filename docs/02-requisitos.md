@@ -86,36 +86,23 @@ responsável pela abertura do registro.
 
 ## 4.3. Edição de registros
 
-Poderão editar um registro:
+O usuário que abriu o processo poderá alterar dados não críticos enquanto o status permitir edição. A GQ poderá alterar dados não críticos e incluir anexos em qualquer etapa autorizada.
 
-- o usuário responsável pela abertura;
-- Garantia da Qualidade - GQ.
-
-Essa regra poderá sofrer restrições de acordo com o
-status do processo.
-
-As regras específicas de edição após aprovação ainda
-precisam ser detalhadas.
+Após validação ou aprovação, somente a GQ poderá alterar dados críticos. A alteração exigirá justificativa e registro de auditoria. Após encerramento, a edição normal ficará bloqueada.
 
 ---
 
 ## 4.4. Aprovações
 
-Os seguintes perfis poderão participar de aprovações:
+Na Reclamação de Cliente, a validação da GQ é obrigatória e gera automaticamente a NC. RT e CQ podem participar tecnicamente, mas não são aprovadores obrigatórios do fluxo normal.
 
-- Responsável Técnico - RT;
-- Controle de Qualidade - CQ;
-- Garantia da Qualidade - GQ.
-
-A etapa exata em que cada perfil deverá aprovar ainda
-deverá ser detalhada para cada processo.
+Na NC, RT e GQ aprovam. Em caso de divergência, o CQ decide. No Recall, RT e GQ realizam a aprovação técnica e o CQ decide em caso de divergência.
 
 ---
 
 ## 4.5. Encerramento
 
-O encerramento dos processos será realizado pela
-Garantia da Qualidade - GQ.
+O encerramento formal de RC, NC e Recall será realizado pela Garantia da Qualidade - GQ, após o atendimento dos requisitos obrigatórios e, quando aplicável, das aprovações técnicas.
 
 O sistema não deverá permitir encerramento quando
 existirem requisitos obrigatórios pendentes.
@@ -200,6 +187,8 @@ definitivamente pelo usuário comum.
 Quando houver necessidade de retirada lógica de algum
 cadastro, deverá ser avaliada a utilização de inativação.
 
+Anexos críticos não poderão ser excluídos definitivamente. Sua retirada será feita por remoção lógica, inativação ou anulação, preservando o arquivo e o histórico.
+
 ---
 
 ## RF-009 - Anexos
@@ -217,6 +206,12 @@ Exemplos:
 - formulários;
 - evidências das ações;
 - documentos laboratoriais.
+
+No MVP serão aceitos PDF, JPG, JPEG, PNG, DOC, DOCX, XLS, XLSX, CSV, TXT, EML, MSG e MP4, com até 25 MB por arquivo e até 20 anexos por registro.
+
+Cada anexo registrará nome original, tipo, tamanho, usuário, data/hora, processo relacionado e descrição opcional. Não haverá sobrescrita silenciosa.
+
+São anexos críticos, no mínimo: laudos laboratoriais, resultados analíticos, documentos de aprovação, evidências de encerramento, documentos regulatórios, documentos de Recall, evidências de ações e eficácia e documentos que sustentem conclusão técnica. Apenas GQ e Administrador poderão anulá-los logicamente, sempre com justificativa e auditoria.
 
 ---
 
@@ -265,8 +260,21 @@ Os principais usuários considerados são:
 - CQ;
 - GQ.
 
-Cada evento que gera uma notificação deverá ser
-definido individualmente.
+O e-mail fará parte do MVP. Os eventos e destinatários definidos são:
+
+- RC aguardando validação: GQ;
+- RC validada e NC criada automaticamente: GQ e RT;
+- NC crítica: GQ, RT e CQ;
+- NC aguardando aprovação: RT e GQ;
+- divergência entre RT e GQ: CQ;
+- decisão do CQ: RT e GQ;
+- laboratório externo solicitado ou resultado recebido: GQ e RT;
+- Recall iniciado: GQ, RT e CQ;
+- Recall aprovado: GQ, RT, CQ e áreas envolvidas;
+- prorrogação registrada: GQ e RT;
+- processo encerrado: responsáveis envolvidos.
+
+Para todo processo com prazo ou data-alvo haverá alerta por e-mail 48 horas úteis antes do vencimento para GQ e RT. Isso se aplica à RC, à NC e ao Recall quando houver prazo-alvo.
 
 ---
 
@@ -314,13 +322,7 @@ O sistema deverá permitir registrar uma Reclamação de Cliente.
 
 ## RF-RC-002 - Identificação da reclamação
 
-Cada reclamação deverá possuir código único.
-
-Formato definitivo ainda deverá ser definido.
-
-Exemplo provisório:
-
-RC-2026-000001
+Cada reclamação deverá possuir código único no formato `RC-AAAA-000001`, com sequência automática e independente por ano. O número não poderá ser editado, reutilizado ou alterado por reabertura ou encerramento.
 
 ---
 
@@ -357,13 +359,13 @@ Deverá ser registrado o contato do cliente.
 
 ## RF-RC-008 - Produto
 
-Deverá ser identificado o produto reclamado.
+Cada Reclamação deverá envolver exatamente um produto.
 
 ---
 
 ## RF-RC-009 - Lote
 
-Deverá ser identificado o lote envolvido.
+Uma Reclamação poderá não possuir lote inicialmente, possuir um lote ou vários lotes, desde que todos pertençam ao mesmo produto da Reclamação.
 
 ---
 
@@ -587,9 +589,10 @@ A resposta poderá registrar:
 - procedência ou improcedência;
 - ações adotadas;
 - orientações;
-- tratamento comercial;
 - data;
 - responsável.
+
+O tratamento comercial será registrado separadamente da conclusão técnica.
 
 ---
 
@@ -618,6 +621,8 @@ A Reclamação deverá permitir acessar sua NC vinculada.
 A Reclamação somente poderá ser encerrada após cumprimento
 das condições obrigatórias definidas para o processo.
 
+O encerramento formal será realizado pela GQ. A RC encerrada poderá ser reaberta por GQ ou RT, com justificativa, usuário, data/hora e auditoria, retornando para Em Investigação.
+
 ---
 
 # 8. Não Conformidade - NC
@@ -630,11 +635,7 @@ O sistema deverá permitir registrar uma Não Conformidade.
 
 ## RF-NC-002 - Código
 
-Cada NC deverá possuir código único.
-
-Exemplo provisório:
-
-NC-2026-000001
+Cada NC deverá possuir código único no formato `NC-AAAA-000001`, com sequência automática e independente por ano. O número não poderá ser editado, reutilizado ou alterado por reabertura ou encerramento.
 
 ---
 
@@ -856,9 +857,7 @@ A eficácia deverá possuir resultado:
 
 ## RF-NC-030 - Ineficácia
 
-Quando a ação for considerada ineficaz, deverá existir
-possibilidade de novo tratamento ou reabertura conforme
-regra ainda a ser detalhada.
+Quando a eficácia for considerada Ineficaz, a NC retornará de Em Tratamento para Em Investigação.
 
 ---
 
@@ -866,6 +865,8 @@ regra ainda a ser detalhada.
 
 A NC somente poderá ser encerrada quando os requisitos
 obrigatórios estiverem concluídos.
+
+Após aprovação de RT e GQ, ou decisão favorável do CQ em caso de divergência, a GQ realizará o encerramento formal. Se houver reprovação, a NC voltará para Em Tratamento.
 
 ---
 
@@ -891,9 +892,7 @@ Recolhimento quando aplicável.
 
 ## RF-RECALL-002 - Código
 
-Cada Recall deverá possuir código único.
-
-Formato definitivo ainda pendente.
+Cada Recall deverá possuir código único no formato `REC-AAAA-000001`, com sequência automática e independente por ano. O número não poderá ser editado, reutilizado ou alterado por reabertura ou encerramento.
 
 ---
 
@@ -990,14 +989,33 @@ Deverá ser registrado o risco potencial associado.
 
 ## RF-RECALL-016 - Decisão de recolhimento
 
-O sistema deverá registrar a decisão sobre recolhimento.
+O sistema deverá registrar avaliação com resultado Aplicável ou Não Aplicável. A avaliação poderá ser iniciada por GQ, RT ou CQ.
 
 ---
 
 ## RF-RECALL-017 - Justificativa
 
-A decisão deverá possuir justificativa técnica quando
-aplicável.
+Quando o resultado for Não Aplicável, o processo será encerrado sem criar status específico de Não Aplicável. Serão obrigatórios justificativa, responsável, data/hora e auditoria; evidências serão registradas quando aplicáveis.
+
+A avaliação Não Aplicável também exigirá avaliação de risco. Quando o resultado for Aplicável, o processo formal de Recall será iniciado.
+
+## RN-RECALL-001 - Recall obrigatório
+
+O Recall será obrigatório quando houver determinação da autoridade sanitária; nesse caso, a determinação prevalece e o sistema deve registrar a ordem e iniciar o fluxo de Recall, sem nova decisão interna sobre realizar o recolhimento.
+
+O Recall também será obrigatório quando houver produto distribuído e risco confirmado à saúde ou segurança do usuário, inclusive contaminação confirmada que possa oferecer esse risco.
+
+Se todo o lote estiver sob controle interno e não tiver sido distribuído, não haverá produto no mercado para recolher. O caso deverá ter bloqueio, segregação e tratamento da NC, sem obrigatoriedade automática de Recall.
+
+## RN-RECALL-002 - Avaliação formal de Recall
+
+Produto fora de especificação, erro de rotulagem e falha de embalagem deverão sempre gerar avaliação formal de Recall, mas não Recall automático.
+
+- Produto fora de especificação exigirá Recall quando o desvio puder oferecer risco ao usuário ou justificar retirada de produto distribuído.
+- Erro de rotulagem exigirá Recall quando afetar segurança, uso correto, advertências, identificação, informações regulatórias críticas ou representar risco relevante.
+- Falha de embalagem exigirá Recall quando comprometer segurança, integridade, conservação, identificação ou uso seguro do produto. Falhas meramente estéticas não o exigem automaticamente.
+
+Todo evento potencialmente relacionado a risco poderá abrir avaliação de Recall. Critérios regulatórios adicionais não deverão ser codificados sem validação documental.
 
 ---
 
@@ -1163,6 +1181,8 @@ A destinação deverá possuir evidência quando aplicável.
 
 O Recall somente poderá ser encerrado quando todos os
 requisitos obrigatórios estiverem atendidos.
+
+O encerramento formal será realizado pela GQ após aprovação técnica de RT e GQ, ou decisão do CQ em caso de divergência.
 
 ---
 
@@ -1448,12 +1468,19 @@ Possibilidades já identificadas:
 
 A relação definitiva deverá ser confirmada.
 
+Para o MVP, o dashboard exibirá RC abertas, NC abertas, Recalls ativos, processos atrasados, processos vencendo em breve, processos aguardando aprovação, processos aguardando laboratório externo, RC por classificação e NC por classificação.
+
+Os relatórios do MVP serão: Reclamações por período, produto, lote e classificação; Procedentes x Improcedentes; NC por área, origem e classificação; processos atrasados; atrasos externos; tempo médio de encerramento; Recall por período, produto e lote.
+
+As exportações obrigatórias do MVP serão XLSX e PDF. CSV poderá ser disponibilizado posteriormente como formato simples adicional.
+
 ---
 
 # 13. Pontos Pendentes
 
-Os itens abaixo ainda precisam ser definidos antes da
-modelagem definitiva do banco e dos fluxos.
+Esta seção preserva o histórico do levantamento. O status atual de cada item é definido pela seção 14 e pelas regras consolidadas ao final deste documento.
+
+Continuam pendentes somente: comunicação regulatória (P-024), alerta específico para ação de NC vencida (P-029), obrigatoriedade de laudo externo antes do encerramento (P-034), controle de amostra interna (P-035), nova aprovação após alteração relevante (P-016) e regras de reabertura para Recall (P-004 a P-006, apenas para Recall).
 
 ## P-001 - Status da Reclamação
 
@@ -1596,13 +1623,13 @@ Definir exatamente quem deverá aprovar o início do Recall.
 
 ---
 
-## P-020 - Recall obrigatório
+## P-020 - Recall obrigatório (Resolvido)
 
 Definir situações em que Recall será obrigatório.
 
 ---
 
-## P-021 - Recall facultativo
+## P-021 - Recall facultativo (Resolvido)
 
 Definir situações em que Recall ficará sujeito à
 avaliação técnica.
@@ -1761,25 +1788,37 @@ Os seguintes pontos não deverão permanecer como pendentes:
 - vencimento marca processo como Atrasado;
 - processo Atrasado não fica bloqueado.
 
+Também ficam consolidadas as seguintes decisões:
+
+- status de RC, NC e Recall, conforme fluxos deste documento;
+- numeração automática anual e independente: `RC-AAAA-000001`, `NC-AAAA-000001` e `REC-AAAA-000001`;
+- números não são editáveis, reutilizáveis ou alterados por encerramento e reabertura; vínculos entre processos usam relacionamentos técnicos, não o texto do número;
+- RC possui um produto e zero, um ou vários lotes do mesmo produto;
+- GQ valida e encerra RC, sem aprovação obrigatória de RT ou CQ;
+- RT e GQ aprovam NC e Recall; CQ decide somente em divergência; GQ faz o encerramento formal;
+- formatos, limites, metadados e proteção de anexos críticos definidos para o MVP;
+- e-mail no MVP e matriz de notificações definida;
+- calendário configurável por Administrador e GQ, com auditoria;
+- prazo de NC: crítica com início imediato de contenção e data-alvo definida pela GQ; maior em 15 dias úteis; menor em 30 dias úteis;
+- Recall sem prazo universal, mas com prazo-alvo, responsável, justificativa, prioridade e datas regulatórias quando aplicáveis;
+- dashboard, relatórios e exportações XLSX e PDF definidos para o MVP;
+- tratamento comercial separado da conclusão técnica, com regras próprias de acesso.
+- critérios de Recall obrigatório e de avaliação formal de Recall definidos.
+
 ---
 
 # 15. Situação atual do levantamento
 
-O sistema permanece em fase de levantamento de requisitos.
-
-Ainda não iniciar modelagem definitiva do banco enquanto
-os pontos de maior impacto estiverem pendentes.
+Os requisitos centrais do MVP estão consolidados. Permanecem pendências pontuais que devem ser resolvidas antes da implementação dos respectivos recursos.
 
 # Próximas etapas
 
-1. Concluir pendências de negócio;
-2. Definir status dos processos;
-3. Definir matriz de permissões;
-4. Desenhar fluxos;
-5. Definir MVP;
-6. Modelar entidades e relacionamentos;
-7. Modelar banco de dados;
-8. Criar projeto ASP.NET Core.
+1. Resolver pendências remanescentes de negócio;
+2. Desenhar fluxos e critérios de transição;
+3. Refinar a matriz de permissões;
+4. Modelar entidades e relacionamentos;
+5. Modelar banco de dados;
+6. Implementar gradualmente os módulos do MVP.
 
 # Status da Reclamação de Cliente
 
@@ -1890,3 +1929,70 @@ Rascunho
 → Aguardando Conclusão
 
 → Encerrada
+
+---
+
+# Status da Não Conformidade
+
+## Status definitivos
+
+- Em Investigação;
+- Em Tratamento;
+- Aguardando Aprovação;
+- Aguardando Laboratório Externo;
+- Encerrada.
+
+## Fluxo de status da NC
+
+```text
+Em Investigação → Em Tratamento → Aguardando Aprovação → Encerrada
+Em Investigação → Aguardando Laboratório Externo → Em Investigação
+Em Tratamento → Em Investigação, quando a eficácia for Ineficaz
+Aguardando Aprovação → Em Tratamento, quando houver reprovação
+Encerrada → Em Investigação, em reabertura autorizada
+```
+
+“Atrasada” é condição de prazo, não status. A reabertura é permitida a GQ, RT e Auditor autorizado, exige justificativa e auditoria e submete a NC novamente ao fluxo e às aprovações.
+
+---
+
+# Status do Recall
+
+## Status definitivos
+
+- Em Avaliação;
+- Aguardando Aprovação;
+- Em Recolhimento;
+- Aguardando Retorno;
+- Em Avaliação de Destinação;
+- Aguardando Encerramento;
+- Encerrado.
+
+## Fluxo de status do Recall
+
+```text
+Em Avaliação → Aguardando Aprovação → Em Recolhimento → Aguardando Retorno
+→ Em Avaliação de Destinação → Aguardando Encerramento → Encerrado
+```
+
+Se o resultado da avaliação for Não Aplicável, o Recall passa de Em Avaliação para Encerrado; o resultado não cria status próprio.
+
+Cada Recall registrará as áreas envolvidas: GQ, RT, CQ, Produção, Expedição/Almoxarifado, Comercial/Atendimento, Diretoria e QSMS, conforme o caso.
+
+---
+
+# Calendário e dias úteis
+
+O calendário será configurável e considerará finais de semana, feriados nacionais, estaduais e municipais e dias excepcionais definidos pela empresa. Cada data especial registrará data, descrição, tipo, ano e situação ativo/inativo.
+
+Administrador e GQ poderão cadastrar ou alterar datas; os demais usuários poderão apenas consultar. Toda alteração será auditada. O calendário será utilizado nos prazos de RC, NC, alertas de 48 horas úteis e demais prazos baseados em dias úteis.
+
+---
+
+# Tratamento comercial da Reclamação
+
+O tratamento comercial é independente da conclusão técnica da RC. Poderão visualizá-lo GQ, Comercial/Atendimento, RT, gestores autorizados e Administrador. Comercial/Atendimento e GQ poderão registrar ou alterar o tratamento.
+
+Serão registrados tipo, responsável, data, observação e evidência quando aplicável. Os tipos previstos são troca, reposição, crédito, devolução, reembolso, nenhuma ação comercial e outra solução autorizada.
+
+Uma decisão comercial não altera automaticamente o resultado técnico: uma troca pode ocorrer mesmo quando a RC for tecnicamente Improcedente.

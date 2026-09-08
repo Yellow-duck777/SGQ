@@ -1,31 +1,190 @@
 html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
   position: relative;
   min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+  min-height: 100vh;
+  margin: 0;
+  background: #f5f7f8;
+  color: #1f2933;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.site-header {
+  background: #ffffff;
+  border-bottom: 1px solid #dfe5e8;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.navbar {
+  min-height: 4.5rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #173f4a;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: #173f4a;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.45rem;
+  background: #1e6a66;
+  color: #ffffff;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.page-shell {
+  min-height: calc(100vh - 8.5rem);
+}
+
+.welcome-panel {
+  max-width: 48rem;
+  padding: 2rem 0 2.5rem;
+}
+
+.eyebrow {
+  margin-bottom: 0.75rem;
+  color: #1e6a66;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.welcome-panel h1 {
+  margin-bottom: 1rem;
+  color: #173f4a;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.welcome-description {
+  max-width: 40rem;
+  margin: 0;
+  color: #52616b;
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+.information-card {
+  max-width: 48rem;
+  padding: 1.5rem;
+  border: 1px solid #dfe5e8;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.information-card h2 {
+  margin-bottom: 0.5rem;
+  color: #173f4a;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.information-card p {
+  margin: 0;
+  color: #667680;
+  line-height: 1.6;
+}
+
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: 28rem;
+}
+
+.auth-card {
+  width: min(100%, 28rem);
+  padding: 2rem;
+  border: 1px solid #dfe5e8;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2.5rem rgba(23, 63, 74, 0.08);
+}
+
+.auth-card-header {
+  margin-bottom: 1.75rem;
+}
+
+.auth-card-header .eyebrow {
+  margin-bottom: 0.5rem;
+}
+
+.auth-card-header h1 {
+  margin-bottom: 0.5rem;
+  color: #173f4a;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.auth-card-header p:last-child {
+  margin: 0;
+  color: #667680;
+}
+
+.auth-card .form-control {
+  min-height: 2.75rem;
+  border-color: #cbd5da;
+}
+
+.auth-card .form-control:focus {
+  border-color: #1e6a66;
+}
+
+.auth-link {
+  color: #1e6a66;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  color: #15534f;
+  text-decoration: underline;
+}
+
+.btn-primary {
+  border-color: #1e6a66;
+  background-color: #1e6a66;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  border-color: #15534f;
+  background-color: #15534f;
+}
+
+.site-footer {
+  padding: 1.25rem 0;
+  background: #ffffff;
+  border-top: 1px solid #dfe5e8;
+  color: #667680;
+  font-size: 0.875rem;
+}
+
+.footer-separator {
+  margin: 0 0.5rem;
+}
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem #ffffff, 0 0 0 0.25rem rgba(30, 106, 102, 0.35);
 }

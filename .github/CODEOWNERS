@@ -1,0 +1,4 @@
+# Responsável técnico padrão para todo o código do repositório.
+# Para tornar a aprovação obrigatória, ative “Require review from Code Owners”
+# na regra de proteção da branch `main` no GitHub.
+* @ViniciusLgo

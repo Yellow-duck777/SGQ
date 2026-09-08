@@ -66,6 +66,6 @@ O sistema deverá possuir:
 
 ## Situação atual
 
-Projeto em fase de levantamento e validação dos requisitos.
+O projeto está em fase de consolidação e validação dos requisitos. A fundação técnica da aplicação já foi iniciada, incluindo autenticação e cadastros básicos iniciais.
 
-O desenvolvimento do código ainda não foi iniciado.
+O MVP contemplará os processos de Reclamação de Cliente, Não Conformidade e Recall, com rastreabilidade, auditoria, anexos, aprovações, prazos calculados em dias úteis, notificações por e-mail, dashboard e relatórios definidos para o MVP.
