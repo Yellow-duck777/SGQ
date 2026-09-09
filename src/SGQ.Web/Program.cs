@@ -1,9 +1,21 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+    builder.Logging.AddDebug();
+
+    var keysDirectory = new DirectoryInfo(
+        Path.Combine(builder.Environment.ContentRootPath, ".data-protection"));
+    builder.Services.AddDataProtection().PersistKeysToFileSystem(keysDirectory);
+}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

@@ -1,0 +1,7 @@
+@model IEnumerable<SGQ.Web.Models.NaoConformidade>
+@{ ViewData["Title"] = "Não Conformidades"; }
+<div class="page-heading mb-4"><p class="eyebrow mb-1">Processos de qualidade</p><h1>Não Conformidades</h1><p class="text-muted mb-0">Acompanhe NCs originadas por Reclamações e outros desvios.</p></div>
+<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Origem</th><th>Produto</th><th>Status</th><th></th></tr></thead><tbody>
+@foreach (var nc in Model) { <tr><td class="fw-semibold">@nc.Codigo</td><td>@nc.Origem</td><td>@(nc.Produto?.Nome ?? "Não informado")</td><td><span class="badge text-bg-secondary">@nc.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@nc.Id">Ver</a></td></tr> }
+@if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Nenhuma NC registrada.</td></tr> }
+</tbody></table></div></div>

@@ -1,0 +1,24 @@
+@model SGQ.Web.ViewModels.ReclamacaoCreateViewModel
+@{ ViewData["Title"] = "Nova reclamação"; }
+<div class="page-heading mb-4"><p class="eyebrow mb-1">Processos de qualidade</p><h1>Nova Reclamação de Cliente</h1><p class="text-muted mb-0">O registro será criado como rascunho.</p></div>
+<form method="post" class="card shadow-sm border-0 p-4 form-card">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="row g-3">
+        <div class="col-md-6"><label asp-for="DataRecebimento" class="form-label"></label><input asp-for="DataRecebimento" class="form-control" /><span asp-validation-for="DataRecebimento" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="CanalRecebimento" class="form-label"></label><input asp-for="CanalRecebimento" class="form-control" placeholder="Ex.: E-mail, telefone, SAC" /><span asp-validation-for="CanalRecebimento" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="ClienteId" class="form-label">Cliente</label><select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select"><option value="">Selecione</option></select><span asp-validation-for="ClienteId" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="ContatoCliente" class="form-label"></label><input asp-for="ContatoCliente" class="form-control" /><span asp-validation-for="ContatoCliente" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Selecione</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="LoteIds" class="form-label">Lotes envolvidos</label><select asp-for="LoteIds" asp-items="ViewBag.Lotes" class="form-select" multiple size="4"></select><div class="form-text">Opcional; selecione apenas lotes do produto informado.</div><span asp-validation-for="LoteIds" class="text-danger"></span></div>
+        <div class="col-12"><label asp-for="Descricao" class="form-label"></label><textarea asp-for="Descricao" class="form-control" rows="4"></textarea><span asp-validation-for="Descricao" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="DataFabricacao" class="form-label"></label><input asp-for="DataFabricacao" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="DataValidade" class="form-label"></label><input asp-for="DataValidade" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="QuantidadeEnvolvida" class="form-label"></label><input asp-for="QuantidadeEnvolvida" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="LocalAquisicao" class="form-label"></label><input asp-for="LocalAquisicao" class="form-control" /></div>
+        <div class="col-md-3 d-flex align-items-end"><div class="form-check mb-2"><input asp-for="ProdutoDisponivel" class="form-check-input" /><label asp-for="ProdutoDisponivel" class="form-check-label"></label></div></div>
+        <div class="col-md-3"><label asp-for="QuantidadeDisponivel" class="form-label"></label><input asp-for="QuantidadeDisponivel" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="VolumeDisponivel" class="form-label"></label><input asp-for="VolumeDisponivel" class="form-control" /></div>
+    </div>
+    <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Criar rascunho</button><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

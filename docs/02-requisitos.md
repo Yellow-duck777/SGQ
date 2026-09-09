@@ -213,6 +213,10 @@ Cada anexo registrará nome original, tipo, tamanho, usuário, data/hora, proces
 
 São anexos críticos, no mínimo: laudos laboratoriais, resultados analíticos, documentos de aprovação, evidências de encerramento, documentos regulatórios, documentos de Recall, evidências de ações e eficácia e documentos que sustentem conclusão técnica. Apenas GQ e Administrador poderão anulá-los logicamente, sempre com justificativa e auditoria.
 
+Uma única evidência ou laudo poderá ser vinculada tecnicamente a RC, NC e Recall relacionados, sem duplicar fisicamente o arquivo. Para resultado de laboratório externo, serão registrados laboratório, data de envio da amostra, data de recebimento, identificação do laudo, resultado, responsável pelo registro e arquivo.
+
+O processo poderá sair de Aguardando Laboratório Externo após o resultado ser registrado e retornar ao fluxo normal. Se o laboratório exceder o prazo previsto, será registrada a condição Atraso Externo, separada do atraso interno nos indicadores. O recebimento formal do resultado sem o arquivo do laudo não autoriza o encerramento definitivo.
+
 ---
 
 ## RF-010 - Rastreabilidade
@@ -275,6 +279,10 @@ O e-mail fará parte do MVP. Os eventos e destinatários definidos são:
 - processo encerrado: responsáveis envolvidos.
 
 Para todo processo com prazo ou data-alvo haverá alerta por e-mail 48 horas úteis antes do vencimento para GQ e RT. Isso se aplica à RC, à NC e ao Recall quando houver prazo-alvo.
+
+Quando uma ação de NC vencer, será enviada notificação obrigatória ao responsável pela ação e à GQ. Em NC Crítica, o RT também será notificado; em NC Maior ou Menor, o RT não receberá automaticamente essa notificação.
+
+A notificação informará, no mínimo, número da NC, ação vencida, responsável, prazo original, quantidade de dias em atraso, classificação e link ou referência ao registro.
 
 ---
 
@@ -544,6 +552,8 @@ Quando aplicável, poderão ser registrados:
 Resultados e laudos laboratoriais deverão poder ser anexados
 ao processo.
 
+Se a RC passar por Aguardando Laboratório Externo ou depender de análise externa, o laudo será anexo obrigatório antes do encerramento. Deverão ser registrados resultado, laudo anexado, data do resultado e laboratório responsável.
+
 ---
 
 ## RF-RC-032 - Resultado da reclamação
@@ -762,6 +772,8 @@ Exemplos:
 
 A NC deverá possuir investigação.
 
+Se a investigação depender de laboratório externo, o resultado utilizado deverá estar documentado e o laudo será obrigatório antes do encerramento.
+
 ---
 
 ## RF-NC-019 - Causa provável
@@ -804,6 +816,10 @@ Cada ação deverá possuir, quando aplicável:
 - status;
 - data de execução;
 - evidência.
+
+Quando uma ação obrigatória ultrapassar o prazo sem conclusão, ficará com condição Atrasada, sem alterar automaticamente o status principal da NC. A condição deverá registrar data/hora do vencimento, responsável, prazo, notificações geradas e conclusão posterior da ação.
+
+Uma NC não poderá ser concluída ou encerrada enquanto possuir ações obrigatórias vencidas e não concluídas.
 
 ---
 
@@ -1051,12 +1067,20 @@ Quando aplicável, a comunicação deverá contemplar:
 Quando aplicável, deverá ser possível registrar comunicação
 à autoridade sanitária.
 
+Quando o Recall for Aplicável e houver decisão de recolher produto do mercado, o registro de comunicação à autoridade sanitária será obrigatório, inclusive em recolhimento voluntário. O mesmo se aplica a Recall decorrente de risco à saúde ou segurança e a determinação formal da autoridade.
+
+Em Recall Não Aplicável, a comunicação não será exigida automaticamente, mas poderá ser registrada quando voluntária ou exigida por outra obrigação regulatória. Enquanto a decisão estiver em avaliação, a comunicação poderá ficar Pendente de Avaliação Regulatória.
+
 ---
 
 ## RF-RECALL-022 - Protocolo
 
 Quando houver comunicação regulatória, deverá ser possível
 registrar protocolo e documentos relacionados.
+
+Toda comunicação regulatória registrará autoridade, data, hora, responsável, meio de comunicação, protocolo quando houver, documento ou evidência e observações.
+
+Quando houver determinação formal, também serão registrados a determinação recebida, número do ofício/processo/documento quando houver, data de recebimento, prazo determinado, documento recebido, resposta enviada, protocolo e evidências. Se o produto tiver sido exportado, será registrada também a comunicação à autoridade competente do país de destino.
 
 ---
 
@@ -1131,6 +1155,8 @@ de transporte quando aplicável.
 
 Deverá ser possível anexar fotografias e demais evidências.
 
+Se a avaliação ou decisão de Recall utilizar resultado de laboratório externo, o laudo será obrigatório como evidência do processo. Caso contrário, não será exigido.
+
 ---
 
 ## RF-RECALL-034 - Segregação
@@ -1183,6 +1209,8 @@ O Recall somente poderá ser encerrado quando todos os
 requisitos obrigatórios estiverem atendidos.
 
 O encerramento formal será realizado pela GQ após aprovação técnica de RT e GQ, ou decisão do CQ em caso de divergência.
+
+Quando houver Recall Aplicável, o processo não poderá ser encerrado enquanto a comunicação obrigatória à autoridade sanitária não estiver registrada.
 
 ---
 
@@ -1480,7 +1508,7 @@ As exportações obrigatórias do MVP serão XLSX e PDF. CSV poderá ser disponi
 
 Esta seção preserva o histórico do levantamento. O status atual de cada item é definido pela seção 14 e pelas regras consolidadas ao final deste documento.
 
-Continuam pendentes somente: comunicação regulatória (P-024), alerta específico para ação de NC vencida (P-029), obrigatoriedade de laudo externo antes do encerramento (P-034), controle de amostra interna (P-035), nova aprovação após alteração relevante (P-016) e regras de reabertura para Recall (P-004 a P-006, apenas para Recall).
+Não há pendências de negócio abertas para o escopo consolidado atual. Regras documentais futuras poderão ser adicionadas conforme necessário.
 
 ## P-001 - Status da Reclamação
 
@@ -1804,6 +1832,10 @@ Também ficam consolidadas as seguintes decisões:
 - dashboard, relatórios e exportações XLSX e PDF definidos para o MVP;
 - tratamento comercial separado da conclusão técnica, com regras próprias de acesso.
 - critérios de Recall obrigatório e de avaliação formal de Recall definidos.
+- comunicação regulatória obrigatória em Recall Aplicável definida.
+- notificação de ação de NC vencida definida por classificação.
+- laudo externo obrigatório somente quando utilizado ou necessário à conclusão definido.
+- controle de amostra interna, nova aprovação após alteração relevante e reabertura de Recall definidos.
 
 ---
 
@@ -1996,3 +2028,33 @@ O tratamento comercial é independente da conclusão técnica da RC. Poderão vi
 Serão registrados tipo, responsável, data, observação e evidência quando aplicável. Os tipos previstos são troca, reposição, crédito, devolução, reembolso, nenhuma ação comercial e outra solução autorizada.
 
 Uma decisão comercial não altera automaticamente o resultado técnico: uma troca pode ocorrer mesmo quando a RC for tecnicamente Improcedente.
+
+---
+
+# Controle de amostras internas
+
+O SGQ controlará amostras internas somente quando RC, NC ou avaliação de Recall depender de análise física do produto. Cada amostra registrará identificador único, processo de origem, produto, lote, quantidade ou volume, unidade de medida, data de recebimento, origem, responsável, local de armazenamento, condição no recebimento, observações e situação.
+
+As situações possíveis são: Aguardando Recebimento, Recebida, Em Armazenamento, Em Análise Interna, Enviada para Laboratório Externo, Análise Concluída e Destinada/Descartada.
+
+Em envio externo, serão registrados laboratório de destino, data, quantidade enviada, responsável, identificação da remessa, data prevista do resultado quando informada, data de recebimento, identificação do laudo e vínculo com o laudo anexado. O histórico registrará recebimento, mudança de local, análise, envio externo, retorno e descarte ou destinação, com usuário, data/hora, ação e observação quando aplicável.
+
+A mesma amostra poderá ser vinculada a RC, NC e Recall relacionados sem duplicação. O prazo de retenção física não será definido até existir regra documental específica.
+
+---
+
+# Alterações relevantes após aprovação
+
+Alterações relevantes invalidam aprovações anteriores e exigem nova rodada de aprovação da versão atualizada. São relevantes, entre outros, mudanças de classificação, produto, lote, conclusão técnica, procedência, avaliação de risco, causa raiz, ações corretivas ou preventivas, eficácia, decisão de Recall, destinação, prazo, prorrogação e informações que sustentem o encerramento.
+
+O sistema registrará usuário, data/hora, valor anterior, valor novo, justificativa, aprovações anteriores e a nova rodada. Na NC, uma alteração relevante em Aguardando Aprovação mantém ou retorna o processo para esse status e exige nova análise de RT e GQ; em divergência, CQ decide. Alterações não relevantes permanecem auditadas, sem reiniciar aprovação. A classificação técnica da alteração será aplicada pelo sistema, não escolhida livremente pelo usuário.
+
+---
+
+# Reabertura de Recall
+
+Recall encerrado poderá ser reaberto por GQ ou RT por nova informação relevante, clientes ou lotes adicionais, quantidade incorreta, produto ainda no mercado, nova avaliação de risco, determinação da autoridade, problema de destinação ou evidência que altere a conclusão.
+
+A reabertura exige justificativa, usuário, data/hora, motivo, status anterior, nova situação e evidências relacionadas. O número permanece o mesmo e não será criado novo Recall. A transição será `Encerrado → Em Avaliação`; após nova aprovação técnica, o fluxo seguirá apenas pelas etapas operacionais aplicáveis até Aguardando Encerramento e Encerrado.
+
+Correções puramente administrativas, sem impacto em decisão, risco, quantidade, destinação ou conclusão, não exigem reabertura, mas permanecem auditadas.

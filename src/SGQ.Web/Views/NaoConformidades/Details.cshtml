@@ -1,0 +1,4 @@
+@model SGQ.Web.Models.NaoConformidade
+@{ ViewData["Title"] = Model.Codigo; }
+<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">Não Conformidade</p><h1>@Model.Codigo</h1><span class="badge text-bg-secondary">@Model.Status</span></div><a class="btn btn-outline-secondary" asp-action="Index">Voltar</a></div>
+<div class="card shadow-sm border-0 p-4"><dl class="row mb-0"><dt class="col-sm-3">Origem</dt><dd class="col-sm-9">@Model.Origem</dd><dt class="col-sm-3">Produto</dt><dd class="col-sm-9">@(Model.Produto?.Nome ?? "Não informado")</dd><dt class="col-sm-3">Reclamação vinculada</dt><dd class="col-sm-9">@(Model.ReclamacaoCliente?.Codigo ?? "Não aplicável")</dd><dt class="col-sm-3">Área</dt><dd class="col-sm-9">@Model.Area</dd><dt class="col-sm-3">Descrição</dt><dd class="col-sm-9">@Model.Descricao</dd></dl></div>

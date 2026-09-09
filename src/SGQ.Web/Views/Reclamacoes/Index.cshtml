@@ -1,0 +1,12 @@
+@model IEnumerable<SGQ.Web.Models.ReclamacaoCliente>
+@{
+    ViewData["Title"] = "Reclamações";
+}
+<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4">
+    <div><p class="eyebrow mb-1">Processos de qualidade</p><h1>Reclamações de Cliente</h1><p class="text-muted mb-0">Registre e acompanhe reclamações desde a abertura.</p></div>
+    <a class="btn btn-primary" asp-action="Create">Nova reclamação</a>
+</div>
+<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Cliente</th><th>Produto</th><th>Status</th><th class="text-end">Ação</th></tr></thead><tbody>
+@foreach (var item in Model) { <tr><td class="fw-semibold">@item.Codigo</td><td>@item.Cliente.Nome</td><td>@item.Produto.Nome</td><td><span class="badge text-bg-secondary">@item.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Ver</a></td></tr> }
+@if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Nenhuma reclamação registrada.</td></tr> }
+</tbody></table></div></div>

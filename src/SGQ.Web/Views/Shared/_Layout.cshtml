@@ -22,6 +22,19 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Início</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Reclamacoes" asp-action="Index">Reclamações</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="NaoConformidades" asp-action="Index">Não Conformidades</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastros</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Clientes" asp-action="Index">Clientes</a></li>
+                                <li><a class="dropdown-item" asp-controller="Produtos" asp-action="Index">Produtos</a></li>
+                                <li><a class="dropdown-item" asp-controller="Lotes" asp-action="Index">Lotes</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                     <div class="ms-auto">
                         <partial name="_LoginPartial" />
                     </div>

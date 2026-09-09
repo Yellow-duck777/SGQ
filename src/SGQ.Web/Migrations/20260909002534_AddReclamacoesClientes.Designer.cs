@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SGQ.Web.Data;
@@ -11,9 +12,11 @@ using SGQ.Web.Data;
 namespace SGQ.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909002534_AddReclamacoesClientes")]
+    partial class AddReclamacoesClientes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -268,78 +271,6 @@ namespace SGQ.Web.Migrations
                     b.ToTable("Lotes");
                 });
 
-            modelBuilder.Entity("SGQ.Web.Models.NaoConformidade", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Ano")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Area")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Classificacao")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Codigo")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTimeOffset>("CriadaEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly>("DataAbertura")
-                        .HasColumnType("date");
-
-                    b.Property<string>("Descricao")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("Origem")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("ProdutoId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ReclamacaoClienteId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SequenciaAnual")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UsuarioAbertura")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Codigo")
-                        .IsUnique();
-
-                    b.HasIndex("ProdutoId");
-
-                    b.HasIndex("ReclamacaoClienteId")
-                        .IsUnique();
-
-                    b.HasIndex("Ano", "SequenciaAnual")
-                        .IsUnique();
-
-                    b.ToTable("NaoConformidades");
-                });
-
             modelBuilder.Entity("SGQ.Web.Models.Produto", b =>
                 {
                     b.Property<int>("Id")
@@ -531,23 +462,6 @@ namespace SGQ.Web.Migrations
                     b.Navigation("Produto");
                 });
 
-            modelBuilder.Entity("SGQ.Web.Models.NaoConformidade", b =>
-                {
-                    b.HasOne("SGQ.Web.Models.Produto", "Produto")
-                        .WithMany()
-                        .HasForeignKey("ProdutoId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("SGQ.Web.Models.ReclamacaoCliente", "ReclamacaoCliente")
-                        .WithOne("NaoConformidade")
-                        .HasForeignKey("SGQ.Web.Models.NaoConformidade", "ReclamacaoClienteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Produto");
-
-                    b.Navigation("ReclamacaoCliente");
-                });
-
             modelBuilder.Entity("SGQ.Web.Models.ReclamacaoCliente", b =>
                 {
                     b.HasOne("SGQ.Web.Models.Cliente", "Cliente")
@@ -594,8 +508,6 @@ namespace SGQ.Web.Migrations
             modelBuilder.Entity("SGQ.Web.Models.ReclamacaoCliente", b =>
                 {
                     b.Navigation("Lotes");
-
-                    b.Navigation("NaoConformidade");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,5 @@
+@model SGQ.Web.Models.Lote
+@{ ViewData["Title"] = "Novo lote"; }
+<div class="page-heading mb-4"><p class="eyebrow mb-1">Cadastros básicos</p><h1>Novo lote</h1></div>
+<form method="post" class="card shadow-sm border-0 p-4 form-card"><div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div><div class="mb-3"><label asp-for="Numero" class="form-label"></label><input asp-for="Numero" class="form-control" autofocus /><span asp-validation-for="Numero" class="text-danger"></span></div><div class="mb-4"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Selecione um produto</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div><div class="d-flex gap-2"><button class="btn btn-primary" type="submit">Salvar lote</button><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div></form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
