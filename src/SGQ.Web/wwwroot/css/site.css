@@ -82,6 +82,42 @@ body {
   line-height: 1.7;
 }
 
+.dashboard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  align-items: end;
+  padding: clamp(2rem, 5vw, 4rem);
+  border-radius: 1rem;
+  background: linear-gradient(125deg, #173f4a, #1e6a66);
+  color: #fff;
+}
+
+.dashboard-hero .eyebrow { color: #b9e0d9; }
+.dashboard-hero h1 { max-width: 44rem; margin: 0; font-size: clamp(2rem, 4vw, 3.3rem); font-weight: 700; letter-spacing: -0.04em; }
+.dashboard-hero p:not(.eyebrow) { max-width: 38rem; margin: 1rem 0 0; color: #e2f0ed; font-size: 1.05rem; line-height: 1.65; }
+.dashboard-hero .btn-outline-primary { border-color: #d7eeea; color: #fff; }
+.dashboard-hero .btn-outline-primary:hover { background: #fff; color: #173f4a; }
+.hero-status { display: grid; gap: .35rem; min-width: 13rem; padding: 1rem 1.1rem; border: 1px solid rgba(255,255,255,.25); border-radius: .75rem; background: rgba(255,255,255,.1); font-size: .85rem; }
+.hero-status span:last-child { color: #d7eeea; }
+.hero-status-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #8be0ba; box-shadow: 0 0 0 .25rem rgba(139,224,186,.18); }
+.dashboard-section { margin-top: 3rem; }
+.section-heading h2 { margin: 0; color: #173f4a; font-size: 1.5rem; font-weight: 700; }
+.section-heading .eyebrow { margin-bottom: .3rem; }
+.module-card { display: block; height: 100%; padding: 1.5rem; border: 1px solid #dfe5e8; border-radius: .85rem; background: #fff; color: inherit; text-decoration: none; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.module-card:hover { transform: translateY(-3px); border-color: #9ac8c2; box-shadow: 0 .8rem 1.8rem rgba(23,63,74,.09); color: inherit; }
+.module-card-primary { border-color: #1e6a66; background: #f0f8f7; }
+.module-icon { display: inline-grid; place-items: center; width: 2.3rem; height: 2.3rem; margin-bottom: 1rem; border-radius: .6rem; background: #d8eeeb; color: #15534f; font-size: .78rem; font-weight: 800; letter-spacing: .04em; }
+.module-card h3 { color: #173f4a; font-size: 1.05rem; font-weight: 700; }
+.module-card p { min-height: 3.2rem; color: #667680; font-size: .92rem; line-height: 1.55; }
+.module-link { color: #1e6a66; font-size: .88rem; font-weight: 700; }
+.process-flow { display: flex; gap: 0; margin: 1.25rem 0 0; padding: 0; list-style: none; }
+.process-flow li { display: flex; flex: 1; align-items: center; gap: .75rem; min-width: 0; }
+.process-flow li:not(:last-child)::after { width: 100%; height: 1px; margin: 0 1rem; background: #b9d7d3; content: ""; }
+.process-flow li > span { display: grid; flex: 0 0 2rem; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: #1e6a66; color: #fff; font-size: .82rem; font-weight: 700; }
+.process-flow div { display: grid; gap: .15rem; white-space: nowrap; }
+.process-flow strong { color: #173f4a; font-size: .92rem; }.process-flow small { color: #667680; font-size: .78rem; }
+
 .information-card {
   max-width: 48rem;
   padding: 1.5rem;
@@ -187,4 +223,11 @@ body {
 .form-control:focus,
 .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem #ffffff, 0 0 0 0.25rem rgba(30, 106, 102, 0.35);
+}
+
+@media (max-width: 767.98px) {
+  .dashboard-hero { grid-template-columns: 1fr; padding: 2rem; }
+  .hero-status { width: 100%; }
+  .process-flow { display: grid; gap: 1rem; }
+  .process-flow li:not(:last-child)::after { display: none; }
 }

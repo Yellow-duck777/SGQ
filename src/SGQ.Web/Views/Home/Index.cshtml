@@ -2,17 +2,37 @@
     ViewData["Title"] = "Início";
 }
 
-<section class="welcome-panel" aria-labelledby="welcome-title">
-    <p class="eyebrow">Sistema de Gestão da Qualidade</p>
-    <h1 id="welcome-title">Bem-vindo ao SGQ</h1>
-    <p class="welcome-description">
-        Este ambiente está sendo preparado para apoiar o acompanhamento dos processos de qualidade.
-    </p>
+<section class="dashboard-hero" aria-labelledby="welcome-title">
+    <div>
+        <p class="eyebrow">Sistema de Gestão da Qualidade</p>
+        <h1 id="welcome-title">Qualidade com rastreabilidade em cada etapa.</h1>
+        <p>Registre ocorrências, acompanhe o tratamento e mantenha as evidências organizadas em um único lugar.</p>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <a class="btn btn-primary" asp-controller="Reclamacoes" asp-action="Create">Registrar reclamação</a>
+            <a class="btn btn-outline-primary" asp-controller="Reclamacoes" asp-action="Index">Ver processos</a>
+        </div>
+    </div>
+    <div class="hero-status" aria-label="Resumo do ambiente">
+        <span class="hero-status-dot" aria-hidden="true"></span>
+        <strong>Ambiente operacional</strong>
+        <span>Cadastros e abertura de RC disponíveis</span>
+    </div>
 </section>
 
-<section class="information-card" aria-labelledby="preparation-title">
-    <h2 id="preparation-title">Em preparação</h2>
-    <p>
-        A fundação do sistema está sendo construída com acesso seguro e estrutura para evolução futura.
-    </p>
+<section class="dashboard-section" aria-labelledby="shortcuts-title">
+    <div class="section-heading"><div><p class="eyebrow">Acesso rápido</p><h2 id="shortcuts-title">Comece por aqui</h2></div></div>
+    <div class="row g-3">
+        <div class="col-md-4"><a class="module-card module-card-primary" asp-controller="Reclamacoes" asp-action="Create"><span class="module-icon">RC</span><h3>Nova reclamação</h3><p>Registre uma ocorrência e relacione cliente, produto e lotes.</p><span class="module-link">Abrir cadastro →</span></a></div>
+        <div class="col-md-4"><a class="module-card" asp-controller="NaoConformidades" asp-action="Index"><span class="module-icon">NC</span><h3>Não conformidades</h3><p>Acompanhe investigações, ações e aprovações técnicas.</p><span class="module-link">Ver registros →</span></a></div>
+        <div class="col-md-4"><a class="module-card" asp-controller="Produtos" asp-action="Index"><span class="module-icon">CB</span><h3>Cadastros básicos</h3><p>Mantenha clientes, produtos e lotes prontos para uso.</p><span class="module-link">Gerenciar cadastros →</span></a></div>
+    </div>
+</section>
+
+<section class="dashboard-section" aria-labelledby="flow-title">
+    <div class="section-heading"><div><p class="eyebrow">Fluxo do SGQ</p><h2 id="flow-title">Como os processos se conectam</h2></div></div>
+    <ol class="process-flow">
+        <li><span>1</span><div><strong>Reclamação</strong><small>Registro e validação pela GQ</small></div></li>
+        <li><span>2</span><div><strong>Não Conformidade</strong><small>Investigação, ações e eficácia</small></div></li>
+        <li><span>3</span><div><strong>Recall</strong><small>Avaliação e recolhimento quando aplicável</small></div></li>
+    </ol>
 </section>
