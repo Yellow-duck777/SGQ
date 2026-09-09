@@ -16,6 +16,7 @@ public class ReclamacaoCliente
 
     [Required]
     public DateOnly DataRecebimento { get; set; }
+    public DateOnly? DataAlvo { get; set; }
 
     [Required]
     [StringLength(100)]
@@ -56,6 +57,29 @@ public class ReclamacaoCliente
     public string? VolumeDisponivel { get; set; }
 
     public ClassificacaoOcorrencia? Classificacao { get; set; }
+
+    [StringLength(4000)]
+    public string? Investigacao { get; set; }
+
+    public ResultadoReclamacao? Resultado { get; set; }
+
+    [StringLength(4000)]
+    public string? TratamentoAplicado { get; set; }
+
+    [StringLength(4000)]
+    public string? RespostaCliente { get; set; }
+
+    public DateOnly? DataRespostaCliente { get; set; }
+
+    [StringLength(256)]
+    public string? UsuarioValidacao { get; set; }
+
+    public DateTimeOffset? ValidadaEm { get; set; }
+
+    [StringLength(256)]
+    public string? UsuarioEncerramento { get; set; }
+
+    public DateTimeOffset? EncerradaEm { get; set; }
 
     public StatusReclamacao Status { get; set; } = StatusReclamacao.Rascunho;
 

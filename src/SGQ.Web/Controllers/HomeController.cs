@@ -1,13 +1,20 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SGQ.Web.Models;
+using SGQ.Web.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SGQ.Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(ApplicationDbContext context) : Controller
 {
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        ViewBag.RcsAbertas = await context.ReclamacoesClientes.CountAsync(item => item.Status != StatusReclamacao.Encerrada);
+        ViewBag.NcsAbertas = await context.NaoConformidades.CountAsync(item => item.Status != StatusNaoConformidade.Encerrada);
+        ViewBag.RecallsAtivos = await context.Recalls.CountAsync(item => item.Status != StatusRecall.Encerrado);
+        ViewBag.AguardandoAprovacao = await context.NaoConformidades.CountAsync(item => item.Status == StatusNaoConformidade.AguardandoAprovacao)
+            + await context.Recalls.CountAsync(item => item.Status == StatusRecall.AguardandoAprovacao);
         return View();
     }
 

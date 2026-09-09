@@ -1,0 +1,7 @@
+@model IEnumerable<SGQ.Web.Models.Recall>
+@{ ViewData["Title"] = "Recalls"; }
+<div class="page-heading d-flex justify-content-between align-items-end gap-3 mb-4"><div><p class="eyebrow mb-1">Processos de qualidade</p><h1>Recall / Recolhimento</h1><p class="text-muted mb-0">Avalie riscos e acompanhe o recolhimento de produtos.</p></div><a class="btn btn-primary" asp-action="Create">Novo Recall</a></div>
+<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Produto</th><th>Lote</th><th>Decisão</th><th>Status</th><th></th></tr></thead><tbody>
+@foreach (var recall in Model) { <tr><td class="fw-semibold">@recall.Codigo</td><td>@recall.Produto.Nome</td><td>@recall.Lote.Numero</td><td>@recall.Decisao</td><td><span class="badge text-bg-secondary">@recall.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@recall.Id">Ver</a></td></tr> }
+@if (!Model.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">Nenhum Recall registrado.</td></tr> }
+</tbody></table></div></div>

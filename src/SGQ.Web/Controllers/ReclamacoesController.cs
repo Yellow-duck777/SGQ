@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.ViewModels;
+using SGQ.Web.Security;
 
 namespace SGQ.Web.Controllers;
 
@@ -64,6 +65,7 @@ public class ReclamacoesController(ApplicationDbContext context) : Controller
             SequenciaAnual = sequence,
             Codigo = $"RC-{year}-{sequence:D6}",
             DataRecebimento = model.DataRecebimento,
+            DataAlvo = model.DataAlvo,
             CanalRecebimento = model.CanalRecebimento,
             ClienteId = model.ClienteId,
             ContatoCliente = model.ContatoCliente,
@@ -97,9 +99,93 @@ public class ReclamacoesController(ApplicationDbContext context) : Controller
             .Include(item => item.Cliente)
             .Include(item => item.Produto)
             .Include(item => item.Lotes).ThenInclude(item => item.Lote)
+            .Include(item => item.NaoConformidade)
             .SingleOrDefaultAsync(item => item.Id == id);
 
-        return reclamacao is null ? NotFound() : View(reclamacao);
+        if (reclamacao is null) return NotFound();
+        ViewBag.Anexos = await context.Anexos.Where(item => item.ReclamacaoClienteId == id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
+        return View(reclamacao);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.GestaoQualidade)]
+    public async Task<IActionResult> Validar(int id, ClassificacaoOcorrencia classificacao)
+    {
+        var reclamacao = await context.ReclamacoesClientes.Include(item => item.NaoConformidade).SingleOrDefaultAsync(item => item.Id == id);
+        if (reclamacao is null) return NotFound();
+        if (reclamacao.Status is not (StatusReclamacao.Rascunho or StatusReclamacao.InformacoesPendentes or StatusReclamacao.AguardandoValidacaoGq))
+        {
+            TempData["Error"] = "Esta reclamação não está disponível para validação.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        reclamacao.Classificacao = classificacao;
+        reclamacao.Status = StatusReclamacao.EmInvestigacao;
+        reclamacao.UsuarioValidacao = User.Identity?.Name ?? "Usuário autenticado";
+        reclamacao.ValidadaEm = DateTimeOffset.UtcNow;
+        if (reclamacao.NaoConformidade is null)
+        {
+            var year = reclamacao.DataRecebimento.Year;
+            var lastSequence = await context.NaoConformidades.Where(item => item.Ano == year).MaxAsync(item => (int?)item.SequenciaAnual) ?? 0;
+            var sequence = lastSequence + 1;
+            context.NaoConformidades.Add(new NaoConformidade
+            {
+                Ano = year, SequenciaAnual = sequence, Codigo = $"NC-{year}-{sequence:D6}",
+                Origem = OrigemNaoConformidade.ReclamacaoCliente, ReclamacaoClienteId = reclamacao.Id,
+                DataAbertura = DateOnly.FromDateTime(DateTime.Today), Area = "Garantia da Qualidade",
+                ProdutoId = reclamacao.ProdutoId, Descricao = reclamacao.Descricao, Classificacao = classificacao,
+                UsuarioAbertura = reclamacao.UsuarioValidacao, CriadaEm = DateTimeOffset.UtcNow
+            });
+        }
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        TempData["Success"] = "Reclamação validada e Não Conformidade criada automaticamente.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Concluir(ReclamacaoConclusaoViewModel model)
+    {
+        if (!ModelState.IsValid) return RedirectToAction(nameof(Details), new { id = model.Id });
+        var reclamacao = await context.ReclamacoesClientes.FindAsync(model.Id);
+        if (reclamacao is null) return NotFound();
+        if (reclamacao.Status != StatusReclamacao.EmInvestigacao)
+        {
+            TempData["Error"] = "A conclusão só pode ser registrada durante a investigação.";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
+        }
+        reclamacao.Investigacao = model.Investigacao;
+        reclamacao.Resultado = model.Resultado;
+        reclamacao.TratamentoAplicado = model.TratamentoAplicado;
+        reclamacao.RespostaCliente = model.RespostaCliente;
+        reclamacao.DataRespostaCliente = model.DataRespostaCliente;
+        reclamacao.Status = StatusReclamacao.AguardandoConclusao;
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Conclusão registrada. A reclamação está pronta para encerramento pela GQ.";
+        return RedirectToAction(nameof(Details), new { id = model.Id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.GestaoQualidade)]
+    public async Task<IActionResult> Encerrar(int id)
+    {
+        var reclamacao = await context.ReclamacoesClientes.FindAsync(id);
+        if (reclamacao is null) return NotFound();
+        if (reclamacao.Status != StatusReclamacao.AguardandoConclusao || reclamacao.Resultado is null || string.IsNullOrWhiteSpace(reclamacao.RespostaCliente))
+        {
+            TempData["Error"] = "Registre a conclusão e a resposta ao cliente antes do encerramento.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        reclamacao.Status = StatusReclamacao.Encerrada;
+        reclamacao.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado";
+        reclamacao.EncerradaEm = DateTimeOffset.UtcNow;
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Reclamação encerrada pela GQ.";
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     private async Task PopulateOptions(int? selectedCliente = null, int? selectedProduto = null, IEnumerable<int>? selectedLotes = null)

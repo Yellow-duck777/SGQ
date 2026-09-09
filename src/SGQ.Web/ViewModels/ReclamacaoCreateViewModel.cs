@@ -9,6 +9,8 @@ public class ReclamacaoCreateViewModel
     [DataType(DataType.Date)]
     public DateOnly DataRecebimento { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
+    [DataType(DataType.Date)] public DateOnly? DataAlvo { get; set; }
+
     [Required(ErrorMessage = "Informe o canal de recebimento.")]
     [StringLength(100)]
     public string CanalRecebimento { get; set; } = string.Empty;

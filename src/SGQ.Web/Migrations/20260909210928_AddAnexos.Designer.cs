@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SGQ.Web.Data;
@@ -11,9 +12,11 @@ using SGQ.Web.Data;
 namespace SGQ.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909210928_AddAnexos")]
+    partial class AddAnexos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -207,25 +210,12 @@ namespace SGQ.Web.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTimeOffset?>("AnuladoEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("Critico")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Descricao")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
                     b.Property<DateTimeOffset>("EnviadoEm")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("JustificativaAnulacao")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<int?>("NaoConformidadeId")
                         .HasColumnType("integer");
@@ -256,10 +246,6 @@ namespace SGQ.Web.Migrations
 
                     b.Property<string>("Usuario")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("UsuarioAnulacao")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
@@ -471,9 +457,6 @@ namespace SGQ.Web.Migrations
                     b.Property<DateOnly>("DataAbertura")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly?>("DataAlvo")
-                        .HasColumnType("date");
-
                     b.Property<string>("Descricao")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
@@ -597,9 +580,6 @@ namespace SGQ.Web.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateOnly>("DataAbertura")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly?>("DataAlvo")
                         .HasColumnType("date");
 
                     b.Property<DateOnly?>("DataFabricacao")
@@ -736,9 +716,6 @@ namespace SGQ.Web.Migrations
 
                     b.Property<DateTimeOffset>("CriadaEm")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly?>("DataAlvo")
-                        .HasColumnType("date");
 
                     b.Property<DateOnly?>("DataFabricacao")
                         .HasColumnType("date");

@@ -20,6 +20,7 @@ public class NaoConformidade
     public ReclamacaoCliente? ReclamacaoCliente { get; set; }
 
     public DateOnly DataAbertura { get; set; }
+    public DateOnly? DataAlvo { get; set; }
 
     [Required, StringLength(150)]
     public string Area { get; set; } = string.Empty;
@@ -33,10 +34,23 @@ public class NaoConformidade
 
     public ClassificacaoOcorrencia? Classificacao { get; set; }
 
+    [StringLength(4000)] public string? Contencao { get; set; }
+    [StringLength(4000)] public string? Investigacao { get; set; }
+    [StringLength(4000)] public string? CausaProvavel { get; set; }
+    [StringLength(4000)] public string? CausaRaiz { get; set; }
+    [StringLength(200)] public string? MetodoAnalise { get; set; }
+    public bool? Eficaz { get; set; }
+    public bool AprovadaRt { get; set; }
+    public bool AprovadaGq { get; set; }
+    [StringLength(256)] public string? UsuarioEncerramento { get; set; }
+    public DateTimeOffset? EncerradaEm { get; set; }
+
     public StatusNaoConformidade Status { get; set; } = StatusNaoConformidade.EmInvestigacao;
 
     [Required, StringLength(256)]
     public string UsuarioAbertura { get; set; } = string.Empty;
 
     public DateTimeOffset CriadaEm { get; set; }
+
+    public ICollection<AcaoNaoConformidade> Acoes { get; set; } = new List<AcaoNaoConformidade>();
 }
