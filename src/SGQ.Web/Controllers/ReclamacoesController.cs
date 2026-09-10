@@ -7,11 +7,12 @@ using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.ViewModels;
 using SGQ.Web.Security;
+using SGQ.Web.Services;
 
 namespace SGQ.Web.Controllers;
 
 [Authorize]
-public class ReclamacoesController(ApplicationDbContext context) : Controller
+public class ReclamacoesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -65,7 +66,7 @@ public class ReclamacoesController(ApplicationDbContext context) : Controller
             SequenciaAnual = sequence,
             Codigo = $"RC-{year}-{sequence:D6}",
             DataRecebimento = model.DataRecebimento,
-            DataAlvo = model.DataAlvo,
+            DataAlvo = await prazoService.CalcularPrazoReclamacaoAsync(model.DataRecebimento),
             CanalRecebimento = model.CanalRecebimento,
             ClienteId = model.ClienteId,
             ContatoCliente = model.ContatoCliente,
@@ -134,7 +135,9 @@ public class ReclamacoesController(ApplicationDbContext context) : Controller
             {
                 Ano = year, SequenciaAnual = sequence, Codigo = $"NC-{year}-{sequence:D6}",
                 Origem = OrigemNaoConformidade.ReclamacaoCliente, ReclamacaoClienteId = reclamacao.Id,
-                DataAbertura = DateOnly.FromDateTime(DateTime.Today), Area = "Garantia da Qualidade",
+                DataAbertura = DateOnly.FromDateTime(DateTime.Today),
+                DataAlvo = await prazoService.CalcularPrazoNaoConformidadeAsync(DateOnly.FromDateTime(DateTime.Today), classificacao),
+                Area = "Garantia da Qualidade",
                 ProdutoId = reclamacao.ProdutoId, Descricao = reclamacao.Descricao, Classificacao = classificacao,
                 UsuarioAbertura = reclamacao.UsuarioValidacao, CriadaEm = DateTimeOffset.UtcNow
             });

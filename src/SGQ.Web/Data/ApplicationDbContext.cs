@@ -23,6 +23,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RetornoRecall> RetornosRecall => Set<RetornoRecall>();
     public DbSet<HistoricoAuditoria> HistoricosAuditoria => Set<HistoricoAuditoria>();
     public DbSet<Anexo> Anexos => Set<Anexo>();
+    public DbSet<DiaNaoUtil> DiasNaoUteis => Set<DiaNaoUtil>();
+    public DbSet<AlertaEnviado> AlertasEnviados => Set<AlertaEnviado>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -49,6 +51,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entity.Property(cliente => cliente.Nome).IsRequired();
             entity.Property(cliente => cliente.Contato).IsRequired();
+        });
+
+        builder.Entity<DiaNaoUtil>(entity =>
+        {
+            entity.Property(item => item.Tipo).HasConversion<string>();
+            entity.HasIndex(item => new { item.Data, item.Tipo }).IsUnique();
+        });
+
+        builder.Entity<AlertaEnviado>(entity =>
+        {
+            entity.HasIndex(item => new { item.Tipo, item.Referencia, item.DataReferencia }).IsUnique();
         });
 
         builder.Entity<Produto>(entity =>

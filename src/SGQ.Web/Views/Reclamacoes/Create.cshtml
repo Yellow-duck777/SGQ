@@ -4,7 +4,8 @@
 <form method="post" class="card shadow-sm border-0 p-4 form-card">
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
     <div class="row g-3">
-        <div class="col-md-6"><label asp-for="DataRecebimento" class="form-label"></label><input asp-for="DataRecebimento" class="form-control" /><span asp-validation-for="DataRecebimento" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="DataRecebimento" class="form-label"></label><input asp-for="DataRecebimento" class="form-control" /><span asp-validation-for="DataRecebimento" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="DataAlvo" class="form-label">Data-alvo</label><input asp-for="DataAlvo" class="form-control" /><div class="form-text">Preencha quando houver prazo definido para a tratativa.</div><span asp-validation-for="DataAlvo" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="CanalRecebimento" class="form-label"></label><input asp-for="CanalRecebimento" class="form-control" placeholder="Ex.: E-mail, telefone, SAC" /><span asp-validation-for="CanalRecebimento" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="ClienteId" class="form-label">Cliente</label><select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select"><option value="">Selecione</option></select><span asp-validation-for="ClienteId" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="ContatoCliente" class="form-label"></label><input asp-for="ContatoCliente" class="form-control" /><span asp-validation-for="ContatoCliente" class="text-danger"></span></div>

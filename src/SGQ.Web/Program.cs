@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.Security;
+using SGQ.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,10 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IPrazoService, PrazoService>();
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddHostedService<AlertasPrazoHostedService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(

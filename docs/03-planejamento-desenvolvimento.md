@@ -157,12 +157,12 @@ Implementado:
 Entregas:
 
 - Exibir e permitir preencher data-alvo nos formulários de RC, NC e Recall.
-- Cadastro de calendário de dias não úteis (nacionais, estaduais, municipais e internos).
-- Cálculo de prazo de RC em dias úteis.
-- Regras de prazo de NC por classificação.
-- Indicadores de vencidos e vencendo em breve.
-- Alertas de 48 horas úteis antes do vencimento.
-- E-mails para os responsáveis definidos nos requisitos.
+- Cadastro de calendário de dias não úteis (nacionais, estaduais, municipais e internos). **Concluído:** consulta para todos os usuários e criação/edição restrita a Administrador e GQ; alterações são auditadas.
+- Cálculo de prazo de RC em dias úteis. **Concluído:** 15 dias úteis, contados após 24 horas das informações completas, ignorando fins de semana e dias não úteis ativos.
+- Regras de prazo de NC por classificação. **Concluído:** Maior em 15 dias úteis, Menor em 30 dias úteis e Crítica com data-alvo obrigatoriamente definida pela GQ.
+- Indicadores de vencidos e vencendo em breve. **Concluído:** o dashboard considera RC, NC e Recall abertos com data-alvo, usando a janela de 48 horas úteis.
+- Alertas de 48 horas úteis antes do vencimento. **Concluído:** serviço em segundo plano executado a cada hora, com alerta único por prazo para GQ e RT e registro de envio.
+- E-mails para os responsáveis definidos nos requisitos. **Concluído para alertas de prazo:** RC, NC e Recall com data-alvo; ações de NC vencidas notificam o responsável e GQ, incluindo RT quando a NC é Crítica. Notificações dos demais eventos do fluxo permanecem pendentes.
 
 Critério de aceite:
 
@@ -242,8 +242,8 @@ Critério de aceite:
 | Etapa | Entrega | Dependência | Status |
 |---|---|---|---|
 | 1 | Aplicar migrações e validar ambiente local | PostgreSQL configurado | Pendente |
-| 2 | Datas-alvo na interface e calendário | Etapa 1 | Em andamento |
-| 3 | Alertas e notificações | Etapa 2 | Pendente |
+| 2 | Datas-alvo na interface e calendário | Etapa 1 | Concluído em código (migração pendente de aplicação) |
+| 3 | Alertas e notificações | Etapa 2 | Alertas de prazo concluídos em código; notificações dos eventos de fluxo pendentes |
 | 4 | Laboratório, reabertura e prorrogação | Etapa 1 | Pendente |
 | 5 | Divergência e decisão do CQ | Perfis ativos | Pendente |
 | 6 | Pesquisa e filtros | Etapa 1 | Pendente |
@@ -272,6 +272,7 @@ Ao retomar o desenvolvimento:
 
 - Configurar `ConnectionStrings:DefaultConnection` com User Secrets ou variável de ambiente.
 - Configurar `InitialAdminEmail` para provisionar o primeiro administrador.
+- Configurar SMTP por User Secrets ou variável de ambiente (`Smtp:Host`, `Smtp:Port`, `Smtp:EnableSsl`, `Smtp:UserName`, `Smtp:Password` e `Smtp:From`) antes de ativar os alertas por e-mail.
 - Aplicar as migrações pendentes.
 - Criar usuários de teste para Administrador, GQ, RT, CQ e usuário comum.
 - Testar permissões e fluxos completos com esses usuários.

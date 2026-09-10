@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SGQ.Web.Data;
@@ -11,9 +12,11 @@ using SGQ.Web.Data;
 namespace SGQ.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260910231455_AddCalendarioDiasNaoUteis")]
+    partial class AddCalendarioDiasNaoUteis
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -197,43 +200,6 @@ namespace SGQ.Web.Migrations
                     b.HasIndex("NaoConformidadeId");
 
                     b.ToTable("AcoesNaoConformidade");
-                });
-
-            modelBuilder.Entity("SGQ.Web.Models.AlertaEnviado", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateOnly>("DataReferencia")
-                        .HasColumnType("date");
-
-                    b.Property<string>("Destinatarios")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTimeOffset>("EnviadoEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Referencia")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Tipo", "Referencia", "DataReferencia")
-                        .IsUnique();
-
-                    b.ToTable("AlertasEnviados");
                 });
 
             modelBuilder.Entity("SGQ.Web.Models.Anexo", b =>

@@ -7,11 +7,12 @@ using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.ViewModels;
 using SGQ.Web.Security;
+using SGQ.Web.Services;
 
 namespace SGQ.Web.Controllers;
 
 [Authorize]
-public class NaoConformidadesController(ApplicationDbContext context) : Controller
+public class NaoConformidadesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
 {
     public async Task<IActionResult> Index() => View(await context.NaoConformidades.Include(item => item.ReclamacaoCliente).Include(item => item.Produto).OrderByDescending(item => item.CriadaEm).ToListAsync());
 
@@ -25,8 +26,13 @@ public class NaoConformidadesController(ApplicationDbContext context) : Controll
     [Authorize(Roles = Roles.GestaoQualidade)]
     public async Task<IActionResult> Create(NaoConformidadeCreateViewModel model)
     {
+        if (model.Classificacao == ClassificacaoOcorrencia.Critica && !model.DataAlvo.HasValue)
+            ModelState.AddModelError(nameof(model.DataAlvo), "A GQ deve definir a data-alvo para NC crítica.");
         if (model.ProdutoId.HasValue && !await context.Produtos.AnyAsync(item => item.Id == model.ProdutoId)) ModelState.AddModelError(nameof(model.ProdutoId), "Produto inválido.");
         if (!ModelState.IsValid) { await PopulateProdutos(model.ProdutoId); return View(model); }
+        if (model.Classificacao is ClassificacaoOcorrencia.Maior or ClassificacaoOcorrencia.Menor)
+            model.DataAlvo = await prazoService.CalcularPrazoNaoConformidadeAsync(model.DataAbertura, model.Classificacao);
+
         var year = model.DataAbertura.Year;
         await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var sequence = (await context.NaoConformidades.Where(item => item.Ano == year).MaxAsync(item => (int?)item.SequenciaAnual) ?? 0) + 1;

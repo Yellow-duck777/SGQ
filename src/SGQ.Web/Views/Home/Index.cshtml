@@ -26,6 +26,10 @@
         <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">NC abertas</small><strong class="display-6">@ViewBag.NcsAbertas</strong></div></div>
         <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Recalls ativos</small><strong class="display-6">@ViewBag.RecallsAtivos</strong></div></div>
         <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Aguardando aprovação</small><strong class="display-6">@ViewBag.AguardandoAprovacao</strong></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Processos atrasados</small><strong class="display-6 text-danger">@ViewBag.ProcessosVencidos</strong></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Vencendo em até 48h úteis</small><strong class="display-6 text-warning">@ViewBag.ProcessosProximosDoVencimento</strong></div></div>
+        <div class="col-md-6"><div class="card shadow-sm border-danger p-3"><small class="text-danger">Processos vencidos</small><strong class="display-6 text-danger">@ViewBag.ProcessosVencidos</strong><small class="text-muted">RC, NC e Recall com data-alvo anterior a hoje.</small></div></div>
+        <div class="col-md-6"><div class="card shadow-sm border-warning p-3"><small class="text-warning-emphasis">Vencendo em até 2 dias úteis</small><strong class="display-6 text-warning-emphasis">@ViewBag.ProcessosProximosDoVencimento</strong><small class="text-muted">Inclui processos com vencimento hoje.</small></div></div>
     </div>
 </section>
 
