@@ -66,6 +66,8 @@ Para validar a compilação:
 dotnet build SGQ.slnx --no-restore
 ```
 
+Para criar ou desativar contas locais de teste com segurança, consulte [a documentação de usuários de teste](docs/usuarios-teste-development.md).
+
 Os requisitos e decisões de negócio estão em [docs/02-requisitos.md](docs/02-requisitos.md).
 O roteiro detalhado, estado atual e backlog estão em [docs/03-planejamento-desenvolvimento.md](docs/03-planejamento-desenvolvimento.md).
 

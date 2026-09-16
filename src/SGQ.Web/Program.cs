@@ -42,6 +42,12 @@ builder.Services
 
 var app = builder.Build();
 
+if (DevelopmentTestUsers.HasRequestedOperation(args))
+{
+    await DevelopmentTestUsers.ExecuteAsync(args, app.Services, app.Environment, app.Configuration);
+    return;
+}
+
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
