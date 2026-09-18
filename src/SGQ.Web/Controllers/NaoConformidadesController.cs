@@ -100,6 +100,16 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         await context.SaveChangesAsync(); TempData["Success"] = "Resultado laboratorial registrado. A NC voltou para investigação."; return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.GarantiaQualidade + "," + Roles.ResponsavelTecnico)]
+    public async Task<IActionResult> Prorrogar(ProrrogacaoPrazoViewModel model)
+    {
+        if (!ModelState.IsValid || !model.NovaData.HasValue) return RedirectToAction(nameof(Details), new { id = model.Id });
+        var item = await context.NaoConformidades.FindAsync(model.Id); if (item is null) return NotFound();
+        if (!item.DataAlvo.HasValue || model.NovaData <= item.DataAlvo) { TempData["Error"] = "Informe uma nova data posterior ao prazo atual."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
+        context.ProrrogacoesPrazo.Add(new ProrrogacaoPrazo { NaoConformidadeId = item.Id, DataAnterior = item.DataAlvo.Value, NovaData = model.NovaData.Value, Motivo = model.Motivo.Trim(), ClienteComunicado = model.ClienteComunicado, RegistroComunicacaoCliente = model.RegistroComunicacaoCliente?.Trim(), Usuario = User.Identity?.Name ?? "Usuário autenticado", RegistradaEm = DateTimeOffset.UtcNow });
+        item.DataAlvo = model.NovaData; await context.SaveChangesAsync(); TempData["Success"] = "Prazo prorrogado e registrado no histórico."; return RedirectToAction(nameof(Details), new { id = model.Id });
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AdicionarAcao(AcaoNaoConformidadeViewModel model)
     {

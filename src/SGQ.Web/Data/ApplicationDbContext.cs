@@ -25,6 +25,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Anexo> Anexos => Set<Anexo>();
     public DbSet<DiaNaoUtil> DiasNaoUteis => Set<DiaNaoUtil>();
     public DbSet<AlertaEnviado> AlertasEnviados => Set<AlertaEnviado>();
+    public DbSet<ProrrogacaoPrazo> ProrrogacoesPrazo => Set<ProrrogacaoPrazo>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -131,6 +132,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(item => item.Recall).WithMany(recall => recall.Retornos).HasForeignKey(item => item.RecallId).OnDelete(DeleteBehavior.Cascade);
         });
         builder.Entity<Anexo>(entity =>
+        {
+            entity.HasOne<ReclamacaoCliente>().WithMany().HasForeignKey(item => item.ReclamacaoClienteId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<NaoConformidade>().WithMany().HasForeignKey(item => item.NaoConformidadeId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Recall>().WithMany().HasForeignKey(item => item.RecallId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<ProrrogacaoPrazo>(entity =>
         {
             entity.HasOne<ReclamacaoCliente>().WithMany().HasForeignKey(item => item.ReclamacaoClienteId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne<NaoConformidade>().WithMany().HasForeignKey(item => item.NaoConformidadeId).OnDelete(DeleteBehavior.Cascade);

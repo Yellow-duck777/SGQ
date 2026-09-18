@@ -1,0 +1,17 @@
+@model (string Action, int Id, DateOnly? DataAlvo)
+@using SGQ.Web.Security
+@if (Model.DataAlvo.HasValue && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador)))
+{
+    <section class="card shadow-sm border-0 p-4 mt-4">
+        <h2 class="h5">Prorrogar prazo</h2>
+        <p class="text-muted">Prazo atual: <strong>@Model.DataAlvo.Value.ToString("dd/MM/yyyy")</strong>. A nova data deve ser posterior.</p>
+        <form asp-action="@Model.Action" method="post" class="row g-3">
+            <input type="hidden" name="Id" value="@Model.Id" />
+            <div class="col-md-3"><label class="form-label">Nova data</label><input name="NovaData" type="date" class="form-control" required /></div>
+            <div class="col-md-5"><label class="form-label">Motivo</label><input name="Motivo" class="form-control" minlength="10" maxlength="2000" required /></div>
+            <div class="col-md-4"><label class="form-label">Registro da comunicação ao cliente</label><input name="RegistroComunicacaoCliente" class="form-control" maxlength="1000" /></div>
+            <div class="col-12 form-check"><input name="ClienteComunicado" value="true" type="checkbox" class="form-check-input" id="clienteComunicado-@Model.Id" /><label class="form-check-label" for="clienteComunicado-@Model.Id">Cliente comunicado</label></div>
+            <div class="col-12"><button class="btn btn-outline-primary">Registrar prorrogação</button></div>
+        </form>
+    </section>
+}
