@@ -14,7 +14,26 @@ namespace SGQ.Web.Controllers;
 [Authorize]
 public class NaoConformidadesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
 {
-    public async Task<IActionResult> Index() => View(await context.NaoConformidades.Include(item => item.ReclamacaoCliente).Include(item => item.Produto).OrderByDescending(item => item.CriadaEm).ToListAsync());
+    public async Task<IActionResult> Index(string? busca, StatusNaoConformidade? status, ClassificacaoOcorrencia? classificacao, OrigemNaoConformidade? origem, int? produtoId, DateOnly? inicio, DateOnly? fim)
+    {
+        var query = context.NaoConformidades.Include(item => item.ReclamacaoCliente).Include(item => item.Produto).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(busca))
+        {
+            var termo = busca.Trim();
+            query = query.Where(nc => nc.Codigo.Contains(termo) || nc.Area.Contains(termo) ||
+                (nc.Produto != null && nc.Produto.Nome.Contains(termo)) ||
+                (nc.ReclamacaoCliente != null && nc.ReclamacaoCliente.Codigo.Contains(termo)));
+        }
+        if (status.HasValue) query = query.Where(nc => nc.Status == status);
+        if (classificacao.HasValue) query = query.Where(nc => nc.Classificacao == classificacao);
+        if (origem.HasValue) query = query.Where(nc => nc.Origem == origem);
+        if (produtoId.HasValue) query = query.Where(nc => nc.ProdutoId == produtoId);
+        if (inicio.HasValue) query = query.Where(nc => nc.DataAbertura >= inicio);
+        if (fim.HasValue) query = query.Where(nc => nc.DataAbertura <= fim);
+
+        ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(produto => produto.Nome).ToListAsync(), "Id", "Nome", produtoId);
+        return View(await query.OrderByDescending(nc => nc.CriadaEm).ToListAsync());
+    }
 
     public async Task<IActionResult> Create()
     {
@@ -110,6 +129,37 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound();
         if (nc.Status != StatusNaoConformidade.AguardandoAprovacao || !nc.AprovadaRt || !nc.AprovadaGq) { TempData["Error"] = "São necessárias as aprovações de RT e GQ antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
         nc.Status = StatusNaoConformidade.Encerrada; nc.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado"; nc.EncerradaEm = DateTimeOffset.UtcNow; await context.SaveChangesAsync(); TempData["Success"] = "Não Conformidade encerrada."; return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.GarantiaQualidade + "," + Roles.ResponsavelTecnico + "," + Roles.Auditor)]
+    public async Task<IActionResult> Reabrir(NaoConformidadeReaberturaViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Informe uma justificativa de reabertura com pelo menos 10 caracteres.";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
+        }
+
+        var nc = await context.NaoConformidades.FindAsync(model.Id);
+        if (nc is null) return NotFound();
+        if (nc.Status != StatusNaoConformidade.Encerrada)
+        {
+            TempData["Error"] = "Somente Não Conformidade encerrada pode ser reaberta.";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
+        }
+
+        nc.StatusAnteriorReabertura = nc.Status;
+        nc.JustificativaReabertura = model.Justificativa.Trim();
+        nc.UsuarioReabertura = User.Identity?.Name ?? "Usuário autenticado";
+        nc.ReabertaEm = DateTimeOffset.UtcNow;
+        nc.AprovadaRt = false;
+        nc.AprovadaGq = false;
+        nc.Eficaz = null;
+        nc.Status = StatusNaoConformidade.EmInvestigacao;
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Não Conformidade reaberta. Revise a investigação, as ações e a eficácia antes das novas aprovações.";
+        return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     private async Task PopulateProdutos(int? produtoId = null) => ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(item => item.Nome).ToListAsync(), "Id", "Nome", produtoId);

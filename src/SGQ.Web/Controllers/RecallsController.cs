@@ -13,9 +13,25 @@ namespace SGQ.Web.Controllers;
 [Authorize]
 public class RecallsController(ApplicationDbContext context) : Controller
 {
-    public async Task<IActionResult> Index() => View(await context.Recalls
-        .Include(item => item.Produto).Include(item => item.Lote)
-        .OrderByDescending(item => item.CriadaEm).ToListAsync());
+    public async Task<IActionResult> Index(string? busca, StatusRecall? status, DecisaoRecall? decisao, int? produtoId, int? loteId, DateOnly? inicio, DateOnly? fim)
+    {
+        var query = context.Recalls.Include(item => item.Produto).Include(item => item.Lote).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(busca))
+        {
+            var termo = busca.Trim();
+            query = query.Where(recall => recall.Codigo.Contains(termo) || recall.Produto.Nome.Contains(termo) || recall.Lote.Numero.Contains(termo));
+        }
+        if (status.HasValue) query = query.Where(recall => recall.Status == status);
+        if (decisao.HasValue) query = query.Where(recall => recall.Decisao == decisao);
+        if (produtoId.HasValue) query = query.Where(recall => recall.ProdutoId == produtoId);
+        if (loteId.HasValue) query = query.Where(recall => recall.LoteId == loteId);
+        if (inicio.HasValue) query = query.Where(recall => recall.DataAbertura >= inicio);
+        if (fim.HasValue) query = query.Where(recall => recall.DataAbertura <= fim);
+
+        ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(produto => produto.Nome).ToListAsync(), "Id", "Nome", produtoId);
+        ViewBag.Lotes = new SelectList(await context.Lotes.OrderBy(lote => lote.Numero).ToListAsync(), "Id", "Numero", loteId);
+        return View(await query.OrderByDescending(recall => recall.CriadaEm).ToListAsync());
+    }
 
     public async Task<IActionResult> Create()
     {
@@ -145,6 +161,37 @@ public class RecallsController(ApplicationDbContext context) : Controller
         var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound();
         if (recall.Status != StatusRecall.AguardandoEncerramento || !recall.AprovadaRt || !recall.AprovadaGq || recall.ComunicadaAutoridadeEm is null) { TempData["Error"] = "O Recall precisa de aprovações, comunicação regulatória e destinação antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
         recall.Status = StatusRecall.Encerrado; recall.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado"; recall.EncerradaEm = DateTimeOffset.UtcNow; await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.GarantiaQualidade + "," + Roles.ResponsavelTecnico)]
+    public async Task<IActionResult> Reabrir(RecallReaberturaViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Informe o motivo e a justificativa da reabertura (mínimo de 10 caracteres cada).";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
+        }
+
+        var recall = await context.Recalls.FindAsync(model.Id);
+        if (recall is null) return NotFound();
+        if (recall.Status != StatusRecall.Encerrado)
+        {
+            TempData["Error"] = "Somente Recall encerrado pode ser reaberto.";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
+        }
+
+        recall.StatusAnteriorReabertura = recall.Status;
+        recall.MotivoReabertura = model.Motivo.Trim();
+        recall.JustificativaReabertura = model.Justificativa.Trim();
+        recall.UsuarioReabertura = User.Identity?.Name ?? "Usuário autenticado";
+        recall.ReabertaEm = DateTimeOffset.UtcNow;
+        recall.AprovadaRt = false;
+        recall.AprovadaGq = false;
+        recall.Status = StatusRecall.EmAvaliacao;
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Recall reaberto. A avaliação e as aprovações técnicas devem ser realizadas novamente.";
+        return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     private async Task PopulateOptions(int? produtoId = null, int? loteId = null, int? ncId = null, int? rcId = null)

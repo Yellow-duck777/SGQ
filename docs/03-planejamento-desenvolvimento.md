@@ -79,7 +79,7 @@ Implementado:
 - Encerramento formal.
 - Registro de usuário e data de validação/encerramento.
 
-**Status:** fluxo principal concluído; faltam recursos especiais descritos na seção 6.
+**Status:** fluxo principal concluído; reabertura por GQ com justificativa e auditoria foi implementada. Faltam laboratório externo, prorrogação e notificações de eventos do fluxo.
 
 ### 5.3 Não Conformidade
 
@@ -94,7 +94,7 @@ Implementado:
 - Reprovação retorna a NC para tratamento.
 - Encerramento após aprovações necessárias.
 
-**Status:** fluxo principal concluído; faltam notificações, reabertura, laboratório externo e decisão de divergência pelo CQ.
+**Status:** fluxo principal concluído; reabertura com justificativa, auditoria e nova rodada de aprovações foi implementada para NC. Faltam notificações, laboratório externo e decisão de divergência pelo CQ.
 
 ### 5.4 Recall
 
@@ -108,7 +108,7 @@ Implementado:
 - Registro de destinação e evidência.
 - Encerramento condicionado às aprovações, comunicação regulatória e destinação.
 
-**Status:** fluxo principal concluído; faltam reabertura, decisão de divergência pelo CQ e maior detalhamento regulatório.
+**Status:** fluxo principal concluído; reabertura com justificativa, auditoria e nova rodada de aprovações foi implementada para Recall. Faltam decisão de divergência pelo CQ e maior detalhamento regulatório.
 
 ### 5.5 Segurança e governança
 
@@ -177,7 +177,7 @@ Critério de aceite:
 Entregas:
 
 - Laboratório externo para RC e NC, com laudo obrigatório quando utilizado para conclusão.
-- Reabertura de RC, NC e Recall com justificativa e auditoria.
+- Reabertura de RC, NC e Recall com justificativa e auditoria. **Concluído:** Recall pode ser reaberto por GQ ou RT, preservando o número e o encerramento anterior, exigindo motivo e justificativa e reiniciando as aprovações. NC pode ser reaberta por GQ, RT ou Auditor, retorna à investigação e invalida as aprovações anteriores. RC pode ser reaberta pela GQ, retorna à investigação e mantém a NC vinculada.
 - Prorrogação de prazo com motivo, responsável e histórico.
 - Divergência entre RT e GQ encaminhada ao CQ para decisão.
 - Controle de amostras internas, se confirmado como escopo imediato.
@@ -194,8 +194,8 @@ Critério de aceite:
 
 Entregas:
 
-- Pesquisa por código, cliente, produto, lote e período.
-- Filtros por status, classificação, origem, área e responsável.
+- Pesquisa por código, cliente, produto, lote e período. **Concluído para as listagens de RC, NC e Recall:** a busca cobre código e os relacionamentos aplicáveis de cada processo.
+- Filtros por status, classificação, origem, área e responsável. **Concluído parcialmente:** RC, NC e Recall já possuem filtros por status, classificação/decisão, produto, lote (quando aplicável) e período; NC também filtra por origem e a busca cobre a área. Filtro específico de responsável permanece pendente.
 - Navegação entre RC, NC, Recall, lotes e anexos relacionados.
 - Consulta de histórico de auditoria por processo.
 

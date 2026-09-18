@@ -42,6 +42,11 @@ public class Recall
     [StringLength(1000)] public string? EvidenciaDestinacao { get; set; }
     [StringLength(256)] public string? UsuarioEncerramento { get; set; }
     public DateTimeOffset? EncerradaEm { get; set; }
+    public StatusRecall? StatusAnteriorReabertura { get; set; }
+    [StringLength(500)] public string? MotivoReabertura { get; set; }
+    [StringLength(2000)] public string? JustificativaReabertura { get; set; }
+    [StringLength(256)] public string? UsuarioReabertura { get; set; }
+    public DateTimeOffset? ReabertaEm { get; set; }
     [Required, StringLength(256)] public string UsuarioAbertura { get; set; } = string.Empty;
     public DateTimeOffset CriadaEm { get; set; }
     public ICollection<RetornoRecall> Retornos { get; set; } = new List<RetornoRecall>();

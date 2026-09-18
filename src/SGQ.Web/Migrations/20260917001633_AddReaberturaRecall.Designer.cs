@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SGQ.Web.Data;
@@ -11,9 +12,11 @@ using SGQ.Web.Data;
 namespace SGQ.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260917001633_AddReaberturaRecall")]
+    partial class AddReaberturaRecall
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -559,10 +562,6 @@ namespace SGQ.Web.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
-                    b.Property<string>("JustificativaReabertura")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
                     b.Property<string>("MetodoAnalise")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -574,9 +573,6 @@ namespace SGQ.Web.Migrations
                     b.Property<int?>("ProdutoId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset?>("ReabertaEm")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int?>("ReclamacaoClienteId")
                         .HasColumnType("integer");
 
@@ -587,19 +583,12 @@ namespace SGQ.Web.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("StatusAnteriorReabertura")
-                        .HasColumnType("integer");
-
                     b.Property<string>("UsuarioAbertura")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
                     b.Property<string>("UsuarioEncerramento")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("UsuarioReabertura")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
@@ -867,10 +856,6 @@ namespace SGQ.Web.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
-                    b.Property<string>("JustificativaReabertura")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
                     b.Property<string>("LocalAquisicao")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -887,9 +872,6 @@ namespace SGQ.Web.Migrations
                     b.Property<decimal?>("QuantidadeEnvolvida")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTimeOffset?>("ReabertaEm")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("RespostaCliente")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
@@ -904,9 +886,6 @@ namespace SGQ.Web.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("StatusAnteriorReabertura")
-                        .HasColumnType("integer");
-
                     b.Property<string>("TratamentoAplicado")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
@@ -917,10 +896,6 @@ namespace SGQ.Web.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.Property<string>("UsuarioEncerramento")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("UsuarioReabertura")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 

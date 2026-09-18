@@ -45,7 +45,15 @@ Desativar apenas as contas `@sgq.test` que estejam configuradas nos User Secrets
 dotnet run --project src/SGQ.Web -- --remove-test-users
 ```
 
+Redefinir a senha local de uma conta já configurada, sem a exibir no terminal:
+
+```powershell
+dotnet run --project src/SGQ.Web -- --reset-test-user-password <usuario>@sgq.test
+```
+
 O bootstrap é idempotente: se uma conta já existir com exatamente os mesmos perfis, ela é preservada e sua senha não é alterada. Se os perfis forem diferentes, o comando falha e exige desativação explícita antes de recriar a conta.
+
+A redefinição usa exclusivamente a senha já armazenada nos User Secrets, exige o e-mail configurado e invalida as sessões existentes da conta.
 
 O comando de limpeza bloqueia a conta indefinidamente e invalida as sessões ativas. Ele não faz exclusão física, preservando a rastreabilidade de ações registradas na auditoria. Contas fora de `@sgq.test` não são alcançadas pelo comando.
 

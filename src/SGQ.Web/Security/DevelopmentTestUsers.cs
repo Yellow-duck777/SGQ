@@ -25,10 +25,13 @@ public static class DevelopmentTestUsers
 {
     private const string BootstrapArgument = "--bootstrap-test-users";
     private const string RemoveArgument = "--remove-test-users";
+    private const string ResetPasswordArgument = "--reset-test-user-password";
     private const string TestEmailDomain = "@sgq.test";
 
     public static bool HasRequestedOperation(string[] args) =>
-        args.Contains(BootstrapArgument, StringComparer.Ordinal) || args.Contains(RemoveArgument, StringComparer.Ordinal);
+        args.Contains(BootstrapArgument, StringComparer.Ordinal) ||
+        args.Contains(RemoveArgument, StringComparer.Ordinal) ||
+        args.Contains(ResetPasswordArgument, StringComparer.Ordinal);
 
     public static async Task ExecuteAsync(
         string[] args,
@@ -38,15 +41,16 @@ public static class DevelopmentTestUsers
     {
         var bootstrap = args.Contains(BootstrapArgument, StringComparer.Ordinal);
         var remove = args.Contains(RemoveArgument, StringComparer.Ordinal);
-        if (bootstrap == remove)
-            throw new InvalidOperationException($"Informe exatamente uma operação: {BootstrapArgument} ou {RemoveArgument}.");
+        var resetPassword = args.Contains(ResetPasswordArgument, StringComparer.Ordinal);
+        if (new[] { bootstrap, remove, resetPassword }.Count(requested => requested) != 1)
+            throw new InvalidOperationException($"Informe exatamente uma operação: {BootstrapArgument}, {RemoveArgument} ou {ResetPasswordArgument} <e-mail>.");
 
         if (!environment.IsDevelopment())
             throw new InvalidOperationException("Usuários de teste só podem ser gerenciados no ambiente Development.");
 
         var options = configuration.GetSection(DevelopmentTestUsersOptions.SectionName).Get<DevelopmentTestUsersOptions>()
             ?? new DevelopmentTestUsersOptions();
-        ValidateOptions(options, bootstrap);
+        ValidateOptions(options, bootstrap || resetPassword);
 
         await using var scope = services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -62,8 +66,10 @@ public static class DevelopmentTestUsers
 
         if (bootstrap)
             await BootstrapAsync(options.Users, userManager, roleManager);
-        else
+        else if (remove)
             await DisableAsync(options.Users, userManager);
+        else
+            await ResetPasswordAsync(GetResetEmail(args), options.Users, userManager);
     }
 
     private static async Task BootstrapAsync(
@@ -108,6 +114,29 @@ public static class DevelopmentTestUsers
                 EnsureSuccess(await userManager.UpdateSecurityStampAsync(user), $"Não foi possível invalidar sessões do usuário de teste {email}");
             }
         }
+    }
+
+    private static async Task ResetPasswordAsync(
+        string email,
+        IEnumerable<DevelopmentTestUserOptions> configuredUsers,
+        UserManager<ApplicationUser> userManager)
+    {
+        var configuredUser = configuredUsers.SingleOrDefault(user => string.Equals(user.Email.Trim(), email, StringComparison.OrdinalIgnoreCase));
+        if (configuredUser is null)
+            throw new InvalidOperationException("O e-mail informado não está entre as contas de teste configuradas nos User Secrets.");
+
+        var user = await userManager.FindByEmailAsync(email)
+            ?? throw new InvalidOperationException("A conta de teste não existe. Execute o bootstrap antes de redefinir a senha.");
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        EnsureSuccess(await userManager.ResetPasswordAsync(user, token, configuredUser.Password), "Não foi possível redefinir a senha da conta de teste");
+    }
+
+    private static string GetResetEmail(string[] args)
+    {
+        var index = Array.FindIndex(args, argument => string.Equals(argument, ResetPasswordArgument, StringComparison.Ordinal));
+        if (index < 0 || index == args.Length - 1 || args[index + 1].StartsWith("--", StringComparison.Ordinal))
+            throw new InvalidOperationException($"Informe o e-mail: {ResetPasswordArgument} <e-mail@sgq.test>.");
+        return args[index + 1].Trim();
     }
 
     private static void ValidateOptions(DevelopmentTestUsersOptions options, bool requiresPasswords)

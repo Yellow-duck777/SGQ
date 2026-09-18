@@ -81,6 +81,16 @@ public class ReclamacaoCliente
 
     public DateTimeOffset? EncerradaEm { get; set; }
 
+    public StatusReclamacao? StatusAnteriorReabertura { get; set; }
+
+    [StringLength(2000)]
+    public string? JustificativaReabertura { get; set; }
+
+    [StringLength(256)]
+    public string? UsuarioReabertura { get; set; }
+
+    public DateTimeOffset? ReabertaEm { get; set; }
+
     public StatusReclamacao Status { get; set; } = StatusReclamacao.Rascunho;
 
     [Required]

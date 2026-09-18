@@ -14,13 +14,28 @@ namespace SGQ.Web.Controllers;
 [Authorize]
 public class ReclamacoesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
 {
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? busca, StatusReclamacao? status, ClassificacaoOcorrencia? classificacao, int? produtoId, DateOnly? inicio, DateOnly? fim)
     {
-        var reclamacoes = await context.ReclamacoesClientes
+        var query = context.ReclamacoesClientes
             .Include(reclamacao => reclamacao.Cliente)
             .Include(reclamacao => reclamacao.Produto)
-            .OrderByDescending(reclamacao => reclamacao.CriadaEm)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(busca))
+        {
+            var termo = busca.Trim();
+            query = query.Where(reclamacao => reclamacao.Codigo.Contains(termo) ||
+                reclamacao.Cliente.Nome.Contains(termo) || reclamacao.Produto.Nome.Contains(termo) ||
+                reclamacao.Lotes.Any(lote => lote.Lote.Numero.Contains(termo)));
+        }
+        if (status.HasValue) query = query.Where(reclamacao => reclamacao.Status == status);
+        if (classificacao.HasValue) query = query.Where(reclamacao => reclamacao.Classificacao == classificacao);
+        if (produtoId.HasValue) query = query.Where(reclamacao => reclamacao.ProdutoId == produtoId);
+        if (inicio.HasValue) query = query.Where(reclamacao => reclamacao.DataRecebimento >= inicio);
+        if (fim.HasValue) query = query.Where(reclamacao => reclamacao.DataRecebimento <= fim);
+
+        ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(produto => produto.Nome).ToListAsync(), nameof(Produto.Id), nameof(Produto.Nome), produtoId);
+        var reclamacoes = await query.OrderByDescending(reclamacao => reclamacao.CriadaEm).ToListAsync();
 
         return View(reclamacoes);
     }
@@ -189,6 +204,35 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         await context.SaveChangesAsync();
         TempData["Success"] = "Reclamação encerrada pela GQ.";
         return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.GestaoQualidade)]
+    public async Task<IActionResult> Reabrir(ReclamacaoReaberturaViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Informe uma justificativa de reabertura com pelo menos 10 caracteres.";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
+        }
+
+        var reclamacao = await context.ReclamacoesClientes.FindAsync(model.Id);
+        if (reclamacao is null) return NotFound();
+        if (reclamacao.Status != StatusReclamacao.Encerrada)
+        {
+            TempData["Error"] = "Somente reclamação encerrada pode ser reaberta.";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
+        }
+
+        reclamacao.StatusAnteriorReabertura = reclamacao.Status;
+        reclamacao.JustificativaReabertura = model.Justificativa.Trim();
+        reclamacao.UsuarioReabertura = User.Identity?.Name ?? "Usuário autenticado";
+        reclamacao.ReabertaEm = DateTimeOffset.UtcNow;
+        reclamacao.Status = StatusReclamacao.EmInvestigacao;
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Reclamação reaberta. Registre uma nova conclusão antes do encerramento pela GQ.";
+        return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     private async Task PopulateOptions(int? selectedCliente = null, int? selectedProduto = null, IEnumerable<int>? selectedLotes = null)

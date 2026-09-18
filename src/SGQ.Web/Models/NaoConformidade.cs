@@ -44,6 +44,10 @@ public class NaoConformidade
     public bool AprovadaGq { get; set; }
     [StringLength(256)] public string? UsuarioEncerramento { get; set; }
     public DateTimeOffset? EncerradaEm { get; set; }
+    public StatusNaoConformidade? StatusAnteriorReabertura { get; set; }
+    [StringLength(2000)] public string? JustificativaReabertura { get; set; }
+    [StringLength(256)] public string? UsuarioReabertura { get; set; }
+    public DateTimeOffset? ReabertaEm { get; set; }
 
     public StatusNaoConformidade Status { get; set; } = StatusNaoConformidade.EmInvestigacao;
 
