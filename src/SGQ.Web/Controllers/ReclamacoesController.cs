@@ -186,6 +186,27 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SolicitarLaboratorio(SolicitarLaboratorioExternoViewModel model)
+    {
+        if (!ModelState.IsValid) return RedirectToAction(nameof(Details), new { id = model.Id });
+        var item = await context.ReclamacoesClientes.FindAsync(model.Id); if (item is null) return NotFound();
+        if (item.Status != StatusReclamacao.EmInvestigacao) return RedirectToAction(nameof(Details), new { id = model.Id });
+        item.LaboratorioExterno = model.Laboratorio.Trim(); item.DataEnvioAmostraLaboratorio = model.DataEnvioAmostra; item.LaudoLaboratorioAnexoId = null; item.Status = StatusReclamacao.AguardandoLaboratorioExterno;
+        await context.SaveChangesAsync(); TempData["Success"] = "Laboratório externo solicitado."; return RedirectToAction(nameof(Details), new { id = model.Id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegistrarResultadoLaboratorio(ResultadoLaboratorioExternoViewModel model)
+    {
+        if (!ModelState.IsValid) return RedirectToAction(nameof(Details), new { id = model.Id });
+        var item = await context.ReclamacoesClientes.FindAsync(model.Id); if (item is null) return NotFound();
+        var laudoValido = item.LaudoLaboratorioAnexoId.HasValue && await context.Anexos.AnyAsync(a => a.Id == item.LaudoLaboratorioAnexoId && a.ReclamacaoClienteId == item.Id && a.Critico && a.Ativo);
+        if (item.Status != StatusReclamacao.AguardandoLaboratorioExterno || !laudoValido) { TempData["Error"] = "Envie o laudo como anexo crítico antes de registrar o resultado."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
+        item.DataRecebimentoResultadoLaboratorio = model.DataRecebimento; item.IdentificacaoLaudoLaboratorio = model.IdentificacaoLaudo.Trim(); item.ResultadoLaboratorio = model.Resultado.Trim(); item.Status = StatusReclamacao.EmInvestigacao;
+        await context.SaveChangesAsync(); TempData["Success"] = "Resultado laboratorial registrado. A reclamação voltou para investigação."; return RedirectToAction(nameof(Details), new { id = model.Id });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.GestaoQualidade)]
@@ -193,7 +214,8 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
     {
         var reclamacao = await context.ReclamacoesClientes.FindAsync(id);
         if (reclamacao is null) return NotFound();
-        if (reclamacao.Status != StatusReclamacao.AguardandoConclusao || reclamacao.Resultado is null || string.IsNullOrWhiteSpace(reclamacao.RespostaCliente))
+        var laudoValido = string.IsNullOrWhiteSpace(reclamacao.LaboratorioExterno) || (reclamacao.LaudoLaboratorioAnexoId.HasValue && await context.Anexos.AnyAsync(a => a.Id == reclamacao.LaudoLaboratorioAnexoId && a.ReclamacaoClienteId == id && a.Critico && a.Ativo));
+        if (reclamacao.Status != StatusReclamacao.AguardandoConclusao || reclamacao.Resultado is null || string.IsNullOrWhiteSpace(reclamacao.RespostaCliente) || !laudoValido)
         {
             TempData["Error"] = "Registre a conclusão e a resposta ao cliente antes do encerramento.";
             return RedirectToAction(nameof(Details), new { id });

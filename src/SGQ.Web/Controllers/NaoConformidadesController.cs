@@ -80,6 +80,27 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SolicitarLaboratorio(SolicitarLaboratorioExternoViewModel model)
+    {
+        if (!ModelState.IsValid) return RedirectToAction(nameof(Details), new { id = model.Id });
+        var item = await context.NaoConformidades.FindAsync(model.Id); if (item is null) return NotFound();
+        if (item.Status != StatusNaoConformidade.EmInvestigacao) return RedirectToAction(nameof(Details), new { id = model.Id });
+        item.LaboratorioExterno = model.Laboratorio.Trim(); item.DataEnvioAmostraLaboratorio = model.DataEnvioAmostra; item.LaudoLaboratorioAnexoId = null; item.Status = StatusNaoConformidade.AguardandoLaboratorioExterno;
+        await context.SaveChangesAsync(); TempData["Success"] = "Laboratório externo solicitado."; return RedirectToAction(nameof(Details), new { id = model.Id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegistrarResultadoLaboratorio(ResultadoLaboratorioExternoViewModel model)
+    {
+        if (!ModelState.IsValid) return RedirectToAction(nameof(Details), new { id = model.Id });
+        var item = await context.NaoConformidades.FindAsync(model.Id); if (item is null) return NotFound();
+        var laudoValido = item.LaudoLaboratorioAnexoId.HasValue && await context.Anexos.AnyAsync(a => a.Id == item.LaudoLaboratorioAnexoId && a.NaoConformidadeId == item.Id && a.Critico && a.Ativo);
+        if (item.Status != StatusNaoConformidade.AguardandoLaboratorioExterno || !laudoValido) { TempData["Error"] = "Envie o laudo como anexo crítico antes de registrar o resultado."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
+        item.DataRecebimentoResultadoLaboratorio = model.DataRecebimento; item.IdentificacaoLaudoLaboratorio = model.IdentificacaoLaudo.Trim(); item.ResultadoLaboratorio = model.Resultado.Trim(); item.Status = StatusNaoConformidade.EmInvestigacao;
+        await context.SaveChangesAsync(); TempData["Success"] = "Resultado laboratorial registrado. A NC voltou para investigação."; return RedirectToAction(nameof(Details), new { id = model.Id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AdicionarAcao(AcaoNaoConformidadeViewModel model)
     {
         if (!ModelState.IsValid) return RedirectToAction(nameof(Details), new { id = model.NaoConformidadeId });
@@ -127,7 +148,8 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     public async Task<IActionResult> Encerrar(int id)
     {
         var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound();
-        if (nc.Status != StatusNaoConformidade.AguardandoAprovacao || !nc.AprovadaRt || !nc.AprovadaGq) { TempData["Error"] = "São necessárias as aprovações de RT e GQ antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
+        var laudoValido = string.IsNullOrWhiteSpace(nc.LaboratorioExterno) || (nc.LaudoLaboratorioAnexoId.HasValue && await context.Anexos.AnyAsync(a => a.Id == nc.LaudoLaboratorioAnexoId && a.NaoConformidadeId == id && a.Critico && a.Ativo));
+        if (nc.Status != StatusNaoConformidade.AguardandoAprovacao || !nc.AprovadaRt || !nc.AprovadaGq || !laudoValido) { TempData["Error"] = "São necessárias as aprovações e, quando aplicável, um laudo crítico ativo antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
         nc.Status = StatusNaoConformidade.Encerrada; nc.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado"; nc.EncerradaEm = DateTimeOffset.UtcNow; await context.SaveChangesAsync(); TempData["Success"] = "Não Conformidade encerrada."; return RedirectToAction(nameof(Details), new { id });
     }
 

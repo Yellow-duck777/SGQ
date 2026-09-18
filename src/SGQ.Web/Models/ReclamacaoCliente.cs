@@ -90,6 +90,12 @@ public class ReclamacaoCliente
     public string? UsuarioReabertura { get; set; }
 
     public DateTimeOffset? ReabertaEm { get; set; }
+    [StringLength(200)] public string? LaboratorioExterno { get; set; }
+    public DateOnly? DataEnvioAmostraLaboratorio { get; set; }
+    public DateOnly? DataRecebimentoResultadoLaboratorio { get; set; }
+    [StringLength(200)] public string? IdentificacaoLaudoLaboratorio { get; set; }
+    [StringLength(4000)] public string? ResultadoLaboratorio { get; set; }
+    public int? LaudoLaboratorioAnexoId { get; set; }
 
     public StatusReclamacao Status { get; set; } = StatusReclamacao.Rascunho;
 

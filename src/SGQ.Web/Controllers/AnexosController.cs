@@ -13,7 +13,7 @@ public class AnexosController(ApplicationDbContext context, IWebHostEnvironment 
     private static readonly HashSet<string> ExtensoesPermitidas = [".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt", ".eml", ".msg", ".mp4"];
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Enviar(IFormFile arquivo, string processo, int id, string? descricao, bool critico)
+    public async Task<IActionResult> Enviar(IFormFile arquivo, string processo, int id, string? descricao, bool critico, bool laudoLaboratorio = false)
     {
         if (arquivo is null || arquivo.Length == 0 || arquivo.Length > 25 * 1024 * 1024 || !ExtensoesPermitidas.Contains(Path.GetExtension(arquivo.FileName).ToLowerInvariant()))
         { TempData["Error"] = "Arquivo inválido. São aceitos os formatos definidos, com até 25 MB."; return RedirectToAction("Details", processo, new { id }); }
@@ -24,7 +24,16 @@ public class AnexosController(ApplicationDbContext context, IWebHostEnvironment 
         else return BadRequest();
         var directory = Path.Combine(environment.ContentRootPath, "App_Data", "uploads"); Directory.CreateDirectory(directory);
         await using var stream = System.IO.File.Create(Path.Combine(directory, anexo.NomeArmazenado)); await arquivo.CopyToAsync(stream);
-        context.Anexos.Add(anexo); await context.SaveChangesAsync(); TempData["Success"] = "Anexo enviado.";
+        anexo.Critico |= laudoLaboratorio;
+        context.Anexos.Add(anexo); await context.SaveChangesAsync();
+        if (laudoLaboratorio || critico)
+        {
+            if (processo == "Reclamacoes") { var item = await context.ReclamacoesClientes.FindAsync(id); if (item is null || item.Status != StatusReclamacao.AguardandoLaboratorioExterno) return BadRequest(); item.LaudoLaboratorioAnexoId = anexo.Id; }
+            else if (processo == "NaoConformidades") { var item = await context.NaoConformidades.FindAsync(id); if (item is null || item.Status != StatusNaoConformidade.AguardandoLaboratorioExterno) return BadRequest(); item.LaudoLaboratorioAnexoId = anexo.Id; }
+            else return BadRequest();
+            await context.SaveChangesAsync();
+        }
+        TempData["Success"] = laudoLaboratorio ? "Laudo crítico enviado. Registre o resultado para retomar a investigação." : "Anexo enviado.";
         return RedirectToAction("Details", processo, new { id });
     }
 

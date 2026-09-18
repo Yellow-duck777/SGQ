@@ -48,6 +48,12 @@ public class NaoConformidade
     [StringLength(2000)] public string? JustificativaReabertura { get; set; }
     [StringLength(256)] public string? UsuarioReabertura { get; set; }
     public DateTimeOffset? ReabertaEm { get; set; }
+    [StringLength(200)] public string? LaboratorioExterno { get; set; }
+    public DateOnly? DataEnvioAmostraLaboratorio { get; set; }
+    public DateOnly? DataRecebimentoResultadoLaboratorio { get; set; }
+    [StringLength(200)] public string? IdentificacaoLaudoLaboratorio { get; set; }
+    [StringLength(4000)] public string? ResultadoLaboratorio { get; set; }
+    public int? LaudoLaboratorioAnexoId { get; set; }
 
     public StatusNaoConformidade Status { get; set; } = StatusNaoConformidade.EmInvestigacao;
 
