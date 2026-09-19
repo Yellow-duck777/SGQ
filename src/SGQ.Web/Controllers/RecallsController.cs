@@ -111,11 +111,33 @@ public class RecallsController(ApplicationDbContext context) : Controller
     {
         var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound();
         if (recall.Status != StatusRecall.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
-        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) recall.AprovadaRt = true;
-        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) recall.AprovadaGq = true;
+        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { recall.AprovadaRt = true; recall.ReprovadaRt = false; }
+        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { recall.AprovadaGq = true; recall.ReprovadaGq = false; }
         else return Forbid();
-        if (recall.AprovadaRt && recall.AprovadaGq) recall.Status = StatusRecall.EmRecolhimento;
+        if ((recall.AprovadaRt && recall.ReprovadaGq) || (recall.AprovadaGq && recall.ReprovadaRt)) recall.Status = StatusRecall.AguardandoDecisaoCq;
+        else if (recall.AprovadaRt && recall.AprovadaGq) recall.Status = StatusRecall.EmRecolhimento;
         await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
+    public async Task<IActionResult> Reprovar(int id, string perfil)
+    {
+        var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound(); if (recall.Status != StatusRecall.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
+        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { recall.ReprovadaRt = true; recall.AprovadaRt = false; }
+        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { recall.ReprovadaGq = true; recall.AprovadaGq = false; }
+        else return Forbid();
+        recall.Status = (recall.ReprovadaRt && recall.AprovadaGq) || (recall.ReprovadaGq && recall.AprovadaRt) ? StatusRecall.AguardandoDecisaoCq : StatusRecall.EmAvaliacao;
+        await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ControleQualidade + "," + Roles.Administrador)]
+    public async Task<IActionResult> DecidirDivergencia(int id, bool favoravel, string justificativa)
+    {
+        var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound();
+        if (recall.Status != StatusRecall.AguardandoDecisaoCq || string.IsNullOrWhiteSpace(justificativa) || justificativa.Trim().Length < 10) { TempData["Error"] = "A decisão do CQ requer justificativa de ao menos 10 caracteres."; return RedirectToAction(nameof(Details), new { id }); }
+        recall.DecisaoCq = favoravel ? StatusDecisaoCq.Favoravel : StatusDecisaoCq.Desfavoravel; recall.JustificativaDecisaoCq = justificativa.Trim(); recall.UsuarioDecisaoCq = User.Identity?.Name ?? "Usuário autenticado"; recall.DecididaPeloCqEm = DateTimeOffset.UtcNow;
+        recall.Status = favoravel ? StatusRecall.EmRecolhimento : StatusRecall.EmAvaliacao;
+        await context.SaveChangesAsync(); TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; o Recall segue para recolhimento." : "Decisão desfavorável do CQ registrada; o Recall voltou para avaliação."; return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]

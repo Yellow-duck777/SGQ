@@ -141,16 +141,33 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     public async Task<IActionResult> Aprovar(int id, string perfil)
     {
         var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound(); if (nc.Status != StatusNaoConformidade.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
-        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) nc.AprovadaRt = true;
-        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) nc.AprovadaGq = true;
+        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { nc.AprovadaRt = true; nc.ReprovadaRt = false; }
+        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { nc.AprovadaGq = true; nc.ReprovadaGq = false; }
         else return Forbid();
+        if ((nc.AprovadaRt && nc.ReprovadaGq) || (nc.AprovadaGq && nc.ReprovadaRt)) nc.Status = StatusNaoConformidade.AguardandoDecisaoCq;
         await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Reprovar(int id)
+    [Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
+    public async Task<IActionResult> Reprovar(int id, string perfil)
     {
-        var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound(); nc.AprovadaRt = false; nc.AprovadaGq = false; nc.Status = StatusNaoConformidade.EmTratamento; await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+        var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound(); if (nc.Status != StatusNaoConformidade.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
+        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { nc.ReprovadaRt = true; nc.AprovadaRt = false; }
+        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { nc.ReprovadaGq = true; nc.AprovadaGq = false; }
+        else return Forbid();
+        nc.Status = (nc.ReprovadaRt && nc.AprovadaGq) || (nc.ReprovadaGq && nc.AprovadaRt) ? StatusNaoConformidade.AguardandoDecisaoCq : StatusNaoConformidade.EmTratamento;
+        await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ControleQualidade + "," + Roles.Administrador)]
+    public async Task<IActionResult> DecidirDivergencia(int id, bool favoravel, string justificativa)
+    {
+        var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound();
+        if (nc.Status != StatusNaoConformidade.AguardandoDecisaoCq || string.IsNullOrWhiteSpace(justificativa) || justificativa.Trim().Length < 10) { TempData["Error"] = "A decisão do CQ requer justificativa de ao menos 10 caracteres."; return RedirectToAction(nameof(Details), new { id }); }
+        nc.DecisaoCq = favoravel ? StatusDecisaoCq.Favoravel : StatusDecisaoCq.Desfavoravel; nc.JustificativaDecisaoCq = justificativa.Trim(); nc.UsuarioDecisaoCq = User.Identity?.Name ?? "Usuário autenticado"; nc.DecididaPeloCqEm = DateTimeOffset.UtcNow;
+        nc.Status = favoravel ? StatusNaoConformidade.AguardandoAprovacao : StatusNaoConformidade.EmTratamento;
+        await context.SaveChangesAsync(); TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; a NC pode ser encerrada pela GQ." : "Decisão desfavorável do CQ registrada; a NC retornou para tratamento."; return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -159,7 +176,7 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     {
         var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound();
         var laudoValido = string.IsNullOrWhiteSpace(nc.LaboratorioExterno) || (nc.LaudoLaboratorioAnexoId.HasValue && await context.Anexos.AnyAsync(a => a.Id == nc.LaudoLaboratorioAnexoId && a.NaoConformidadeId == id && a.Critico && a.Ativo));
-        if (nc.Status != StatusNaoConformidade.AguardandoAprovacao || !nc.AprovadaRt || !nc.AprovadaGq || !laudoValido) { TempData["Error"] = "São necessárias as aprovações e, quando aplicável, um laudo crítico ativo antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
+        if (nc.Status != StatusNaoConformidade.AguardandoAprovacao || (!(nc.AprovadaRt && nc.AprovadaGq) && nc.DecisaoCq != StatusDecisaoCq.Favoravel) || !laudoValido) { TempData["Error"] = "São necessárias as aprovações ou decisão favorável do CQ e, quando aplicável, um laudo crítico ativo antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
         nc.Status = StatusNaoConformidade.Encerrada; nc.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado"; nc.EncerradaEm = DateTimeOffset.UtcNow; await context.SaveChangesAsync(); TempData["Success"] = "Não Conformidade encerrada."; return RedirectToAction(nameof(Details), new { id });
     }
 

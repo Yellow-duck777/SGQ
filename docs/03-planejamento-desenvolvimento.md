@@ -176,10 +176,10 @@ Critério de aceite:
 
 Entregas:
 
-- Laboratório externo para RC e NC, com laudo obrigatório quando utilizado para conclusão.
+- Laboratório externo para RC e NC, com laudo crítico obrigatório quando utilizado para conclusão. **Concluído:** solicitação, envio da amostra, anexo do laudo, resultado e retorno à investigação.
 - Reabertura de RC, NC e Recall com justificativa e auditoria. **Concluído:** Recall pode ser reaberto por GQ ou RT, preservando o número e o encerramento anterior, exigindo motivo e justificativa e reiniciando as aprovações. NC pode ser reaberta por GQ, RT ou Auditor, retorna à investigação e invalida as aprovações anteriores. RC pode ser reaberta pela GQ, retorna à investigação e mantém a NC vinculada.
-- Prorrogação de prazo com motivo, responsável e histórico.
-- Divergência entre RT e GQ encaminhada ao CQ para decisão.
+- Prorrogação de prazo com motivo, responsável e histórico. **Concluído:** RC, NC e Recall exigem motivo, preservam a data anterior e registram responsável e comunicação ao cliente.
+- Divergência entre RT e GQ encaminhada ao CQ para decisão. **Concluído:** nas aprovações de NC e Recall, pareceres opostos encaminham o processo ao CQ; a decisão fundamentada fica rastreada e determina o prosseguimento ou retorno ao tratamento/avaliação.
 - Controle de amostras internas, se confirmado como escopo imediato.
 
 Critério de aceite:
@@ -244,8 +244,8 @@ Critério de aceite:
 | 1 | Aplicar migrações e validar ambiente local | PostgreSQL configurado | Pendente |
 | 2 | Datas-alvo na interface e calendário | Etapa 1 | Concluído em código (migração pendente de aplicação) |
 | 3 | Alertas e notificações | Etapa 2 | Alertas de prazo concluídos em código; notificações dos eventos de fluxo pendentes |
-| 4 | Laboratório, reabertura e prorrogação | Etapa 1 | Pendente |
-| 5 | Divergência e decisão do CQ | Perfis ativos | Pendente |
+| 4 | Laboratório, reabertura e prorrogação | Etapa 1 | Concluído em código (migrações pendentes de aplicação) |
+| 5 | Divergência e decisão do CQ | Perfis ativos | Concluído em código (migração pendente de aplicação) |
 | 6 | Pesquisa e filtros | Etapa 1 | Pendente |
 | 7 | Relatórios e exportações | Pesquisa/filtros | Pendente |
 | 8 | Vínculos múltiplos de anexos | Anexos atuais | Pendente |

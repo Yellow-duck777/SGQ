@@ -42,6 +42,12 @@ public class NaoConformidade
     public bool? Eficaz { get; set; }
     public bool AprovadaRt { get; set; }
     public bool AprovadaGq { get; set; }
+    public bool ReprovadaRt { get; set; }
+    public bool ReprovadaGq { get; set; }
+    public StatusDecisaoCq? DecisaoCq { get; set; }
+    [StringLength(2000)] public string? JustificativaDecisaoCq { get; set; }
+    [StringLength(256)] public string? UsuarioDecisaoCq { get; set; }
+    public DateTimeOffset? DecididaPeloCqEm { get; set; }
     [StringLength(256)] public string? UsuarioEncerramento { get; set; }
     public DateTimeOffset? EncerradaEm { get; set; }
     public StatusNaoConformidade? StatusAnteriorReabertura { get; set; }

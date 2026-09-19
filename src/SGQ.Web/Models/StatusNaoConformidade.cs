@@ -5,6 +5,7 @@ public enum StatusNaoConformidade
     EmInvestigacao,
     EmTratamento,
     AguardandoAprovacao,
+    AguardandoDecisaoCq,
     AguardandoLaboratorioExterno,
     Encerrada
 }

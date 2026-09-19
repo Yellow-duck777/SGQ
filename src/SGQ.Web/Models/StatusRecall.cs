@@ -4,6 +4,7 @@ public enum StatusRecall
 {
     EmAvaliacao,
     AguardandoAprovacao,
+    AguardandoDecisaoCq,
     EmRecolhimento,
     AguardandoRetorno,
     EmAvaliacaoDeDestinacao,
