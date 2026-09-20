@@ -13,7 +13,7 @@ namespace SGQ.Web.Controllers;
 [Authorize]
 public class RecallsController(ApplicationDbContext context) : Controller
 {
-    public async Task<IActionResult> Index(string? busca, StatusRecall? status, DecisaoRecall? decisao, int? produtoId, int? loteId, DateOnly? inicio, DateOnly? fim)
+    public async Task<IActionResult> Index(string? busca, StatusRecall? status, DecisaoRecall? decisao, int? produtoId, int? loteId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
         var query = context.Recalls.Include(item => item.Produto).Include(item => item.Lote).AsQueryable();
         if (!string.IsNullOrWhiteSpace(busca))
@@ -25,6 +25,11 @@ public class RecallsController(ApplicationDbContext context) : Controller
         if (decisao.HasValue) query = query.Where(recall => recall.Decisao == decisao);
         if (produtoId.HasValue) query = query.Where(recall => recall.ProdutoId == produtoId);
         if (loteId.HasValue) query = query.Where(recall => recall.LoteId == loteId);
+        if (!string.IsNullOrWhiteSpace(responsavel))
+        {
+            var termo = responsavel.Trim();
+            query = query.Where(recall => recall.UsuarioAbertura.Contains(termo));
+        }
         if (inicio.HasValue) query = query.Where(recall => recall.DataAbertura >= inicio);
         if (fim.HasValue) query = query.Where(recall => recall.DataAbertura <= fim);
 

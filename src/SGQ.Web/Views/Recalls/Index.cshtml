@@ -8,6 +8,7 @@
         <div class="col-md-2"><label class="form-label" for="decisao">Decisão</label><select class="form-select" id="decisao" name="decisao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.DecisaoRecall>()) { <option value="@item" selected="@(Context.Request.Query["decisao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
         <div class="col-md-2"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
         <div class="col-md-3"><label class="form-label" for="loteId">Lote</label><select class="form-select" id="loteId" name="loteId" asp-items="ViewBag.Lotes"><option value="">Todos</option></select></div>
+        <div class="col-md-2"><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Usuário de abertura" /></div>
         <div class="col-md-2"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
         <div class="col-md-2"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Context.Request.Query["fim"]" /></div>
     </div>

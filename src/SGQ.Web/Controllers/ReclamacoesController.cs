@@ -14,7 +14,7 @@ namespace SGQ.Web.Controllers;
 [Authorize]
 public class ReclamacoesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
 {
-    public async Task<IActionResult> Index(string? busca, StatusReclamacao? status, ClassificacaoOcorrencia? classificacao, int? produtoId, DateOnly? inicio, DateOnly? fim)
+    public async Task<IActionResult> Index(string? busca, StatusReclamacao? status, ClassificacaoOcorrencia? classificacao, int? produtoId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
         var query = context.ReclamacoesClientes
             .Include(reclamacao => reclamacao.Cliente)
@@ -31,6 +31,11 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         if (status.HasValue) query = query.Where(reclamacao => reclamacao.Status == status);
         if (classificacao.HasValue) query = query.Where(reclamacao => reclamacao.Classificacao == classificacao);
         if (produtoId.HasValue) query = query.Where(reclamacao => reclamacao.ProdutoId == produtoId);
+        if (!string.IsNullOrWhiteSpace(responsavel))
+        {
+            var termo = responsavel.Trim();
+            query = query.Where(reclamacao => reclamacao.UsuarioAbertura.Contains(termo));
+        }
         if (inicio.HasValue) query = query.Where(reclamacao => reclamacao.DataRecebimento >= inicio);
         if (fim.HasValue) query = query.Where(reclamacao => reclamacao.DataRecebimento <= fim);
 

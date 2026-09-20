@@ -14,7 +14,7 @@ namespace SGQ.Web.Controllers;
 [Authorize]
 public class NaoConformidadesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
 {
-    public async Task<IActionResult> Index(string? busca, StatusNaoConformidade? status, ClassificacaoOcorrencia? classificacao, OrigemNaoConformidade? origem, int? produtoId, DateOnly? inicio, DateOnly? fim)
+    public async Task<IActionResult> Index(string? busca, StatusNaoConformidade? status, ClassificacaoOcorrencia? classificacao, OrigemNaoConformidade? origem, int? produtoId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
         var query = context.NaoConformidades.Include(item => item.ReclamacaoCliente).Include(item => item.Produto).AsQueryable();
         if (!string.IsNullOrWhiteSpace(busca))
@@ -28,6 +28,12 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         if (classificacao.HasValue) query = query.Where(nc => nc.Classificacao == classificacao);
         if (origem.HasValue) query = query.Where(nc => nc.Origem == origem);
         if (produtoId.HasValue) query = query.Where(nc => nc.ProdutoId == produtoId);
+        if (!string.IsNullOrWhiteSpace(responsavel))
+        {
+            var termo = responsavel.Trim();
+            query = query.Where(nc => nc.UsuarioAbertura.Contains(termo) ||
+                nc.Acoes.Any(acao => acao.Responsavel.Contains(termo)));
+        }
         if (inicio.HasValue) query = query.Where(nc => nc.DataAbertura >= inicio);
         if (fim.HasValue) query = query.Where(nc => nc.DataAbertura <= fim);
 
