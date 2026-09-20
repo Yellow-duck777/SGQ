@@ -16,3 +16,4 @@
 @if (Model.DecididaPeloCqEm.HasValue) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Decisão do CQ</h2><p class="mb-1">@Model.DecisaoCq — @Model.JustificativaDecisaoCq</p><p class="mb-0 text-muted">Por @Model.UsuarioDecisaoCq em @Model.DecididaPeloCqEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p></section> }
 <partial name="_Anexos" model='("Recalls", Model.Id)' />
 <partial name="_ProrrogacaoPrazo" model='("Prorrogar", Model.Id, Model.DataAlvo)' />
+<partial name="_HistoricoAuditoria" model='(IEnumerable<SGQ.Web.Models.HistoricoAuditoria>)ViewBag.HistoricoAuditoria' />

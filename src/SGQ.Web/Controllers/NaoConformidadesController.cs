@@ -66,6 +66,10 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         var nc = await context.NaoConformidades.Include(item => item.ReclamacaoCliente).Include(item => item.Produto).Include(item => item.Acoes).SingleOrDefaultAsync(item => item.Id == id);
         if (nc is null) return NotFound();
         ViewBag.Anexos = await context.Anexos.Where(item => item.NaoConformidadeId == id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
+        ViewBag.HistoricoAuditoria = await context.HistoricosAuditoria
+            .Where(item => item.Entidade == nameof(NaoConformidade) && item.ChaveRegistro == id.ToString())
+            .OrderByDescending(item => item.OcorridaEm)
+            .ToListAsync();
         return View(nc);
     }
 

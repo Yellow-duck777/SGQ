@@ -120,6 +120,10 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
 
         if (reclamacao is null) return NotFound();
         ViewBag.Anexos = await context.Anexos.Where(item => item.ReclamacaoClienteId == id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
+        ViewBag.HistoricoAuditoria = await context.HistoricosAuditoria
+            .Where(item => item.Entidade == nameof(ReclamacaoCliente) && item.ChaveRegistro == id.ToString())
+            .OrderByDescending(item => item.OcorridaEm)
+            .ToListAsync();
         return View(reclamacao);
     }
 

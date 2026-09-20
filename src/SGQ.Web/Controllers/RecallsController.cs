@@ -93,6 +93,10 @@ public class RecallsController(ApplicationDbContext context) : Controller
             .SingleOrDefaultAsync(item => item.Id == id);
         if (recall is null) return NotFound();
         ViewBag.Anexos = await context.Anexos.Where(item => item.RecallId == id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
+        ViewBag.HistoricoAuditoria = await context.HistoricosAuditoria
+            .Where(item => item.Entidade == nameof(Recall) && item.ChaveRegistro == id.ToString())
+            .OrderByDescending(item => item.OcorridaEm)
+            .ToListAsync();
         return View(recall);
     }
 

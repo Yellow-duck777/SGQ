@@ -197,7 +197,7 @@ Entregas:
 - Pesquisa por código, cliente, produto, lote e período. **Concluído para as listagens de RC, NC e Recall:** a busca cobre código e os relacionamentos aplicáveis de cada processo.
 - Filtros por status, classificação, origem, área e responsável. **Concluído parcialmente:** RC, NC e Recall já possuem filtros por status, classificação/decisão, produto, lote (quando aplicável) e período; NC também filtra por origem e a busca cobre a área. Filtro específico de responsável permanece pendente.
 - Navegação entre RC, NC, Recall, lotes e anexos relacionados.
-- Consulta de histórico de auditoria por processo.
+- Consulta de histórico de auditoria por processo. **Concluído:** RC, NC e Recall exibem as alterações, usuário e data/hora do registro.
 
 Critério de aceite:
 
