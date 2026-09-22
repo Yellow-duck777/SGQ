@@ -1,8 +1,8 @@
 # Visão do Produto
 
-## Nome provisório
+## Nome
 
-SGQ - Sistema de Gestão da Qualidade
+SGQ — Sistema de Gestão da Qualidade
 
 ## Objetivo
 
@@ -66,6 +66,6 @@ O sistema deverá possuir:
 
 ## Situação atual
 
-O projeto está em fase de consolidação e validação dos requisitos. A fundação técnica da aplicação já foi iniciada, incluindo autenticação e cadastros básicos iniciais.
+Autenticação, cadastros básicos e abertura de RC como rascunho possuem implementação parcial. Perfis, permissões, auditoria, anexos, fluxos completos, testes e preparação de produção ainda fazem parte do roadmap.
 
-O MVP contemplará os processos de Reclamação de Cliente, Não Conformidade e Recall, com rastreabilidade, auditoria, anexos, aprovações, prazos calculados em dias úteis, notificações por e-mail, dashboard e relatórios definidos para o MVP.
+O MVP planejado contempla Reclamação de Cliente, Não Conformidade e Recall com rastreabilidade, auditoria, anexos, aprovações, prazos em dias úteis, notificações por e-mail, dashboard e relatórios. A situação verificável de cada item fica na [matriz de rastreabilidade](matriz-rastreabilidade.md).
