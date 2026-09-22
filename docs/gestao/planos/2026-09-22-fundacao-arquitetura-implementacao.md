@@ -37,7 +37,7 @@
 - Consome: documentação versionada e interface autenticada já verificadas.
 - Produz: uma única branch-base limpa para todas as tarefas seguintes.
 
-- [ ] **Passo 1: confirmar que as branches de origem estão limpas**
+- [x] **Passo 1: confirmar que as branches de origem estão limpas**
 
 ```powershell
 git -C C:\laragon\www\sis_cris status --short
@@ -46,7 +46,7 @@ git -C C:\laragon\www\sis_cris-ui status --short
 
 Esperado: nenhuma saída em ambas.
 
-- [ ] **Passo 2: criar a branch a partir da documentação**
+- [x] **Passo 2: criar a branch a partir da documentação**
 
 ```powershell
 git -C C:\laragon\www\sis_cris worktree add `
@@ -55,9 +55,9 @@ git -C C:\laragon\www\sis_cris worktree add `
   docs/fundacao-governanca
 ```
 
-Esperado: worktree criada no commit `3a9bfd5`, que já contém o plano de implementação.
+Esperado: worktree criada no commit `f05c292`, que já contém o plano de implementação corrigido.
 
-- [ ] **Passo 3: integrar o frontend aprovado**
+- [x] **Passo 3: integrar o frontend aprovado**
 
 ```powershell
 git -C C:\laragon\www\sis_cris-foundation cherry-pick bdaa9f4
@@ -65,7 +65,7 @@ git -C C:\laragon\www\sis_cris-foundation cherry-pick bdaa9f4
 
 Esperado: cherry-pick sem conflito, preservando a mensagem `feat(ui): redesenhar login e área autenticada`.
 
-- [ ] **Passo 4: restaurar e compilar a baseline**
+- [x] **Passo 4: restaurar e compilar a baseline**
 
 ```powershell
 $env:DOTNET_ROOT = "$env:LOCALAPPDATA\SGQ\dotnet"
@@ -76,7 +76,7 @@ dotnet build SGQ.slnx --no-restore
 
 Esperado: build concluído com zero erro e zero warning.
 
-- [ ] **Passo 5: confirmar o histórico integrado**
+- [x] **Passo 5: confirmar o histórico integrado**
 
 ```powershell
 git log --oneline --decorate -3
@@ -106,7 +106,7 @@ Esperado: commits documental e visual no histórico; worktree limpa. Não criar 
 - Consome: .NET 10 e `SGQ.Web` existentes.
 - Produz: assemblies `SGQ.Domain`, `SGQ.Application` e `SGQ.Infrastructure` referenciáveis pelas tarefas seguintes.
 
-- [ ] **Passo 1: criar as regras compartilhadas**
+- [x] **Passo 1: criar as regras compartilhadas**
 
 Adicionar `Directory.Build.props`:
 
@@ -121,7 +121,7 @@ Adicionar `Directory.Build.props`:
 </Project>
 ```
 
-- [ ] **Passo 2: criar o projeto Domain sem dependências**
+- [x] **Passo 2: criar o projeto Domain sem dependências**
 
 Adicionar `src/SGQ.Domain/SGQ.Domain.csproj`:
 
@@ -143,7 +143,7 @@ public static class DomainAssembly
 }
 ```
 
-- [ ] **Passo 3: criar o projeto Application dependente somente de Domain**
+- [x] **Passo 3: criar o projeto Application dependente somente de Domain**
 
 Adicionar `src/SGQ.Application/SGQ.Application.csproj`:
 
@@ -168,7 +168,7 @@ public static class ApplicationAssembly
 }
 ```
 
-- [ ] **Passo 4: criar Infrastructure dependente de Application**
+- [x] **Passo 4: criar Infrastructure dependente de Application**
 
 Adicionar `src/SGQ.Infrastructure/SGQ.Infrastructure.csproj`:
 
@@ -193,7 +193,7 @@ public static class InfrastructureAssembly
 }
 ```
 
-- [ ] **Passo 5: referenciar as camadas no projeto Web**
+- [x] **Passo 5: referenciar as camadas no projeto Web**
 
 Manter os `PackageReference` atuais e adicionar em `src/SGQ.Web/SGQ.Web.csproj`:
 
@@ -204,7 +204,7 @@ Manter os `PackageReference` atuais e adicionar em `src/SGQ.Web/SGQ.Web.csproj`:
 </ItemGroup>
 ```
 
-- [ ] **Passo 6: registrar os projetos na solução**
+- [x] **Passo 6: registrar os projetos na solução**
 
 Atualizar `SGQ.slnx` para:
 
@@ -219,7 +219,7 @@ Atualizar `SGQ.slnx` para:
 </Solution>
 ```
 
-- [ ] **Passo 7: restaurar e compilar**
+- [x] **Passo 7: restaurar e compilar**
 
 ```powershell
 dotnet restore SGQ.slnx
@@ -228,7 +228,7 @@ dotnet build SGQ.slnx --no-restore
 
 Esperado: quatro projetos compilados; zero erro e zero warning.
 
-- [ ] **Passo 8: criar o commit local**
+- [x] **Passo 8: criar o commit local**
 
 ```powershell
 git add -- Directory.Build.props SGQ.slnx src/SGQ.Domain src/SGQ.Application src/SGQ.Infrastructure src/SGQ.Web/SGQ.Web.csproj
@@ -250,7 +250,7 @@ git commit -m "refactor(arquitetura): cria fronteiras do monólito"
 - Consome: propriedades `DomainAssembly.Reference`, `ApplicationAssembly.Reference` e `InfrastructureAssembly.Reference`.
 - Produz: testes que falham quando uma camada passa a referenciar uma camada proibida.
 
-- [ ] **Passo 1: gerar o projeto xUnit com as versões do template .NET 10 instalado**
+- [x] **Passo 1: gerar o projeto xUnit com as versões do template .NET 10 instalado**
 
 ```powershell
 dotnet new xunit --framework net10.0 --output tests/SGQ.ArchitectureTests
@@ -261,7 +261,7 @@ dotnet add tests/SGQ.ArchitectureTests/SGQ.ArchitectureTests.csproj reference sr
 
 Remover o arquivo `UnitTest1.cs` gerado pelo template.
 
-- [ ] **Passo 2: escrever inicialmente um teste com uma dependência proibida para provar a proteção**
+- [x] **Passo 2: escrever inicialmente um teste com uma dependência proibida para provar a proteção**
 
 Adicionar temporariamente a `ProjectDependencyTests.cs`:
 
@@ -284,7 +284,7 @@ public class ProjectDependencyTests
 
 Executar `dotnet test tests/SGQ.ArchitectureTests/SGQ.ArchitectureTests.csproj` e confirmar falha em `Assert.Contains`. Depois substituir pelo conteúdo definitivo do passo seguinte.
 
-- [ ] **Passo 3: escrever os testes definitivos**
+- [x] **Passo 3: escrever os testes definitivos**
 
 Adicionar `tests/SGQ.ArchitectureTests/ProjectDependencyTests.cs`:
 
@@ -337,7 +337,7 @@ public class ProjectDependencyTests
 }
 ```
 
-- [ ] **Passo 4: adicionar o projeto à solução**
+- [x] **Passo 4: adicionar o projeto à solução**
 
 Adicionar ao `SGQ.slnx`:
 
@@ -347,7 +347,7 @@ Adicionar ao `SGQ.slnx`:
 </Folder>
 ```
 
-- [ ] **Passo 5: executar o teste**
+- [x] **Passo 5: executar o teste**
 
 ```powershell
 dotnet test tests/SGQ.ArchitectureTests/SGQ.ArchitectureTests.csproj
@@ -355,7 +355,7 @@ dotnet test tests/SGQ.ArchitectureTests/SGQ.ArchitectureTests.csproj
 
 Esperado: três testes aprovados.
 
-- [ ] **Passo 6: criar o commit local**
+- [x] **Passo 6: criar o commit local**
 
 ```powershell
 git add -- SGQ.slnx tests/SGQ.ArchitectureTests
@@ -380,7 +380,7 @@ git commit -m "test(arquitetura): protege dependências entre camadas"
 - Consome: propriedades e relacionamentos existentes sem alterar assinaturas.
 - Produz: entidades em `SGQ.Domain.Entities` e enums em `SGQ.Domain.Enums`.
 
-- [ ] **Passo 1: adicionar a referência direta e temporária de Web para Domain**
+- [x] **Passo 1: adicionar a referência direta e temporária de Web para Domain**
 
 Adicionar ao grupo de referências de `src/SGQ.Web/SGQ.Web.csproj`:
 
@@ -390,7 +390,7 @@ Adicionar ao grupo de referências de `src/SGQ.Web/SGQ.Web.csproj`:
 
 Essa referência é temporariamente aceita porque controllers, EF e views ainda consomem os modelos diretamente; será removida quando os casos de uso migrarem para `Application`.
 
-- [ ] **Passo 2: mover as entidades preservando todo o conteúdo**
+- [x] **Passo 2: mover as entidades preservando todo o conteúdo**
 
 Em cada entidade, alterar somente o namespace:
 
@@ -406,7 +406,7 @@ using SGQ.Domain.Enums;
 
 Não alterar propriedades, validações, valores padrão ou relacionamentos nesta tarefa.
 
-- [ ] **Passo 3: mover os enums preservando membros e valores**
+- [x] **Passo 3: mover os enums preservando membros e valores**
 
 Em cada enum, alterar somente o namespace:
 
@@ -414,7 +414,7 @@ Em cada enum, alterar somente o namespace:
 namespace SGQ.Domain.Enums;
 ```
 
-- [ ] **Passo 4: atualizar consumidores C#**
+- [x] **Passo 4: atualizar consumidores C#**
 
 Substituir `using SGQ.Web.Models;` pelos imports específicos abaixo quando aplicável:
 
@@ -425,7 +425,7 @@ using SGQ.Domain.Enums;
 
 Manter `ApplicationUser` e `ErrorViewModel` em `SGQ.Web.Models`; arquivos que usam esses tipos continuam importando esse namespace.
 
-- [ ] **Passo 5: atualizar Razor**
+- [x] **Passo 5: atualizar Razor**
 
 Adicionar a `src/SGQ.Web/Views/_ViewImports.cshtml`:
 
@@ -443,7 +443,7 @@ Alterar declarações totalmente qualificadas, por exemplo:
 
 Não alterar `_LoginPartial.cshtml`, `_Layout.cshtml` ou imports de Identity que usam `ApplicationUser`.
 
-- [ ] **Passo 6: alinhar somente o snapshot atual**
+- [x] **Passo 6: alinhar somente o snapshot atual**
 
 Em `ApplicationDbContextModelSnapshot.cs`, substituir:
 
@@ -458,7 +458,7 @@ SGQ.Web.Models.NaoConformidade         → SGQ.Domain.Entities.NaoConformidade
 
 Não alterar `SGQ.Web.Models.ApplicationUser` nem os arquivos de migrations históricas.
 
-- [ ] **Passo 7: comprovar que o modelo não gerou mudança física**
+- [x] **Passo 7: comprovar que o modelo não gerou mudança física**
 
 ```powershell
 dotnet build SGQ.slnx --no-restore
@@ -469,7 +469,7 @@ dotnet ef migrations has-pending-model-changes `
 
 Esperado: build verde e mensagem informando que nenhuma alteração de modelo foi encontrada.
 
-- [ ] **Passo 8: executar todos os testes**
+- [x] **Passo 8: executar todos os testes**
 
 ```powershell
 dotnet test SGQ.slnx --no-build
@@ -477,7 +477,7 @@ dotnet test SGQ.slnx --no-build
 
 Esperado: três testes arquiteturais aprovados.
 
-- [ ] **Passo 9: criar o commit local**
+- [x] **Passo 9: criar o commit local**
 
 ```powershell
 git add -- src/SGQ.Domain src/SGQ.Web tests/SGQ.ArchitectureTests
@@ -499,7 +499,7 @@ git commit -m "refactor(dominio): move modelos operacionais para Domain"
 - Consome: solução modular compilável e frontend integrado.
 - Produz: evidências de execução e escopo preciso para o plano seguinte.
 
-- [ ] **Passo 1: executar a aplicação em porta isolada**
+- [x] **Passo 1: executar a aplicação em porta isolada**
 
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT = "Development"
@@ -510,7 +510,7 @@ dotnet run --no-build `
 
 Esperado: aplicação ouvindo em `http://localhost:5026`.
 
-- [ ] **Passo 2: verificar o redirecionamento anônimo**
+- [x] **Passo 2: verificar o redirecionamento anônimo**
 
 ```powershell
 curl.exe -I http://localhost:5026
@@ -518,7 +518,7 @@ curl.exe -I http://localhost:5026
 
 Esperado: `HTTP/1.1 302 Found` e `Location: /Identity/Account/Login`.
 
-- [ ] **Passo 3: executar o roteiro no navegador**
+- [x] **Passo 3: executar o roteiro no navegador**
 
 Verificar com dados sintéticos:
 
@@ -535,7 +535,7 @@ login
 
 Esperado: nenhuma exceção, link quebrado ou erro de console.
 
-- [ ] **Passo 4: atualizar a visão arquitetural**
+- [x] **Passo 4: atualizar a visão arquitetural**
 
 Registrar em `visao-geral.md`:
 
@@ -545,11 +545,11 @@ Registrar em `visao-geral.md`:
 - referência temporária `Web → Domain`;
 - próxima fatia: contratos de casos de uso e persistência em `Infrastructure`.
 
-- [ ] **Passo 5: atualizar backlog e daily**
+- [x] **Passo 5: atualizar backlog e daily**
 
 Marcar `DEM-2026-002` como `Implementado` somente para a fatia descrita e criar demanda separada para retirar o acesso direto dos controllers ao EF Core. Registrar comandos, resultados, riscos e evidência do navegador na daily.
 
-- [ ] **Passo 6: validação final**
+- [x] **Passo 6: validação final**
 
 ```powershell
 dotnet build SGQ.slnx --no-restore
@@ -560,14 +560,14 @@ git status --short
 
 Esperado: build e testes verdes; nenhuma inconsistência de whitespace; somente os três documentos desta tarefa pendentes.
 
-- [ ] **Passo 7: criar o commit local**
+- [x] **Passo 7: criar o commit local**
 
 ```powershell
 git add -- docs/arquitetura/visao-geral.md docs/gestao/backlog.md docs/gestao/dailies/2026/09/2026-09-22-fundacao-arquitetura.md
 git commit -m "docs(arquitetura): registra primeira separação de camadas"
 ```
 
-- [ ] **Passo 8: revisar a branch**
+- [x] **Passo 8: revisar a branch**
 
 ```powershell
 git log --oneline --decorate docs/fundacao-governanca..HEAD
