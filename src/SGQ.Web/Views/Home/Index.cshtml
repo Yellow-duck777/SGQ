@@ -1,38 +1,75 @@
-﻿@{
-    ViewData["Title"] = "Início";
+@model SGQ.Web.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Visão geral";
 }
 
-<section class="dashboard-hero" aria-labelledby="welcome-title">
+<section class="dashboard-intro">
     <div>
-        <p class="eyebrow">Sistema de Gestão da Qualidade</p>
-        <h1 id="welcome-title">Qualidade com rastreabilidade em cada etapa.</h1>
-        <p>Registre ocorrências, acompanhe o tratamento e mantenha as evidências organizadas em um único lugar.</p>
-        <div class="d-flex flex-wrap gap-2 mt-4">
-            <a class="btn btn-primary" asp-controller="Reclamacoes" asp-action="Create">Registrar reclamação</a>
-            <a class="btn btn-outline-primary" asp-controller="Reclamacoes" asp-action="Index">Ver processos</a>
+        <p class="eyebrow">Centro de controle</p>
+        <h1>Bom trabalho, <span>Administrador.</span></h1>
+        <p>Acompanhe o cenário da qualidade e avance nos processos que exigem atenção.</p>
+    </div>
+    <a class="btn btn-primary btn-action" asp-controller="Reclamacoes" asp-action="Create"><span aria-hidden="true">＋</span> Nova reclamação</a>
+</section>
+
+<section class="metric-grid" aria-label="Indicadores operacionais">
+    <article class="metric-card metric-card-accent">
+        <div class="metric-top"><span class="metric-code">RC</span><span class="metric-state">Em acompanhamento</span></div>
+        <strong>@Model.ReclamacoesAbertas</strong><p>Reclamações abertas</p><a asp-controller="Reclamacoes" asp-action="Index">Ver processos <span>→</span></a>
+    </article>
+    <article class="metric-card">
+        <div class="metric-top"><span class="metric-code">NC</span><span class="metric-state">Tratamento</span></div>
+        <strong>@Model.NaoConformidadesAbertas</strong><p>Não conformidades abertas</p><a asp-controller="NaoConformidades" asp-action="Index">Acompanhar NCs <span>→</span></a>
+    </article>
+    <article class="metric-card">
+        <div class="metric-top"><span class="metric-code">CL</span><span class="metric-state is-neutral">Base atual</span></div>
+        <strong>@Model.ClientesAtivos</strong><p>Clientes cadastrados</p><a asp-controller="Clientes" asp-action="Index">Gerenciar clientes <span>→</span></a>
+    </article>
+    <article class="metric-card">
+        <div class="metric-top"><span class="metric-code">PD</span><span class="metric-state is-neutral">@Model.LotesCadastrados lotes</span></div>
+        <strong>@Model.ProdutosCadastrados</strong><p>Produtos cadastrados</p><a asp-controller="Produtos" asp-action="Index">Consultar produtos <span>→</span></a>
+    </article>
+</section>
+
+<div class="dashboard-grid">
+    <section class="panel recent-panel" aria-labelledby="recent-title">
+        <div class="panel-heading">
+            <div><p class="eyebrow">Movimentação recente</p><h2 id="recent-title">Últimas reclamações</h2></div>
+            <a asp-controller="Reclamacoes" asp-action="Index">Ver todas</a>
         </div>
-    </div>
-    <div class="hero-status" aria-label="Resumo do ambiente">
-        <span class="hero-status-dot" aria-hidden="true"></span>
-        <strong>Ambiente operacional</strong>
-        <span>Cadastros e abertura de RC disponíveis</span>
-    </div>
-</section>
+        @if (Model.ReclamacoesRecentes.Count == 0)
+        {
+            <div class="empty-state"><span>RC</span><h3>Nenhuma reclamação registrada</h3><p>Quando um processo for aberto, ele aparecerá aqui para acompanhamento.</p><a class="btn btn-primary" asp-controller="Reclamacoes" asp-action="Create">Registrar a primeira</a></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table app-table">
+                    <thead><tr><th>Processo</th><th>Cliente / Produto</th><th>Status</th><th>Abertura</th><th><span class="visually-hidden">Ação</span></th></tr></thead>
+                    <tbody>
+                    @foreach (var item in Model.ReclamacoesRecentes)
+                    {
+                        <tr>
+                            <td><a class="process-code" asp-controller="Reclamacoes" asp-action="Details" asp-route-id="@item.Id">@item.Codigo</a></td>
+                            <td><strong>@item.Cliente</strong><small>@item.Produto</small></td>
+                            <td><span class="status-pill">@item.Status</span></td>
+                            <td>@item.CriadaEm.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td><a class="table-action" asp-controller="Reclamacoes" asp-action="Details" asp-route-id="@item.Id" aria-label="Abrir @item.Codigo">→</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
 
-<section class="dashboard-section" aria-labelledby="shortcuts-title">
-    <div class="section-heading"><div><p class="eyebrow">Acesso rápido</p><h2 id="shortcuts-title">Comece por aqui</h2></div></div>
-    <div class="row g-3">
-        <div class="col-md-4"><a class="module-card module-card-primary" asp-controller="Reclamacoes" asp-action="Create"><span class="module-icon">RC</span><h3>Nova reclamação</h3><p>Registre uma ocorrência e relacione cliente, produto e lotes.</p><span class="module-link">Abrir cadastro →</span></a></div>
-        <div class="col-md-4"><a class="module-card" asp-controller="NaoConformidades" asp-action="Index"><span class="module-icon">NC</span><h3>Não conformidades</h3><p>Acompanhe investigações, ações e aprovações técnicas.</p><span class="module-link">Ver registros →</span></a></div>
-        <div class="col-md-4"><a class="module-card" asp-controller="Produtos" asp-action="Index"><span class="module-icon">CB</span><h3>Cadastros básicos</h3><p>Mantenha clientes, produtos e lotes prontos para uso.</p><span class="module-link">Gerenciar cadastros →</span></a></div>
-    </div>
-</section>
-
-<section class="dashboard-section" aria-labelledby="flow-title">
-    <div class="section-heading"><div><p class="eyebrow">Fluxo do SGQ</p><h2 id="flow-title">Como os processos se conectam</h2></div></div>
-    <ol class="process-flow">
-        <li><span>1</span><div><strong>Reclamação</strong><small>Registro e validação pela GQ</small></div></li>
-        <li><span>2</span><div><strong>Não Conformidade</strong><small>Investigação, ações e eficácia</small></div></li>
-        <li><span>3</span><div><strong>Recall</strong><small>Avaliação e recolhimento quando aplicável</small></div></li>
-    </ol>
-</section>
+    <aside class="panel quick-panel" aria-labelledby="quick-title">
+        <div class="panel-heading"><div><p class="eyebrow">Atalhos</p><h2 id="quick-title">Acesso rápido</h2></div></div>
+        <div class="quick-links">
+            <a asp-controller="Clientes" asp-action="Create"><span class="quick-icon">CL</span><span><strong>Novo cliente</strong><small>Adicionar à base</small></span><b>→</b></a>
+            <a asp-controller="Produtos" asp-action="Create"><span class="quick-icon">PR</span><span><strong>Novo produto</strong><small>Preparar cadastro</small></span><b>→</b></a>
+            <a asp-controller="Lotes" asp-action="Create"><span class="quick-icon">LT</span><span><strong>Novo lote</strong><small>Vincular ao produto</small></span><b>→</b></a>
+        </div>
+        <div class="roadmap-note"><span>Próxima etapa</span><strong>Fluxos completos de aprovação</strong><p>Perfis, auditoria e MFA entram nas próximas entregas técnicas.</p></div>
+    </aside>
+</div>
