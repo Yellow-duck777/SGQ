@@ -27,7 +27,7 @@
 
 **Arquivos:**
 
-- Consumir commit documental: `dfb2348`
+- Consumir commits documentais: `dfb2348` e `3a9bfd5`
 - Consumir commit visual: `bdaa9f4`
 - Criar worktree: `C:\laragon\www\sis_cris-foundation`
 - Criar branch: `refactor/fundacao-arquitetura`
@@ -55,7 +55,7 @@ git -C C:\laragon\www\sis_cris worktree add `
   docs/fundacao-governanca
 ```
 
-Esperado: worktree criada no commit `dfb2348`.
+Esperado: worktree criada no commit `3a9bfd5`, que já contém o plano de implementação.
 
 - [ ] **Passo 3: integrar o frontend aprovado**
 
