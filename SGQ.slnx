@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/SGQ.Application/SGQ.Application.csproj" />
+    <Project Path="src/SGQ.Domain/SGQ.Domain.csproj" />
+    <Project Path="src/SGQ.Infrastructure/SGQ.Infrastructure.csproj" />
     <Project Path="src/SGQ.Web/SGQ.Web.csproj" />
   </Folder>
 </Solution>

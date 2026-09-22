@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\SGQ.Application\SGQ.Application.csproj" />
+  </ItemGroup>
+</Project>
