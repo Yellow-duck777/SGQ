@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using SGQ.Domain.Enums;
 
-namespace SGQ.Web.Models;
+namespace SGQ.Domain.Entities;
 
 public class ReclamacaoCliente
 {

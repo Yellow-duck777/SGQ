@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SGQ.Application\SGQ.Application.csproj" />
+    <ProjectReference Include="..\SGQ.Domain\SGQ.Domain.csproj" />
     <ProjectReference Include="..\SGQ.Infrastructure\SGQ.Infrastructure.csproj" />
   </ItemGroup>
 

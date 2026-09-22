@@ -1,4 +1,4 @@
-using SGQ.Web.Models;
+using SGQ.Domain.Enums;
 
 namespace SGQ.Web.ViewModels;
 

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SGQ.Web.Models;
+namespace SGQ.Domain.Entities;
 
 public class Produto
 {

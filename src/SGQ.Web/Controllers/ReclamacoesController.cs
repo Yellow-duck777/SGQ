@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SGQ.Domain.Entities;
 using SGQ.Web.Data;
-using SGQ.Web.Models;
 using SGQ.Web.ViewModels;
 
 namespace SGQ.Web.Controllers;

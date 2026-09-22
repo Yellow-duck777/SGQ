@@ -1,4 +1,4 @@
-namespace SGQ.Web.Models;
+namespace SGQ.Domain.Entities;
 
 public class ReclamacaoClienteLote
 {
