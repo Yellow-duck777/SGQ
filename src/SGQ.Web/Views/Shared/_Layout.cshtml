@@ -27,6 +27,10 @@
                         <li class="nav-item"><a class="nav-link" asp-controller="Reclamacoes" asp-action="Index">Reclamações</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="NaoConformidades" asp-action="Index">Não Conformidades</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Recalls" asp-action="Index">Recalls</a></li>
+                        @if (User.IsInRole("Administrador") || User.IsInRole("GQ") || User.IsInRole("Auditor"))
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Relatorios" asp-action="Index">Relatórios</a></li>
+                        }
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastros</a>
                             <ul class="dropdown-menu">

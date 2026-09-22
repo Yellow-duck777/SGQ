@@ -246,8 +246,8 @@ Critério de aceite:
 | 3 | Alertas e notificações | Etapa 2 | Alertas de prazo concluídos em código; notificações dos eventos de fluxo pendentes |
 | 4 | Laboratório, reabertura e prorrogação | Etapa 1 | Concluído em código (migrações pendentes de aplicação) |
 | 5 | Divergência e decisão do CQ | Perfis ativos | Concluído em código (migração pendente de aplicação) |
-| 6 | Pesquisa e filtros | Etapa 1 | Pendente |
-| 7 | Relatórios e exportações | Pesquisa/filtros | Pendente |
+| 6 | Pesquisa e filtros | Etapa 1 | Concluído em código |
+| 7 | Relatórios e exportações | Pesquisa/filtros | Concluído em código: relatório de processos e exportações CSV, XLSX e PDF |
 | 8 | Vínculos múltiplos de anexos | Anexos atuais | Pendente |
 | 9 | Testes ponta a ponta e revisão de segurança | Todas as anteriores | Pendente |
 
@@ -290,3 +290,18 @@ O MVP estará pronto para validação quando:
 - Prazos e alertas funcionarem conforme regras definidas.
 - Pesquisa, filtros e relatórios básicos estiverem disponíveis.
 - Todas as migrações estiverem aplicadas e o ambiente estiver validado com testes de fluxo.
+
+---
+
+## 11. Checklist obrigatório de pré-entrega
+
+Executar este checklist imediatamente antes da entrega/implantação:
+
+- [ ] Alterar a senha do usuário de banco `sgq_app`.
+- [ ] Confirmar que a aplicação não utiliza o usuário `postgres`.
+- [ ] Desativar `DevelopmentTestUsers`.
+- [ ] Remover ou invalidar contas e senhas de teste.
+- [ ] Criar os usuários reais.
+- [ ] Verificar que nenhuma senha está no código-fonte ou em `appsettings.json`.
+- [ ] Confirmar a existência e a recuperação possível de um backup do banco.
+- [ ] Testar login e conexão com o banco após a troca de credenciais.

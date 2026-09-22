@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.Security;
 using SGQ.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 if (builder.Environment.IsDevelopment())
 {
