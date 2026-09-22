@@ -32,6 +32,7 @@ Este diretório é a fonte versionada de produto, arquitetura, desenvolvimento, 
 - [Roadmap](gestao/roadmap.md)
 - [Backlog](gestao/backlog.md)
 - [Desenho do programa de evolução](gestao/planos/2026-09-22-evolucao-completa-sgq-design.md)
+- [Implementação da fundação arquitetural](gestao/planos/2026-09-22-fundacao-arquitetura-implementacao.md)
 - [Template de daily](gestao/dailies/TEMPLATE.md)
 
 ## Qualidade
