@@ -5,4 +5,7 @@
     <Project Path="src/SGQ.Infrastructure/SGQ.Infrastructure.csproj" />
     <Project Path="src/SGQ.Web/SGQ.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SGQ.ArchitectureTests/SGQ.ArchitectureTests.csproj" />
+  </Folder>
 </Solution>
