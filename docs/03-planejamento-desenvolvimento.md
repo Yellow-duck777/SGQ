@@ -227,9 +227,9 @@ Critério de aceite:
 
 Entregas:
 
-- Criar vínculos múltiplos para o mesmo anexo entre RC, NC e Recall.
-- Exibir todos os processos relacionados a uma evidência.
-- Manter regras de acesso e anulação lógica centralizadas.
+- Criar vínculos múltiplos para o mesmo anexo entre RC, NC e Recall. **Concluído em código:** o vínculo referencia o arquivo já armazenado, sem cópia física.
+- Exibir todos os processos relacionados a uma evidência. **Concluído em código:** cada anexo mostra sua origem e todos os vínculos adicionais.
+- Manter regras de acesso e anulação lógica centralizadas. **Concluído em código:** o vínculo e a anulação são restritos à GQ/Administrador.
 
 Critério de aceite:
 
@@ -248,8 +248,8 @@ Critério de aceite:
 | 5 | Divergência e decisão do CQ | Perfis ativos | Concluído em código (migração pendente de aplicação) |
 | 6 | Pesquisa e filtros | Etapa 1 | Concluído em código |
 | 7 | Relatórios e exportações | Pesquisa/filtros | Concluído em código: relatório de processos e exportações CSV, XLSX e PDF |
-| 8 | Vínculos múltiplos de anexos | Anexos atuais | Pendente |
-| 9 | Testes ponta a ponta e revisão de segurança | Todas as anteriores | Pendente |
+| 8 | Vínculos múltiplos de anexos | Anexos atuais | Concluído em código (migração pendente de aplicação) |
+| 9 | Testes ponta a ponta e revisão de segurança | Todas as anteriores | Em andamento: proteção antiforgery global aplicada e quatro testes automatizados aprovados para prazos e vínculos de anexos; validação ponta a ponta depende do banco configurado |
 
 ---
 

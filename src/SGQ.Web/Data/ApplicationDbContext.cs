@@ -23,6 +23,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RetornoRecall> RetornosRecall => Set<RetornoRecall>();
     public DbSet<HistoricoAuditoria> HistoricosAuditoria => Set<HistoricoAuditoria>();
     public DbSet<Anexo> Anexos => Set<Anexo>();
+    public DbSet<AnexoProcessoVinculo> AnexosProcessosVinculos => Set<AnexoProcessoVinculo>();
     public DbSet<DiaNaoUtil> DiasNaoUteis => Set<DiaNaoUtil>();
     public DbSet<AlertaEnviado> AlertasEnviados => Set<AlertaEnviado>();
     public DbSet<ProrrogacaoPrazo> ProrrogacoesPrazo => Set<ProrrogacaoPrazo>();
@@ -133,9 +134,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         });
         builder.Entity<Anexo>(entity =>
         {
-            entity.HasOne<ReclamacaoCliente>().WithMany().HasForeignKey(item => item.ReclamacaoClienteId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne<NaoConformidade>().WithMany().HasForeignKey(item => item.NaoConformidadeId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne<Recall>().WithMany().HasForeignKey(item => item.RecallId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.ReclamacaoCliente).WithMany().HasForeignKey(item => item.ReclamacaoClienteId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.NaoConformidade).WithMany().HasForeignKey(item => item.NaoConformidadeId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.Recall).WithMany().HasForeignKey(item => item.RecallId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<AnexoProcessoVinculo>(entity =>
+        {
+            entity.ToTable(table => table.HasCheckConstraint("CK_AnexosProcessosVinculos_UmProcesso", "(\"ReclamacaoClienteId\" IS NOT NULL)::integer + (\"NaoConformidadeId\" IS NOT NULL)::integer + (\"RecallId\" IS NOT NULL)::integer = 1"));
+            entity.HasOne(item => item.Anexo).WithMany(anexo => anexo.Vinculos).HasForeignKey(item => item.AnexoId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.ReclamacaoCliente).WithMany().HasForeignKey(item => item.ReclamacaoClienteId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.NaoConformidade).WithMany().HasForeignKey(item => item.NaoConformidadeId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.Recall).WithMany().HasForeignKey(item => item.RecallId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(item => new { item.AnexoId, item.ReclamacaoClienteId }).IsUnique();
+            entity.HasIndex(item => new { item.AnexoId, item.NaoConformidadeId }).IsUnique();
+            entity.HasIndex(item => new { item.AnexoId, item.RecallId }).IsUnique();
         });
         builder.Entity<ProrrogacaoPrazo>(entity =>
         {

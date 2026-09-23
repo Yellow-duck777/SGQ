@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/SGQ.Web/SGQ.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SGQ.Web.Tests/SGQ.Web.Tests.csproj" />
+  </Folder>
 </Solution>

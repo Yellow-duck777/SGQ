@@ -71,13 +71,20 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     {
         var nc = await context.NaoConformidades.Include(item => item.ReclamacaoCliente).Include(item => item.Produto).Include(item => item.Acoes).SingleOrDefaultAsync(item => item.Id == id);
         if (nc is null) return NotFound();
-        ViewBag.Anexos = await context.Anexos.Where(item => item.NaoConformidadeId == id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
+        ViewBag.Anexos = await AnexosDoProcesso(context.Anexos, id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
         ViewBag.HistoricoAuditoria = await context.HistoricosAuditoria
             .Where(item => item.Entidade == nameof(NaoConformidade) && item.ChaveRegistro == id.ToString())
             .OrderByDescending(item => item.OcorridaEm)
             .ToListAsync();
         return View(nc);
     }
+
+    private static IQueryable<Anexo> AnexosDoProcesso(IQueryable<Anexo> anexos, int id) => anexos
+        .Where(item => item.NaoConformidadeId == id || item.Vinculos.Any(vinculo => vinculo.NaoConformidadeId == id))
+        .Include(item => item.ReclamacaoCliente).Include(item => item.NaoConformidade).Include(item => item.Recall)
+        .Include(item => item.Vinculos).ThenInclude(item => item.ReclamacaoCliente)
+        .Include(item => item.Vinculos).ThenInclude(item => item.NaoConformidade)
+        .Include(item => item.Vinculos).ThenInclude(item => item.Recall);
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> RegistrarInvestigacao(int id, string contencao, string investigacao, string causaProvavel, string causaRaiz, string metodoAnalise)

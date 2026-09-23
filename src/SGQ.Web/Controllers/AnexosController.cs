@@ -46,6 +46,48 @@ public class AnexosController(ApplicationDbContext context, IWebHostEnvironment 
 
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.GestaoQualidade)]
+    public async Task<IActionResult> Vincular(int id, string processo, int processoId, string codigoDestino)
+    {
+        var anexo = await context.Anexos.FindAsync(id);
+        if (anexo is null) return NotFound();
+        var codigo = codigoDestino?.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(codigo))
+        {
+            TempData["Error"] = "Informe o código do processo de destino.";
+            return RedirectToAction("Details", processo, new { id = processoId });
+        }
+
+        AnexoProcessoVinculo? vinculo = null;
+        if (codigo.StartsWith("RC-"))
+        {
+            var destino = await context.ReclamacoesClientes.SingleOrDefaultAsync(item => item.Codigo == codigo);
+            if (destino is not null && anexo.ReclamacaoClienteId != destino.Id && !await context.AnexosProcessosVinculos.AnyAsync(item => item.AnexoId == id && item.ReclamacaoClienteId == destino.Id)) vinculo = new AnexoProcessoVinculo { AnexoId = id, ReclamacaoClienteId = destino.Id };
+        }
+        else if (codigo.StartsWith("NC-"))
+        {
+            var destino = await context.NaoConformidades.SingleOrDefaultAsync(item => item.Codigo == codigo);
+            if (destino is not null && anexo.NaoConformidadeId != destino.Id && !await context.AnexosProcessosVinculos.AnyAsync(item => item.AnexoId == id && item.NaoConformidadeId == destino.Id)) vinculo = new AnexoProcessoVinculo { AnexoId = id, NaoConformidadeId = destino.Id };
+        }
+        else if (codigo.StartsWith("REC-"))
+        {
+            var destino = await context.Recalls.SingleOrDefaultAsync(item => item.Codigo == codigo);
+            if (destino is not null && anexo.RecallId != destino.Id && !await context.AnexosProcessosVinculos.AnyAsync(item => item.AnexoId == id && item.RecallId == destino.Id)) vinculo = new AnexoProcessoVinculo { AnexoId = id, RecallId = destino.Id };
+        }
+
+        if (vinculo is null)
+        {
+            TempData["Error"] = "Não foi possível vincular: processo inexistente, tipo inválido ou vínculo já criado.";
+            return RedirectToAction("Details", processo, new { id = processoId });
+        }
+
+        context.AnexosProcessosVinculos.Add(vinculo);
+        await context.SaveChangesAsync();
+        TempData["Success"] = $"Evidência vinculada ao processo {codigo}.";
+        return RedirectToAction("Details", processo, new { id = processoId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.GestaoQualidade)]
     public async Task<IActionResult> Anular(int id, string processo, int processoId, string justificativa)
     {
         var anexo = await context.Anexos.FindAsync(id); if (anexo is null) return NotFound();

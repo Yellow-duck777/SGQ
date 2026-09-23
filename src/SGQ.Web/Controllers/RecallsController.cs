@@ -97,13 +97,20 @@ public class RecallsController(ApplicationDbContext context) : Controller
             .Include(item => item.Retornos)
             .SingleOrDefaultAsync(item => item.Id == id);
         if (recall is null) return NotFound();
-        ViewBag.Anexos = await context.Anexos.Where(item => item.RecallId == id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
+        ViewBag.Anexos = await AnexosDoProcesso(context.Anexos, id).OrderByDescending(item => item.EnviadoEm).ToListAsync();
         ViewBag.HistoricoAuditoria = await context.HistoricosAuditoria
             .Where(item => item.Entidade == nameof(Recall) && item.ChaveRegistro == id.ToString())
             .OrderByDescending(item => item.OcorridaEm)
             .ToListAsync();
         return View(recall);
     }
+
+    private static IQueryable<Anexo> AnexosDoProcesso(IQueryable<Anexo> anexos, int id) => anexos
+        .Where(item => item.RecallId == id || item.Vinculos.Any(vinculo => vinculo.RecallId == id))
+        .Include(item => item.ReclamacaoCliente).Include(item => item.NaoConformidade).Include(item => item.Recall)
+        .Include(item => item.Vinculos).ThenInclude(item => item.ReclamacaoCliente)
+        .Include(item => item.Vinculos).ThenInclude(item => item.NaoConformidade)
+        .Include(item => item.Vinculos).ThenInclude(item => item.Recall);
 
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.GestaoQualidade)]
