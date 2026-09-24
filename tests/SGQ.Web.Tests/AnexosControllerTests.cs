@@ -14,6 +14,40 @@ namespace SGQ.Web.Tests;
 public class AnexosControllerTests
 {
     [Fact]
+    public async Task Enviar_EvidenciaCriticaComum_NaoExigeFluxoDeLaboratorio()
+    {
+        await using var context = CriarContexto();
+        var reclamacao = new ReclamacaoCliente
+        {
+            Codigo = "RC-2026-000001", DataRecebimento = new DateOnly(2026, 9, 22),
+            CanalRecebimento = "E-mail", ContatoCliente = "Contato", ClienteId = 1,
+            ProdutoId = 1, Descricao = "Teste", UsuarioAbertura = "gq"
+        };
+        context.ReclamacoesClientes.Add(reclamacao);
+        await context.SaveChangesAsync();
+
+        var contentRoot = Path.Combine(Path.GetTempPath(), $"sgq-tests-{Guid.NewGuid():N}");
+        var environment = new AmbienteWebTeste { ContentRootPath = contentRoot };
+        try
+        {
+            var controller = CriarController(context, environment);
+            await using var conteudo = new MemoryStream([1, 2, 3]);
+            var arquivo = new FormFile(conteudo, 0, conteudo.Length, "arquivo", "evidencia.pdf") { Headers = new HeaderDictionary(), ContentType = "application/pdf" };
+
+            var resultado = await controller.Enviar(arquivo, "Reclamacoes", reclamacao.Id, null, critico: true);
+
+            Assert.IsType<RedirectToActionResult>(resultado);
+            var anexo = await context.Anexos.SingleAsync();
+            Assert.True(anexo.Critico);
+            Assert.Null(reclamacao.LaudoLaboratorioAnexoId);
+        }
+        finally
+        {
+            if (Directory.Exists(contentRoot)) Directory.Delete(contentRoot, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Vincular_CriaVinculoParaProcessoDeDestino_EImpedeDuplicidade()
     {
         await using var context = CriarContexto();
@@ -34,13 +68,13 @@ public class AnexosControllerTests
         Assert.Single(await context.AnexosProcessosVinculos.Where(item => item.AnexoId == anexo.Id && item.NaoConformidadeId == naoConformidade.Id).ToListAsync());
     }
 
-    private static AnexosController CriarController(ApplicationDbContext context)
+    private static AnexosController CriarController(ApplicationDbContext context, IWebHostEnvironment? environment = null)
     {
         var httpContext = new DefaultHttpContext
         {
             User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "gq"), new Claim(ClaimTypes.Role, "GQ")], "Teste"))
         };
-        var controller = new AnexosController(context, new AmbienteWebTeste())
+        var controller = new AnexosController(context, environment ?? new AmbienteWebTeste())
         {
             ControllerContext = new ControllerContext { HttpContext = httpContext },
             TempData = new TempDataDictionary(httpContext, new MemoriaTempDataProvider())

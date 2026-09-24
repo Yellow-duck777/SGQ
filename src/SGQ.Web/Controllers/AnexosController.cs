@@ -18,19 +18,30 @@ public class AnexosController(ApplicationDbContext context, IWebHostEnvironment 
         if (arquivo is null || arquivo.Length == 0 || arquivo.Length > 25 * 1024 * 1024 || !ExtensoesPermitidas.Contains(Path.GetExtension(arquivo.FileName).ToLowerInvariant()))
         { TempData["Error"] = "Arquivo inválido. São aceitos os formatos definidos, com até 25 MB."; return RedirectToAction("Details", processo, new { id }); }
         var anexo = new Anexo { NomeOriginal = Path.GetFileName(arquivo.FileName), TipoConteudo = arquivo.ContentType ?? "application/octet-stream", NomeArmazenado = $"{Guid.NewGuid():N}{Path.GetExtension(arquivo.FileName).ToLowerInvariant()}", TamanhoBytes = arquivo.Length, Descricao = descricao, Critico = critico, Usuario = User.Identity?.Name ?? "Usuário autenticado", EnviadoEm = DateTimeOffset.UtcNow };
+        object? processoDestino = processo switch
+        {
+            "Reclamacoes" => await context.ReclamacoesClientes.FindAsync(id),
+            "NaoConformidades" => await context.NaoConformidades.FindAsync(id),
+            "Recalls" => await context.Recalls.FindAsync(id),
+            _ => null
+        };
+        if (processoDestino is null) return BadRequest();
+
+        if (laudoLaboratorio && processoDestino is not ReclamacaoCliente { Status: StatusReclamacao.AguardandoLaboratorioExterno }
+            && processoDestino is not NaoConformidade { Status: StatusNaoConformidade.AguardandoLaboratorioExterno })
+            return BadRequest();
+
         if (processo == "Reclamacoes") anexo.ReclamacaoClienteId = id;
         else if (processo == "NaoConformidades") anexo.NaoConformidadeId = id;
-        else if (processo == "Recalls") anexo.RecallId = id;
-        else return BadRequest();
+        else anexo.RecallId = id;
         var directory = Path.Combine(environment.ContentRootPath, "App_Data", "uploads"); Directory.CreateDirectory(directory);
         await using var stream = System.IO.File.Create(Path.Combine(directory, anexo.NomeArmazenado)); await arquivo.CopyToAsync(stream);
         anexo.Critico |= laudoLaboratorio;
         context.Anexos.Add(anexo); await context.SaveChangesAsync();
-        if (laudoLaboratorio || critico)
+        if (laudoLaboratorio)
         {
-            if (processo == "Reclamacoes") { var item = await context.ReclamacoesClientes.FindAsync(id); if (item is null || item.Status != StatusReclamacao.AguardandoLaboratorioExterno) return BadRequest(); item.LaudoLaboratorioAnexoId = anexo.Id; }
-            else if (processo == "NaoConformidades") { var item = await context.NaoConformidades.FindAsync(id); if (item is null || item.Status != StatusNaoConformidade.AguardandoLaboratorioExterno) return BadRequest(); item.LaudoLaboratorioAnexoId = anexo.Id; }
-            else return BadRequest();
+            if (processoDestino is ReclamacaoCliente reclamacao) reclamacao.LaudoLaboratorioAnexoId = anexo.Id;
+            else if (processoDestino is NaoConformidade naoConformidade) naoConformidade.LaudoLaboratorioAnexoId = anexo.Id;
             await context.SaveChangesAsync();
         }
         TempData["Success"] = laudoLaboratorio ? "Laudo crítico enviado. Registre o resultado para retomar a investigação." : "Anexo enviado.";
