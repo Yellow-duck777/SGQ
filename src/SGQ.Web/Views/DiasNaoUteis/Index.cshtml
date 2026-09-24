@@ -1,0 +1,12 @@
+@model IEnumerable<SGQ.Web.Models.DiaNaoUtil>
+@{ ViewData["Title"] = "Calendário de dias não úteis"; var podeGerenciar = User.IsInRole("Administrador") || User.IsInRole("GQ"); }
+<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4">
+    <div><p class="eyebrow mb-1">Cadastros</p><h1>Calendário de dias não úteis</h1><p class="text-muted mb-0">Datas ativas são desconsideradas no cálculo de prazos.</p></div>
+    @if (podeGerenciar) { <a class="btn btn-primary" asp-action="Create">Novo dia não útil</a> }
+</div>
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="alert">@success</div> }
+<form method="get" class="row g-2 mb-3"><div class="col-sm-3"><label class="visually-hidden" for="ano">Ano</label><input id="ano" name="ano" type="number" value="@ViewBag.Ano" class="form-control" min="2000" max="9999" /></div><div class="col-auto"><button class="btn btn-outline-secondary">Filtrar</button></div></form>
+<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Status</th>@if (podeGerenciar) { <th class="text-end">Ações</th> }</tr></thead><tbody>
+@foreach (var item in Model) { <tr><td>@item.Data.ToString("dd/MM/yyyy")</td><td>@item.Descricao</td><td>@item.Tipo</td><td>@(item.Ativo ? "Ativo" : "Inativo")</td>@if (podeGerenciar) { <td class="text-end"><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a></td> }</tr> }
+@if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Nenhum dia não útil cadastrado para este ano.</td></tr> }
+</tbody></table></div></div>

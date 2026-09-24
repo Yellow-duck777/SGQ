@@ -1,33 +1,79 @@
-# SGQ - Sistema de Gestão da Qualidade
+# SGQ — Sistema de Gestão da Qualidade
 
-Sistema web para gerenciamento dos processos de qualidade.
+Sistema web para registrar, tratar e rastrear processos de qualidade.
 
-## Processos iniciais
+## Processos cobertos
 
-- Reclamação de Cliente
-- Não Conformidade
-- Recolhimento / Recall de Produto
+- Reclamação de Cliente (RC)
+- Não Conformidade (NC)
+- Recall / Recolhimento de Produto
 
-## Objetivo
+## Recursos implementados
 
-Centralizar registros, investigações, ações, aprovações,
-evidências e rastreabilidade dos processos de qualidade.
+- Autenticação com ASP.NET Identity.
+- Cadastros de clientes, produtos e lotes.
+- Numeração anual automática: `RC-AAAA-000001`, `NC-AAAA-000001` e `REC-AAAA-000001`.
+- Fluxo de RC: abertura, validação, classificação, geração automática de NC, investigação, conclusão e encerramento.
+- Fluxo de NC: abertura, contenção, investigação, plano de ação, eficácia, aprovações RT/GQ e encerramento.
+- Fluxo de Recall: avaliação, aprovações, recolhimento, comunicação, retornos, destinação e encerramento.
+- Perfis: Administrador, GQ, RT, CQ e Auditor; administração de usuários e perfis.
+- Auditoria automática de criações, alterações e exclusões.
+- Anexos e evidências para RC, NC e Recall, com limite de 25 MB, formatos permitidos e anulação lógica.
+- Dashboard com indicadores de processos abertos e aprovações pendentes.
 
-## Tecnologias previstas
+## Tecnologias
 
-- C#
-- ASP.NET Core
+- C# / .NET 10
+- ASP.NET Core MVC
 - Entity Framework Core
 - PostgreSQL
-- HTML
-- CSS
-- JavaScript
-- Git
-- GitHub
-- Codex
+- ASP.NET Identity
+- Bootstrap
 
-## Status
+## Como executar
 
-O projeto está em fase de consolidação de requisitos e construção da fundação técnica. A aplicação ASP.NET Core, a autenticação e os cadastros básicos iniciais já foram iniciados.
+1. Configure a conexão PostgreSQL por User Secrets:
 
-Os requisitos e decisões de negócio estão documentados em [docs/02-requisitos.md](docs/02-requisitos.md).
+   ```powershell
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Database=sgq;Username=postgres;Password=sua_senha" --project src/SGQ.Web
+   ```
+
+2. Defina o primeiro administrador (opcional, mas recomendado):
+
+   ```powershell
+   dotnet user-secrets set "InitialAdminEmail" "admin@empresa.com" --project src/SGQ.Web
+   ```
+
+   Crie ou registre esse usuário antes de iniciar a aplicação. Na inicialização, ele receberá o papel `Administrador`.
+
+3. Aplique as migrações:
+
+   ```powershell
+   dotnet ef database update --project src/SGQ.Web --startup-project src/SGQ.Web
+   ```
+
+4. Execute a aplicação:
+
+   ```powershell
+   dotnet run --project src/SGQ.Web
+   ```
+
+## Desenvolvimento
+
+Para validar a compilação:
+
+```powershell
+dotnet build SGQ.slnx --no-restore
+```
+
+Para criar ou desativar contas locais de teste com segurança, consulte [a documentação de usuários de teste](docs/usuarios-teste-development.md).
+
+Os requisitos e decisões de negócio estão em [docs/02-requisitos.md](docs/02-requisitos.md).
+O roteiro detalhado, estado atual e backlog estão em [docs/03-planejamento-desenvolvimento.md](docs/03-planejamento-desenvolvimento.md).
+
+## Próximas evoluções
+
+- Calendário de dias úteis, prazos e notificações por e-mail.
+- Laboratório externo, reabertura, prorrogação e decisão de divergência pelo CQ.
+- Pesquisa, filtros, relatórios e exportação XLSX/PDF.
+- Vínculo de uma mesma evidência a múltiplos processos sem duplicação física.

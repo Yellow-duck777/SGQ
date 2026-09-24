@@ -1,0 +1,20 @@
+@model IEnumerable<SGQ.Web.Models.Recall>
+@{ ViewData["Title"] = "Recalls"; }
+<div class="page-heading d-flex justify-content-between align-items-end gap-3 mb-4"><div><p class="eyebrow mb-1">Processos de qualidade</p><h1>Recall / Recolhimento</h1><p class="text-muted mb-0">Avalie riscos e acompanhe o recolhimento de produtos.</p></div><a class="btn btn-primary" asp-action="Create">Novo Recall</a></div>
+<form method="get" class="card shadow-sm border-0 p-3 mb-4">
+    <div class="row g-2">
+        <div class="col-md-3"><label class="form-label" for="busca">Pesquisar</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" placeholder="Código, produto ou lote" /></div>
+        <div class="col-md-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.StatusRecall>()) { <option value="@item" selected="@(Context.Request.Query["status"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
+        <div class="col-md-2"><label class="form-label" for="decisao">Decisão</label><select class="form-select" id="decisao" name="decisao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.DecisaoRecall>()) { <option value="@item" selected="@(Context.Request.Query["decisao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
+        <div class="col-md-2"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
+        <div class="col-md-3"><label class="form-label" for="loteId">Lote</label><select class="form-select" id="loteId" name="loteId" asp-items="ViewBag.Lotes"><option value="">Todos</option></select></div>
+        <div class="col-md-2"><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Usuário de abertura" /></div>
+        <div class="col-md-2"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
+        <div class="col-md-2"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Context.Request.Query["fim"]" /></div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary">Aplicar filtros</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+</form>
+<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Produto</th><th>Lote</th><th>Decisão</th><th>Status</th><th></th></tr></thead><tbody>
+@foreach (var recall in Model) { <tr><td class="fw-semibold">@recall.Codigo</td><td>@recall.Produto.Nome</td><td>@recall.Lote.Numero</td><td>@recall.Decisao</td><td><span class="badge text-bg-secondary">@recall.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@recall.Id">Ver</a></td></tr> }
+@if (!Model.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">Nenhum Recall registrado.</td></tr> }
+</tbody></table></div></div>

@@ -1,0 +1,27 @@
+@model IEnumerable<SGQ.Web.Models.HistoricoAuditoria>
+<section class="card shadow-sm border-0 p-4 mt-4">
+    <h2 class="h5">Histórico de auditoria</h2>
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Data e hora</th><th>Usuário</th><th>Ação</th><th>Alterações</th></tr></thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.OcorridaEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@item.Usuario</td>
+                        <td>@item.Acao</td>
+                        <td class="text-break">@(string.IsNullOrWhiteSpace(item.Alteracoes) ? "Não informado" : item.Alteracoes)</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-0">Nenhuma alteração auditada para este processo.</p>
+    }
+</section>

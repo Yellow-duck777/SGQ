@@ -1,0 +1,28 @@
+@model SGQ.Web.ViewModels.RelatorioProcessosViewModel
+@{
+    ViewData["Title"] = "Relatórios";
+}
+<div class="page-heading mb-4">
+    <p class="eyebrow mb-1">Indicadores e rastreabilidade</p>
+    <h1>Relatório de processos</h1>
+    <p class="text-muted mb-0">Consulte RC, NC e Recalls por período e produto. A exportação preserva os filtros aplicados.</p>
+</div>
+<form method="get" class="card shadow-sm border-0 p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label" for="tipo">Processo</label><select class="form-select" id="tipo" name="tipo"><option value="">Todos</option><option value="RC" selected="@(Model.Tipo == "RC")">Reclamações de Cliente</option><option value="NC" selected="@(Model.Tipo == "NC")">Não Conformidades</option><option value="Recall" selected="@(Model.Tipo == "Recall")">Recalls</option></select></div>
+        <div class="col-md-3"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
+        <div class="col-md-2"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Model.Inicio" /></div>
+        <div class="col-md-2"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Model.Fim" /></div>
+        <div class="col-md-2 d-flex gap-2"><button class="btn btn-primary">Aplicar</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+    </div>
+</form>
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Processos no período</small><strong class="display-6">@Model.Itens.Count</strong></div></div>
+    <div class="col-md-4"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Processos abertos</small><strong class="display-6">@Model.ProcessosAbertos</strong></div></div>
+    <div class="col-md-4"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Em atraso</small><strong class="display-6 text-danger">@Model.ProcessosAtrasados</strong></div></div>
+</div>
+<div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3"><p class="mb-0 text-muted">Tempo médio de encerramento: <strong>@(Model.TempoMedioEncerramentoDias?.ToString("N1") ?? "—") dias</strong></p><div class="d-flex gap-2"><a class="btn btn-outline-primary" asp-action="ExportarCsv" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo">CSV</a><a class="btn btn-outline-primary" asp-action="ExportarXlsx" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo">XLSX</a><a class="btn btn-outline-primary" asp-action="ExportarPdf" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo">PDF</a></div></div>
+<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Tipo</th><th>Código</th><th>Abertura</th><th>Produto / lote</th><th>Classificação</th><th>Situação</th><th>Prazo</th></tr></thead><tbody>
+@foreach (var item in Model.Itens) { <tr><td>@item.Tipo</td><td class="fw-semibold">@item.Codigo</td><td>@item.DataAbertura.ToString("dd/MM/yyyy")</td><td>@item.Produto @(item.Lote is null ? "" : $"/ {item.Lote}")</td><td>@item.Classificacao</td><td>@item.Situacao</td><td class="@(item.DataAlvo.HasValue && item.DataAlvo < DateOnly.FromDateTime(DateTime.Today) && !item.EncerradaEm.HasValue ? "text-danger fw-semibold" : "")">@(item.DataAlvo?.ToString("dd/MM/yyyy") ?? "—")</td></tr> }
+@if (!Model.Itens.Any()) { <tr><td colspan="7" class="text-center text-muted py-4">Nenhum processo encontrado para os filtros informados.</td></tr> }
+</tbody></table></div></div>

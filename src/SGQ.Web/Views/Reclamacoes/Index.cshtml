@@ -6,6 +6,18 @@
     <div><p class="eyebrow mb-1">Processos de qualidade</p><h1>Reclamações de Cliente</h1><p class="text-muted mb-0">Registre e acompanhe reclamações desde a abertura.</p></div>
     <a class="btn btn-primary" asp-action="Create">Nova reclamação</a>
 </div>
+<form method="get" class="card shadow-sm border-0 p-3 mb-4">
+    <div class="row g-2">
+        <div class="col-md-4"><label class="form-label" for="busca">Pesquisar</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" placeholder="Código, cliente, produto ou lote" /></div>
+        <div class="col-md-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.StatusReclamacao>()) { <option value="@item" selected="@(Context.Request.Query["status"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
+        <div class="col-md-2"><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.ClassificacaoOcorrencia>()) { <option value="@item" selected="@(Context.Request.Query["classificacao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
+        <div class="col-md-2"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
+        <div class="col-md-2"><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Usuário de abertura" /></div>
+        <div class="col-md-1"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
+        <div class="col-md-1"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Context.Request.Query["fim"]" /></div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary">Aplicar filtros</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+</form>
 <div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Cliente</th><th>Produto</th><th>Status</th><th class="text-end">Ação</th></tr></thead><tbody>
 @foreach (var item in Model) { <tr><td class="fw-semibold">@item.Codigo</td><td>@item.Cliente.Nome</td><td>@item.Produto.Nome</td><td><span class="badge text-bg-secondary">@item.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Ver</a></td></tr> }
 @if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Nenhuma reclamação registrada.</td></tr> }

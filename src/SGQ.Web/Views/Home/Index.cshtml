@@ -19,12 +19,26 @@
     </div>
 </section>
 
+<section class="dashboard-section" aria-labelledby="indicators-title">
+    <div class="section-heading"><div><p class="eyebrow">Visão geral</p><h2 id="indicators-title">Indicadores operacionais</h2></div></div>
+    <div class="row g-3">
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">RC abertas</small><strong class="display-6">@ViewBag.RcsAbertas</strong></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">NC abertas</small><strong class="display-6">@ViewBag.NcsAbertas</strong></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Recalls ativos</small><strong class="display-6">@ViewBag.RecallsAtivos</strong></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Aguardando aprovação</small><strong class="display-6">@ViewBag.AguardandoAprovacao</strong></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Processos atrasados</small><strong class="display-6 text-danger">@ViewBag.ProcessosVencidos</strong></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Vencendo em até 48h úteis</small><strong class="display-6 text-warning">@ViewBag.ProcessosProximosDoVencimento</strong></div></div>
+        <div class="col-md-6"><div class="card shadow-sm border-danger p-3"><small class="text-danger">Processos vencidos</small><strong class="display-6 text-danger">@ViewBag.ProcessosVencidos</strong><small class="text-muted">RC, NC e Recall com data-alvo anterior a hoje.</small></div></div>
+        <div class="col-md-6"><div class="card shadow-sm border-warning p-3"><small class="text-warning-emphasis">Vencendo em até 2 dias úteis</small><strong class="display-6 text-warning-emphasis">@ViewBag.ProcessosProximosDoVencimento</strong><small class="text-muted">Inclui processos com vencimento hoje.</small></div></div>
+    </div>
+</section>
+
 <section class="dashboard-section" aria-labelledby="shortcuts-title">
     <div class="section-heading"><div><p class="eyebrow">Acesso rápido</p><h2 id="shortcuts-title">Comece por aqui</h2></div></div>
     <div class="row g-3">
         <div class="col-md-4"><a class="module-card module-card-primary" asp-controller="Reclamacoes" asp-action="Create"><span class="module-icon">RC</span><h3>Nova reclamação</h3><p>Registre uma ocorrência e relacione cliente, produto e lotes.</p><span class="module-link">Abrir cadastro →</span></a></div>
         <div class="col-md-4"><a class="module-card" asp-controller="NaoConformidades" asp-action="Index"><span class="module-icon">NC</span><h3>Não conformidades</h3><p>Acompanhe investigações, ações e aprovações técnicas.</p><span class="module-link">Ver registros →</span></a></div>
-        <div class="col-md-4"><a class="module-card" asp-controller="Produtos" asp-action="Index"><span class="module-icon">CB</span><h3>Cadastros básicos</h3><p>Mantenha clientes, produtos e lotes prontos para uso.</p><span class="module-link">Gerenciar cadastros →</span></a></div>
+        <div class="col-md-4"><a class="module-card" asp-controller="Recalls" asp-action="Index"><span class="module-icon">REC</span><h3>Recall / Recolhimento</h3><p>Registre a avaliação de risco e a decisão de recolhimento.</p><span class="module-link">Ver processos →</span></a></div>
     </div>
 </section>
 

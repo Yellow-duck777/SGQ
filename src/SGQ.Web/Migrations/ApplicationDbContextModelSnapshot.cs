@@ -158,6 +158,202 @@ namespace SGQ.Web.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SGQ.Web.Models.AcaoNaoConformidade", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly?>("DataConclusao")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Evidencia")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("NaoConformidadeId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Obrigatoria")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly>("Prazo")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Responsavel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NaoConformidadeId");
+
+                    b.ToTable("AcoesNaoConformidade");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.AlertaEnviado", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateOnly>("DataReferencia")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Destinatarios")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("EnviadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Referencia")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Tipo", "Referencia", "DataReferencia")
+                        .IsUnique();
+
+                    b.ToTable("AlertasEnviados");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.Anexo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset?>("AnuladoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Critico")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset>("EnviadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("JustificativaAnulacao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("NaoConformidadeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NomeArmazenado")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)");
+
+                    b.Property<string>("NomeOriginal")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)");
+
+                    b.Property<int?>("RecallId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReclamacaoClienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("TamanhoBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TipoConteudo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioAnulacao")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NaoConformidadeId");
+
+                    b.HasIndex("RecallId");
+
+                    b.HasIndex("ReclamacaoClienteId");
+
+                    b.ToTable("Anexos");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.AnexoProcessoVinculo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnexoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("NaoConformidadeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RecallId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReclamacaoClienteId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NaoConformidadeId");
+
+                    b.HasIndex("RecallId");
+
+                    b.HasIndex("ReclamacaoClienteId");
+
+                    b.HasIndex("AnexoId", "NaoConformidadeId")
+                        .IsUnique();
+
+                    b.HasIndex("AnexoId", "RecallId")
+                        .IsUnique();
+
+                    b.HasIndex("AnexoId", "ReclamacaoClienteId")
+                        .IsUnique();
+
+                    b.ToTable("AnexosProcessosVinculos", t =>
+                        {
+                            t.HasCheckConstraint("CK_AnexosProcessosVinculos_UmProcesso", "(\"ReclamacaoClienteId\" IS NOT NULL)::integer + (\"NaoConformidadeId\" IS NOT NULL)::integer + (\"RecallId\" IS NOT NULL)::integer = 1");
+                        });
+                });
+
             modelBuilder.Entity("SGQ.Web.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -245,6 +441,79 @@ namespace SGQ.Web.Migrations
                     b.ToTable("Clientes");
                 });
 
+            modelBuilder.Entity("SGQ.Web.Models.DiaNaoUtil", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Ano")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly>("Data")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Data", "Tipo")
+                        .IsUnique();
+
+                    b.ToTable("DiasNaoUteis");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.HistoricoAuditoria", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Alteracoes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChaveRegistro")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Entidade")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTimeOffset>("OcorridaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HistoricosAuditoria");
+                });
+
             modelBuilder.Entity("SGQ.Web.Models.Lote", b =>
                 {
                     b.Property<int>("Id")
@@ -279,10 +548,24 @@ namespace SGQ.Web.Migrations
                     b.Property<int>("Ano")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("AprovadaGq")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AprovadaRt")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Area")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<string>("CausaProvavel")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("CausaRaiz")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.Property<string>("Classificacao")
                         .HasColumnType("text");
@@ -292,15 +575,67 @@ namespace SGQ.Web.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Contencao")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
                     b.Property<DateTimeOffset>("CriadaEm")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateOnly>("DataAbertura")
                         .HasColumnType("date");
 
+                    b.Property<DateOnly?>("DataAlvo")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataEnvioAmostraLaboratorio")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataRecebimentoResultadoLaboratorio")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("DecididaPeloCqEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DecisaoCq")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Descricao")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<bool?>("Eficaz")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("EncerradaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdentificacaoLaudoLaboratorio")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Investigacao")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("JustificativaDecisaoCq")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("JustificativaReabertura")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("LaboratorioExterno")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("LaudoLaboratorioAnexoId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MetodoAnalise")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Origem")
                         .IsRequired()
@@ -309,8 +644,21 @@ namespace SGQ.Web.Migrations
                     b.Property<int?>("ProdutoId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("ReabertaEm")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int?>("ReclamacaoClienteId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("ReprovadaGq")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ReprovadaRt")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ResultadoLaboratorio")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.Property<int>("SequenciaAnual")
                         .HasColumnType("integer");
@@ -319,8 +667,23 @@ namespace SGQ.Web.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("StatusAnteriorReabertura")
+                        .HasColumnType("integer");
+
                     b.Property<string>("UsuarioAbertura")
                         .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioDecisaoCq")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioEncerramento")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioReabertura")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
@@ -358,6 +721,248 @@ namespace SGQ.Web.Migrations
                     b.ToTable("Produtos");
                 });
 
+            modelBuilder.Entity("SGQ.Web.Models.ProrrogacaoPrazo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("ClienteComunicado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly>("DataAnterior")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int?>("NaoConformidadeId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("NovaData")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("RecallId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReclamacaoClienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("RegistradaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RegistroComunicacaoCliente")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NaoConformidadeId");
+
+                    b.HasIndex("RecallId");
+
+                    b.HasIndex("ReclamacaoClienteId");
+
+                    b.ToTable("ProrrogacoesPrazo");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.Recall", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Ano")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("AprovadaGq")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AprovadaRt")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AutoridadeSanitaria")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("BloqueioRegistrado")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ClientesEnvolvidos")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ComunicacaoClientes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("ComunicadaAutoridadeEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CriadaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("DataAbertura")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataAlvo")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataFabricacao")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataValidade")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("DecididaPeloCqEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Decisao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("DecisaoCq")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Destinacao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset?>("EncerradaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EvidenciaDestinacao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("JustificativaDecisao")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("JustificativaDecisaoCq")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("JustificativaReabertura")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("LoteId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MotivoReabertura")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("NaoConformidadeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NaturezaOcorrencia")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ProdutoId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProtocoloAutoridade")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("QuantidadeDistribuida")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("QuantidadeEstoque")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("QuantidadeProduzida")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTimeOffset?>("ReabertaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReclamacaoClienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("ReprovadaGq")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ReprovadaRt")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RiscoPotencial")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("SequenciaAnual")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("StatusAnteriorReabertura")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioAbertura")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioDecisaoCq")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioEncerramento")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioReabertura")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("LoteId");
+
+                    b.HasIndex("NaoConformidadeId");
+
+                    b.HasIndex("ProdutoId");
+
+                    b.HasIndex("ReclamacaoClienteId");
+
+                    b.HasIndex("Ano", "SequenciaAnual")
+                        .IsUnique();
+
+                    b.ToTable("Recalls");
+                });
+
             modelBuilder.Entity("SGQ.Web.Models.ReclamacaoCliente", b =>
                 {
                     b.Property<int>("Id")
@@ -393,10 +998,22 @@ namespace SGQ.Web.Migrations
                     b.Property<DateTimeOffset>("CriadaEm")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateOnly?>("DataAlvo")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataEnvioAmostraLaboratorio")
+                        .HasColumnType("date");
+
                     b.Property<DateOnly?>("DataFabricacao")
                         .HasColumnType("date");
 
                     b.Property<DateOnly>("DataRecebimento")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataRecebimentoResultadoLaboratorio")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DataRespostaCliente")
                         .HasColumnType("date");
 
                     b.Property<DateOnly?>("DataValidade")
@@ -406,6 +1023,28 @@ namespace SGQ.Web.Migrations
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTimeOffset?>("EncerradaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdentificacaoLaudoLaboratorio")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Investigacao")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("JustificativaReabertura")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("LaboratorioExterno")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("LaudoLaboratorioAnexoId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("LocalAquisicao")
                         .HasMaxLength(200)
@@ -423,6 +1062,20 @@ namespace SGQ.Web.Migrations
                     b.Property<decimal?>("QuantidadeEnvolvida")
                         .HasColumnType("numeric");
 
+                    b.Property<DateTimeOffset?>("ReabertaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RespostaCliente")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Resultado")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResultadoLaboratorio")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
                     b.Property<int>("SequenciaAnual")
                         .HasColumnType("integer");
 
@@ -430,10 +1083,32 @@ namespace SGQ.Web.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("StatusAnteriorReabertura")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TratamentoAplicado")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
                     b.Property<string>("UsuarioAbertura")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioEncerramento")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioReabertura")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioValidacao")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("ValidadaEm")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("VolumeDisponivel")
                         .HasMaxLength(100)
@@ -467,6 +1142,56 @@ namespace SGQ.Web.Migrations
                     b.HasIndex("LoteId");
 
                     b.ToTable("ReclamacaoClienteLote");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.RetornoRecall", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AvaliacaoGq")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Avarias")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Cliente")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CondicaoEmbalagem")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("CondicaoLacre")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateOnly>("DataRetorno")
+                        .HasColumnType("date");
+
+                    b.Property<string>("DocumentoTransporte")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("Quantidade")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("RecallId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecallId");
+
+                    b.ToTable("RetornosRecall");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -520,6 +1245,73 @@ namespace SGQ.Web.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SGQ.Web.Models.AcaoNaoConformidade", b =>
+                {
+                    b.HasOne("SGQ.Web.Models.NaoConformidade", "NaoConformidade")
+                        .WithMany("Acoes")
+                        .HasForeignKey("NaoConformidadeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NaoConformidade");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.Anexo", b =>
+                {
+                    b.HasOne("SGQ.Web.Models.NaoConformidade", "NaoConformidade")
+                        .WithMany()
+                        .HasForeignKey("NaoConformidadeId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SGQ.Web.Models.Recall", "Recall")
+                        .WithMany()
+                        .HasForeignKey("RecallId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SGQ.Web.Models.ReclamacaoCliente", "ReclamacaoCliente")
+                        .WithMany()
+                        .HasForeignKey("ReclamacaoClienteId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("NaoConformidade");
+
+                    b.Navigation("Recall");
+
+                    b.Navigation("ReclamacaoCliente");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.AnexoProcessoVinculo", b =>
+                {
+                    b.HasOne("SGQ.Web.Models.Anexo", "Anexo")
+                        .WithMany("Vinculos")
+                        .HasForeignKey("AnexoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SGQ.Web.Models.NaoConformidade", "NaoConformidade")
+                        .WithMany()
+                        .HasForeignKey("NaoConformidadeId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SGQ.Web.Models.Recall", "Recall")
+                        .WithMany()
+                        .HasForeignKey("RecallId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SGQ.Web.Models.ReclamacaoCliente", "ReclamacaoCliente")
+                        .WithMany()
+                        .HasForeignKey("ReclamacaoClienteId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Anexo");
+
+                    b.Navigation("NaoConformidade");
+
+                    b.Navigation("Recall");
+
+                    b.Navigation("ReclamacaoCliente");
+                });
+
             modelBuilder.Entity("SGQ.Web.Models.Lote", b =>
                 {
                     b.HasOne("SGQ.Web.Models.Produto", "Produto")
@@ -542,6 +1334,57 @@ namespace SGQ.Web.Migrations
                         .WithOne("NaoConformidade")
                         .HasForeignKey("SGQ.Web.Models.NaoConformidade", "ReclamacaoClienteId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Produto");
+
+                    b.Navigation("ReclamacaoCliente");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.ProrrogacaoPrazo", b =>
+                {
+                    b.HasOne("SGQ.Web.Models.NaoConformidade", null)
+                        .WithMany()
+                        .HasForeignKey("NaoConformidadeId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SGQ.Web.Models.Recall", null)
+                        .WithMany()
+                        .HasForeignKey("RecallId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SGQ.Web.Models.ReclamacaoCliente", null)
+                        .WithMany()
+                        .HasForeignKey("ReclamacaoClienteId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.Recall", b =>
+                {
+                    b.HasOne("SGQ.Web.Models.Lote", "Lote")
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGQ.Web.Models.NaoConformidade", "NaoConformidade")
+                        .WithMany()
+                        .HasForeignKey("NaoConformidadeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGQ.Web.Models.Produto", "Produto")
+                        .WithMany()
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGQ.Web.Models.ReclamacaoCliente", "ReclamacaoCliente")
+                        .WithMany()
+                        .HasForeignKey("ReclamacaoClienteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Lote");
+
+                    b.Navigation("NaoConformidade");
 
                     b.Navigation("Produto");
 
@@ -586,9 +1429,35 @@ namespace SGQ.Web.Migrations
                     b.Navigation("ReclamacaoCliente");
                 });
 
+            modelBuilder.Entity("SGQ.Web.Models.RetornoRecall", b =>
+                {
+                    b.HasOne("SGQ.Web.Models.Recall", "Recall")
+                        .WithMany("Retornos")
+                        .HasForeignKey("RecallId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recall");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.Anexo", b =>
+                {
+                    b.Navigation("Vinculos");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.NaoConformidade", b =>
+                {
+                    b.Navigation("Acoes");
+                });
+
             modelBuilder.Entity("SGQ.Web.Models.Produto", b =>
                 {
                     b.Navigation("Lotes");
+                });
+
+            modelBuilder.Entity("SGQ.Web.Models.Recall", b =>
+                {
+                    b.Navigation("Retornos");
                 });
 
             modelBuilder.Entity("SGQ.Web.Models.ReclamacaoCliente", b =>

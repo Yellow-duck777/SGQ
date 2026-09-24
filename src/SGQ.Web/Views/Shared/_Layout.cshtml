@@ -26,14 +26,25 @@
                         <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Início</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Reclamacoes" asp-action="Index">Reclamações</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="NaoConformidades" asp-action="Index">Não Conformidades</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Recalls" asp-action="Index">Recalls</a></li>
+                        @if (User.IsInRole("Administrador") || User.IsInRole("GQ") || User.IsInRole("Auditor"))
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Relatorios" asp-action="Index">Relatórios</a></li>
+                        }
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastros</a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" asp-controller="Clientes" asp-action="Index">Clientes</a></li>
                                 <li><a class="dropdown-item" asp-controller="Produtos" asp-action="Index">Produtos</a></li>
                                 <li><a class="dropdown-item" asp-controller="Lotes" asp-action="Index">Lotes</a></li>
+                                <li><a class="dropdown-item" asp-controller="DiasNaoUteis" asp-action="Index">Calendário de dias não úteis</a></li>
+                                <li><a class="dropdown-item" asp-controller="DiasNaoUteis" asp-action="Index">Calendário</a></li>
                             </ul>
                         </li>
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Usuarios" asp-action="Index">Usuários</a></li>
+                        }
                     </ul>
                     <div class="ms-auto">
                         <partial name="_LoginPartial" />

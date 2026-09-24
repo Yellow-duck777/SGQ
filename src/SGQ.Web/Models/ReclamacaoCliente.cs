@@ -16,6 +16,7 @@ public class ReclamacaoCliente
 
     [Required]
     public DateOnly DataRecebimento { get; set; }
+    public DateOnly? DataAlvo { get; set; }
 
     [Required]
     [StringLength(100)]
@@ -56,6 +57,45 @@ public class ReclamacaoCliente
     public string? VolumeDisponivel { get; set; }
 
     public ClassificacaoOcorrencia? Classificacao { get; set; }
+
+    [StringLength(4000)]
+    public string? Investigacao { get; set; }
+
+    public ResultadoReclamacao? Resultado { get; set; }
+
+    [StringLength(4000)]
+    public string? TratamentoAplicado { get; set; }
+
+    [StringLength(4000)]
+    public string? RespostaCliente { get; set; }
+
+    public DateOnly? DataRespostaCliente { get; set; }
+
+    [StringLength(256)]
+    public string? UsuarioValidacao { get; set; }
+
+    public DateTimeOffset? ValidadaEm { get; set; }
+
+    [StringLength(256)]
+    public string? UsuarioEncerramento { get; set; }
+
+    public DateTimeOffset? EncerradaEm { get; set; }
+
+    public StatusReclamacao? StatusAnteriorReabertura { get; set; }
+
+    [StringLength(2000)]
+    public string? JustificativaReabertura { get; set; }
+
+    [StringLength(256)]
+    public string? UsuarioReabertura { get; set; }
+
+    public DateTimeOffset? ReabertaEm { get; set; }
+    [StringLength(200)] public string? LaboratorioExterno { get; set; }
+    public DateOnly? DataEnvioAmostraLaboratorio { get; set; }
+    public DateOnly? DataRecebimentoResultadoLaboratorio { get; set; }
+    [StringLength(200)] public string? IdentificacaoLaudoLaboratorio { get; set; }
+    [StringLength(4000)] public string? ResultadoLaboratorio { get; set; }
+    public int? LaudoLaboratorioAnexoId { get; set; }
 
     public StatusReclamacao Status { get; set; } = StatusReclamacao.Rascunho;
 
