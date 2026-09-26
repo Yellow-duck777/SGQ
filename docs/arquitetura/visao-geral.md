@@ -2,7 +2,9 @@
 
 ## Estado atual
 
-O SGQ é uma aplicação ASP.NET Core MVC única. Controllers acessam diretamente `ApplicationDbContext`; modelos de domínio, persistência, autenticação e apresentação ficam no projeto `SGQ.Web`.
+O SGQ continua sendo um único sistema implantável, agora dividido inicialmente nos projetos `SGQ.Domain`, `SGQ.Application`, `SGQ.Infrastructure` e `SGQ.Web`. Entidades e enums operacionais estão em `Domain`; testes automatizados protegem as dependências entre as camadas.
+
+Esta é uma separação incremental. `ApplicationDbContext`, Identity, migrations, controllers e apresentação ainda permanecem em `Web`. Por isso, `Web` mantém temporariamente uma referência direta a `Domain` e os controllers ainda acessam EF Core. A próxima fatia criará casos de uso em `Application`, moverá persistência para `Infrastructure` e eliminará esse acesso direto.
 
 ## Arquitetura alvo
 
@@ -32,4 +34,4 @@ Cadastros, RC, NC e Recall permanecem módulos do mesmo sistema. Cada módulo ex
 
 ## Evolução
 
-A separação acontecerá em PR próprio, acompanhada de testes arquiteturais. Nenhuma funcionalidade deve ser reescrita apenas para “aproveitar” a reorganização.
+A primeira separação foi executada com testes arquiteturais e sem alteração do esquema físico do PostgreSQL. As próximas mudanças continuarão em PRs próprios. Nenhuma funcionalidade será reescrita apenas para “aproveitar” a reorganização.

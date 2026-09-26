@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SGQ.Domain.Entities;
+using SGQ.Domain.Enums;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.Security;

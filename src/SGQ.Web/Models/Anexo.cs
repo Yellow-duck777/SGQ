@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using SGQ.Domain.Entities;
 namespace SGQ.Web.Models;
 public class Anexo
 {

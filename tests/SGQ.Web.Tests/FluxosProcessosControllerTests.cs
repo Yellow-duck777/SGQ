@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using SGQ.Web.Controllers;
+using SGQ.Domain.Entities;
+using SGQ.Domain.Enums;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.Services;
@@ -26,7 +28,7 @@ public class FluxosProcessosControllerTests
         };
         context.ReclamacoesClientes.Add(reclamacao);
         await context.SaveChangesAsync();
-        var controller = CriarController(new ReclamacoesController(context, new PrazoService(context)));
+        var controller = CriarController(new ReclamacoesController(context, new PrazoService(context), new NotificacaoStub()));
 
         var resultado = await controller.Validar(reclamacao.Id, ClassificacaoOcorrencia.Maior);
 
@@ -51,7 +53,7 @@ public class FluxosProcessosControllerTests
         };
         context.NaoConformidades.Add(nc);
         await context.SaveChangesAsync();
-        var controller = CriarController(new NaoConformidadesController(context, new PrazoService(context)));
+        var controller = CriarController(new NaoConformidadesController(context, new PrazoService(context), new NotificacaoStub()));
 
         var resultado = await controller.Encerrar(nc.Id);
 
@@ -71,7 +73,7 @@ public class FluxosProcessosControllerTests
         };
         context.Recalls.Add(recall);
         await context.SaveChangesAsync();
-        var controller = CriarController(new RecallsController(context));
+        var controller = CriarController(new RecallsController(context, new NotificacaoStub()));
 
         var resultado = await controller.Encerrar(recall.Id);
 
@@ -102,5 +104,11 @@ public class FluxosProcessosControllerTests
     {
         public IDictionary<string, object> LoadTempData(HttpContext context) => new Dictionary<string, object>();
         public void SaveTempData(HttpContext context, IDictionary<string, object> values) { }
+    }
+
+    private sealed class NotificacaoStub : INotificacaoService
+    {
+        public Task EnviarParaPapeisAsync(string evento, string codigo, IEnumerable<string> papeis, string mensagem, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task EnviarParaUsuariosEPapeisAsync(string evento, string codigo, IEnumerable<string> usuarios, IEnumerable<string> papeis, string mensagem, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }

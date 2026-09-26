@@ -1,5 +1,4 @@
-@model SGQ.Web.Models.ReclamacaoCliente
-@using SGQ.Web.Models
+@model SGQ.Domain.Entities.ReclamacaoCliente
 @{ ViewData["Title"] = Model.Codigo; }
 
 @{
@@ -138,7 +137,7 @@
                 <p class="text-muted">A validação classifica a reclamação e cria automaticamente a NC vinculada.</p>
                 <form asp-action="Validar" method="post" class="d-flex flex-wrap gap-2 align-items-end">
                     <input type="hidden" name="id" value="@Model.Id" />
-                    <div><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.ClassificacaoOcorrencia>()"></select></div>
+                    <div><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao" asp-items="Html.GetEnumSelectList<ClassificacaoOcorrencia>()"></select></div>
                     <button class="btn btn-primary" type="submit">Validar e criar NC</button>
                 </form>
             </div>
@@ -152,7 +151,7 @@
                     <input type="hidden" name="Id" value="@Model.Id" />
                     <div class="row g-3">
                         <div class="col-12"><label class="form-label" for="Investigacao">Investigação</label><textarea class="form-control" name="Investigacao" id="Investigacao" rows="3" required></textarea></div>
-                        <div class="col-md-4"><label class="form-label" for="Resultado">Resultado</label><select class="form-select" name="Resultado" id="Resultado" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.ResultadoReclamacao>()"></select></div>
+                        <div class="col-md-4"><label class="form-label" for="Resultado">Resultado</label><select class="form-select" name="Resultado" id="Resultado" asp-items="Html.GetEnumSelectList<ResultadoReclamacao>()"></select></div>
                         <div class="col-md-8"><label class="form-label" for="TratamentoAplicado">Tratamento aplicado</label><input class="form-control" name="TratamentoAplicado" id="TratamentoAplicado" required /></div>
                         <div class="col-md-4"><label class="form-label" for="DataRespostaCliente">Data da resposta</label><input class="form-control" type="date" name="DataRespostaCliente" id="DataRespostaCliente" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
                         <div class="col-md-8"><label class="form-label" for="RespostaCliente">Resposta ao cliente</label><input class="form-control" name="RespostaCliente" id="RespostaCliente" required /></div>

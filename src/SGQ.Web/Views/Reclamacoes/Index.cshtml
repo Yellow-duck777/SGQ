@@ -1,4 +1,4 @@
-@model IEnumerable<SGQ.Web.Models.ReclamacaoCliente>
+@model IEnumerable<SGQ.Domain.Entities.ReclamacaoCliente>
 @{
     ViewData["Title"] = "Reclamações";
 }
@@ -9,8 +9,8 @@
 <form method="get" class="card shadow-sm border-0 p-3 mb-4">
     <div class="row g-2">
         <div class="col-md-4"><label class="form-label" for="busca">Pesquisar</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" placeholder="Código, cliente, produto ou lote" /></div>
-        <div class="col-md-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.StatusReclamacao>()) { <option value="@item" selected="@(Context.Request.Query["status"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-2"><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.ClassificacaoOcorrencia>()) { <option value="@item" selected="@(Context.Request.Query["classificacao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
+        <div class="col-md-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos</option>@foreach (var item in Enum.GetValues<StatusReclamacao>()) { <option value="@item" selected="@(Context.Request.Query["status"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
+        <div class="col-md-2"><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<ClassificacaoOcorrencia>()) { <option value="@item" selected="@(Context.Request.Query["classificacao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
         <div class="col-md-2"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
         <div class="col-md-2"><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Usuário de abertura" /></div>
         <div class="col-md-1"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
