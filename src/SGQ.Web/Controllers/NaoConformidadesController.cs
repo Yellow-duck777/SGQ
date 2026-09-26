@@ -12,7 +12,7 @@ using SGQ.Web.Services;
 namespace SGQ.Web.Controllers;
 
 [Authorize]
-public class NaoConformidadesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
+public class NaoConformidadesController(ApplicationDbContext context, IPrazoService prazoService, INotificacaoService notificacaoService) : Controller
 {
     public async Task<IActionResult> Index(string? busca, StatusNaoConformidade? status, ClassificacaoOcorrencia? classificacao, OrigemNaoConformidade? origem, int? produtoId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
@@ -63,6 +63,8 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         var sequence = (await context.NaoConformidades.Where(item => item.Ano == year).MaxAsync(item => (int?)item.SequenciaAnual) ?? 0) + 1;
         var nc = new NaoConformidade { Ano = year, SequenciaAnual = sequence, Codigo = $"NC-{year}-{sequence:D6}", DataAbertura = model.DataAbertura, DataAlvo = model.DataAlvo, Origem = model.Origem, Area = model.Area, ProdutoId = model.ProdutoId, Descricao = model.Descricao, Classificacao = model.Classificacao, UsuarioAbertura = User.Identity?.Name ?? "Usuário autenticado", CriadaEm = DateTimeOffset.UtcNow };
         context.NaoConformidades.Add(nc); await context.SaveChangesAsync(); await transaction.CommitAsync();
+        if (nc.Classificacao == ClassificacaoOcorrencia.Critica)
+            await notificacaoService.EnviarParaPapeisAsync("NC crítica", nc.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade], "Uma Não Conformidade crítica requer acompanhamento imediato.");
         TempData["Success"] = $"Não Conformidade {nc.Codigo} criada.";
         return RedirectToAction(nameof(Details), new { id = nc.Id });
     }
@@ -150,7 +152,9 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         var nc = await context.NaoConformidades.Include(item => item.Acoes).SingleOrDefaultAsync(item => item.Id == id); if (nc is null) return NotFound();
         if (nc.Status != StatusNaoConformidade.EmTratamento || !nc.Acoes.Any() || nc.Acoes.Any(item => item.Obrigatoria && item.DataConclusao is null)) { TempData["Error"] = "Conclua todas as ações obrigatórias antes de avaliar a eficácia."; return RedirectToAction(nameof(Details), new { id }); }
         nc.Eficaz = eficaz; nc.Status = eficaz ? StatusNaoConformidade.AguardandoAprovacao : StatusNaoConformidade.EmInvestigacao;
-        await context.SaveChangesAsync(); TempData["Success"] = eficaz ? "Eficácia registrada. A NC aguarda aprovações." : "Eficácia considerada ineficaz; a NC retornou para investigação."; return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync();
+        if (eficaz) await notificacaoService.EnviarParaPapeisAsync("NC aguardando aprovação", nc.Codigo, [Roles.ResponsavelTecnico, Roles.GarantiaQualidade], "A eficácia foi registrada e a NC aguarda aprovação.");
+        TempData["Success"] = eficaz ? "Eficácia registrada. A NC aguarda aprovações." : "Eficácia considerada ineficaz; a NC retornou para investigação."; return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -162,7 +166,10 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { nc.AprovadaGq = true; nc.ReprovadaGq = false; }
         else return Forbid();
         if ((nc.AprovadaRt && nc.ReprovadaGq) || (nc.AprovadaGq && nc.ReprovadaRt)) nc.Status = StatusNaoConformidade.AguardandoDecisaoCq;
-        await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync();
+        if (nc.Status == StatusNaoConformidade.AguardandoDecisaoCq)
+            await notificacaoService.EnviarParaPapeisAsync("divergência entre RT e GQ", nc.Codigo, [Roles.ControleQualidade], "Há pareceres divergentes e a NC aguarda decisão do CQ.");
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -174,7 +181,10 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { nc.ReprovadaGq = true; nc.AprovadaGq = false; }
         else return Forbid();
         nc.Status = (nc.ReprovadaRt && nc.AprovadaGq) || (nc.ReprovadaGq && nc.AprovadaRt) ? StatusNaoConformidade.AguardandoDecisaoCq : StatusNaoConformidade.EmTratamento;
-        await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync();
+        if (nc.Status == StatusNaoConformidade.AguardandoDecisaoCq)
+            await notificacaoService.EnviarParaPapeisAsync("divergência entre RT e GQ", nc.Codigo, [Roles.ControleQualidade], "Há pareceres divergentes e a NC aguarda decisão do CQ.");
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ControleQualidade + "," + Roles.Administrador)]
@@ -184,7 +194,7 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         if (nc.Status != StatusNaoConformidade.AguardandoDecisaoCq || string.IsNullOrWhiteSpace(justificativa) || justificativa.Trim().Length < 10) { TempData["Error"] = "A decisão do CQ requer justificativa de ao menos 10 caracteres."; return RedirectToAction(nameof(Details), new { id }); }
         nc.DecisaoCq = favoravel ? StatusDecisaoCq.Favoravel : StatusDecisaoCq.Desfavoravel; nc.JustificativaDecisaoCq = justificativa.Trim(); nc.UsuarioDecisaoCq = User.Identity?.Name ?? "Usuário autenticado"; nc.DecididaPeloCqEm = DateTimeOffset.UtcNow;
         nc.Status = favoravel ? StatusNaoConformidade.AguardandoAprovacao : StatusNaoConformidade.EmTratamento;
-        await context.SaveChangesAsync(); TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; a NC pode ser encerrada pela GQ." : "Decisão desfavorável do CQ registrada; a NC retornou para tratamento."; return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync(); await notificacaoService.EnviarParaPapeisAsync("decisão do CQ", nc.Codigo, [Roles.ResponsavelTecnico, Roles.GarantiaQualidade], favoravel ? "O CQ decidiu favoravelmente e a NC pode seguir para encerramento." : "O CQ decidiu desfavoravelmente e a NC retornou para tratamento."); TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; a NC pode ser encerrada pela GQ." : "Decisão desfavorável do CQ registrada; a NC retornou para tratamento."; return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
