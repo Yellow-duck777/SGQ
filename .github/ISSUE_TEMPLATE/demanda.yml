@@ -1,0 +1,40 @@
+name: Demanda
+description: Propor uma melhoria ou funcionalidade sem incluir dados confidenciais.
+title: "[Demanda]: "
+labels:
+  - triagem
+body:
+  - type: markdown
+    attributes:
+      value: Não inclua dados reais, POPs, documentos internos ou credenciais.
+  - type: input
+    id: problema
+    attributes:
+      label: Problema
+      description: Qual problema precisa ser resolvido?
+    validations:
+      required: true
+  - type: textarea
+    id: resultado
+    attributes:
+      label: Resultado esperado
+      description: Descreva o comportamento observável, sem definir código.
+    validations:
+      required: true
+  - type: input
+    id: requisitos
+    attributes:
+      label: Requisitos relacionados
+      placeholder: RF-..., RN-... ou ainda não identificado
+  - type: textarea
+    id: aceite
+    attributes:
+      label: Critérios de aceite
+      description: Liste cenários verificáveis, incluindo falhas relevantes.
+    validations:
+      required: true
+  - type: textarea
+    id: fora
+    attributes:
+      label: Fora do escopo
+      description: O que esta demanda não deve alterar?

@@ -1,4 +1,6 @@
-# Requisitos do SGQ
+# Requisitos consolidados do SGQ
+
+> Este documento preserva o levantamento completo e seus identificadores históricos. Consulte a [matriz de rastreabilidade](matriz-rastreabilidade.md) para saber o estado atual de cada grupo. Os documentos modulares deste diretório orientam validação e implementação.
 
 ## 1. Objetivo
 
@@ -13,7 +15,7 @@ for formalmente definida.
 
 ---
 
-# 2. Escopo inicial do sistema
+## 2. Escopo inicial do sistema
 
 O SGQ terá inicialmente três processos principais:
 
@@ -29,7 +31,7 @@ desde seu registro até sua conclusão.
 
 ---
 
-# 3. Base documental
+## 3. Base documental
 
 O desenvolvimento inicial considera:
 
@@ -46,7 +48,7 @@ formalmente tratada.
 
 ---
 
-# 4. Usuários e responsabilidades
+## 4. Usuários e responsabilidades
 
 ## 4.1. Usuários do sistema
 
@@ -109,7 +111,7 @@ existirem requisitos obrigatórios pendentes.
 
 ---
 
-# 5. Requisitos gerais do sistema
+## 5. Requisitos gerais do sistema
 
 ## RF-001 - Autenticação
 
@@ -286,7 +288,7 @@ A notificação informará, no mínimo, número da NC, ação vencida, responsá
 
 ---
 
-# 6. Cadastros básicos
+## 6. Cadastros básicos
 
 ## 6.1. Cadastro de clientes
 
@@ -320,7 +322,7 @@ Não faz parte do MVP inicial.
 
 ---
 
-# 7. Reclamação de Cliente - RC
+## 7. Reclamação de Cliente - RC
 
 ## RF-RC-001 - Registro da reclamação
 
@@ -635,7 +637,7 @@ O encerramento formal será realizado pela GQ. A RC encerrada poderá ser reaber
 
 ---
 
-# 8. Não Conformidade - NC
+## 8. Não Conformidade - NC
 
 ## RF-NC-001 - Registro
 
@@ -897,7 +899,7 @@ O sistema deverá possibilitar futuramente indicadores como:
 
 ---
 
-# 9. Recall / Recolhimento
+## 9. Recall / Recolhimento
 
 ## RF-RECALL-001 - Registro
 
@@ -1214,7 +1216,7 @@ Quando houver Recall Aplicável, o processo não poderá ser encerrado enquanto 
 
 ---
 
-# 10. Regras de Negócio Confirmadas
+## 10. Regras de Negócio Confirmadas
 
 ## RN-001 - Geração automática de Não Conformidade
 
@@ -1437,7 +1439,7 @@ para conclusão.
 
 ---
 
-# 11. Segurança e rastreabilidade
+## 11. Segurança e rastreabilidade
 
 ## RS-001
 
@@ -1471,7 +1473,7 @@ repositório público.
 
 ---
 
-# 12. Relatórios e indicadores
+## 12. Relatórios e indicadores
 
 O sistema deverá permitir evolução futura para relatórios
 e indicadores.
@@ -1504,11 +1506,9 @@ As exportações obrigatórias do MVP serão XLSX e PDF. CSV poderá ser disponi
 
 ---
 
-# 13. Pontos Pendentes
+## 13. Histórico de pontos pendentes
 
-Esta seção preserva o histórico do levantamento. O status atual de cada item é definido pela seção 14 e pelas regras consolidadas ao final deste documento.
-
-Não há pendências de negócio abertas para o escopo consolidado atual. Regras documentais futuras poderão ser adicionadas conforme necessário.
+Esta seção preserva perguntas levantadas durante a descoberta. Ela não representa, isoladamente, o backlog atual. A seção 14 registra decisões já encerradas e a [matriz de rastreabilidade](matriz-rastreabilidade.md) controla o estado vigente. Um item só é considerado aberto quando estiver marcado como `Proposto` na matriz.
 
 ## P-001 - Status da Reclamação
 
@@ -1795,7 +1795,7 @@ do SGQ ou somente referenciado.
 
 ---
 
-# 14. Decisões já encerradas
+## 14. Decisões já encerradas
 
 Os seguintes pontos não deverão permanecer como pendentes:
 
@@ -1839,11 +1839,11 @@ Também ficam consolidadas as seguintes decisões:
 
 ---
 
-# 15. Situação atual do levantamento
+## 15. Situação atual do levantamento
 
 Os requisitos centrais do MVP estão consolidados. Permanecem pendências pontuais que devem ser resolvidas antes da implementação dos respectivos recursos.
 
-# Próximas etapas
+## Próximas etapas
 
 1. Resolver pendências remanescentes de negócio;
 2. Desenhar fluxos e critérios de transição;
@@ -1852,7 +1852,7 @@ Os requisitos centrais do MVP estão consolidados. Permanecem pendências pontua
 5. Modelar banco de dados;
 6. Implementar gradualmente os módulos do MVP.
 
-# Status da Reclamação de Cliente
+## Status da Reclamação de Cliente
 
 ## ST-RC-001 - Rascunho
 
@@ -1864,9 +1864,7 @@ Nesse status, o registro ainda não será considerado pronto para análise da Ga
 
 ## ST-RC-002 - Informações Pendentes
 
-Quando faltarem informações necessárias para análise da reclamação, o processo ficará com o status:
-
-**Informações Pendentes**
+Quando faltarem informações necessárias para análise da reclamação, o processo ficará com o status **Informações Pendentes**.
 
 Enquanto estiver nesse status:
 
@@ -1878,9 +1876,7 @@ Enquanto estiver nesse status:
 
 ## ST-RC-003 - Aguardando Validação da GQ
 
-Quando todas as informações obrigatórias estiverem completas, a reclamação ficará com o status:
-
-**Aguardando Validação da GQ**
+Quando todas as informações obrigatórias estiverem completas, a reclamação ficará com o status **Aguardando Validação da GQ**.
 
 A Garantia da Qualidade deverá analisar e validar as informações registradas.
 
@@ -1898,9 +1894,7 @@ Após a validação pela Garantia da Qualidade:
 
 ## ST-RC-005 - Aguardando Laboratório Externo
 
-Quando a investigação depender de resultado emitido por laboratório externo, a reclamação poderá assumir o status:
-
-**Aguardando Laboratório Externo**
+Quando a investigação depender de resultado emitido por laboratório externo, a reclamação poderá assumir o status **Aguardando Laboratório Externo**.
 
 Nesse período, deverá ser aplicada a regra de atraso externo já definida no sistema.
 
@@ -1910,9 +1904,7 @@ Após o recebimento do resultado, o processo deverá retornar ao fluxo normal da
 
 ## ST-RC-006 - Aguardando Conclusão
 
-Quando a investigação estiver concluída, mas ainda existirem atividades necessárias antes do encerramento, a reclamação ficará com o status:
-
-**Aguardando Conclusão**
+Quando a investigação estiver concluída, mas ainda existirem atividades necessárias antes do encerramento, a reclamação ficará com o status **Aguardando Conclusão**.
 
 Poderão existir nessa etapa atividades como:
 
@@ -1926,9 +1918,7 @@ Poderão existir nessa etapa atividades como:
 
 ## ST-RC-007 - Encerrada
 
-Após o cumprimento de todos os requisitos obrigatórios, a reclamação poderá assumir o status:
-
-**Encerrada**
+Após o cumprimento de todos os requisitos obrigatórios, a reclamação poderá assumir o status **Encerrada**.
 
 O encerramento será realizado pela Garantia da Qualidade.
 
@@ -1964,9 +1954,9 @@ Rascunho
 
 ---
 
-# Status da Não Conformidade
+## Status da Não Conformidade
 
-## Status definitivos
+## Status definitivos da NC
 
 - Em Investigação;
 - Em Tratamento;
@@ -1988,9 +1978,9 @@ Encerrada → Em Investigação, em reabertura autorizada
 
 ---
 
-# Status do Recall
+## Status do Recall
 
-## Status definitivos
+## Status definitivos do Recall
 
 - Em Avaliação;
 - Aguardando Aprovação;
@@ -2013,7 +2003,7 @@ Cada Recall registrará as áreas envolvidas: GQ, RT, CQ, Produção, Expediçã
 
 ---
 
-# Calendário e dias úteis
+## Calendário e dias úteis
 
 O calendário será configurável e considerará finais de semana, feriados nacionais, estaduais e municipais e dias excepcionais definidos pela empresa. Cada data especial registrará data, descrição, tipo, ano e situação ativo/inativo.
 
@@ -2021,7 +2011,7 @@ Administrador e GQ poderão cadastrar ou alterar datas; os demais usuários pode
 
 ---
 
-# Tratamento comercial da Reclamação
+## Tratamento comercial da Reclamação
 
 O tratamento comercial é independente da conclusão técnica da RC. Poderão visualizá-lo GQ, Comercial/Atendimento, RT, gestores autorizados e Administrador. Comercial/Atendimento e GQ poderão registrar ou alterar o tratamento.
 
@@ -2031,7 +2021,7 @@ Uma decisão comercial não altera automaticamente o resultado técnico: uma tro
 
 ---
 
-# Controle de amostras internas
+## Controle de amostras internas
 
 O SGQ controlará amostras internas somente quando RC, NC ou avaliação de Recall depender de análise física do produto. Cada amostra registrará identificador único, processo de origem, produto, lote, quantidade ou volume, unidade de medida, data de recebimento, origem, responsável, local de armazenamento, condição no recebimento, observações e situação.
 
@@ -2043,7 +2033,7 @@ A mesma amostra poderá ser vinculada a RC, NC e Recall relacionados sem duplica
 
 ---
 
-# Alterações relevantes após aprovação
+## Alterações relevantes após aprovação
 
 Alterações relevantes invalidam aprovações anteriores e exigem nova rodada de aprovação da versão atualizada. São relevantes, entre outros, mudanças de classificação, produto, lote, conclusão técnica, procedência, avaliação de risco, causa raiz, ações corretivas ou preventivas, eficácia, decisão de Recall, destinação, prazo, prorrogação e informações que sustentem o encerramento.
 
@@ -2051,7 +2041,7 @@ O sistema registrará usuário, data/hora, valor anterior, valor novo, justifica
 
 ---
 
-# Reabertura de Recall
+## Reabertura de Recall
 
 Recall encerrado poderá ser reaberto por GQ ou RT por nova informação relevante, clientes ou lotes adicionais, quantidade incorreta, produto ainda no mercado, nova avaliação de risco, determinação da autoridade, problema de destinação ou evidência que altere a conclusão.
 

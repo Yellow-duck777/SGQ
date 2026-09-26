@@ -1,0 +1,41 @@
+name: Defeito
+description: Registrar comportamento incorreto usando apenas dados fictícios.
+title: "[Bug]: "
+labels:
+  - bug
+  - triagem
+body:
+  - type: markdown
+    attributes:
+      value: Vulnerabilidades exploráveis devem ser relatadas pelo GitHub Security Advisory, não por issue pública.
+  - type: textarea
+    id: comportamento
+    attributes:
+      label: Comportamento observado
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Comportamento esperado
+    validations:
+      required: true
+  - type: textarea
+    id: reproducao
+    attributes:
+      label: Passos para reproduzir
+      description: Use dados fictícios e passos mínimos.
+    validations:
+      required: true
+  - type: input
+    id: ambiente
+    attributes:
+      label: Ambiente
+      placeholder: local, homologação, navegador e versão
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidência sanitizada
+      description: Não anexe credenciais, dados pessoais ou documentos internos.
