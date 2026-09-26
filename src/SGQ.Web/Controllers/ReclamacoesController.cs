@@ -33,7 +33,7 @@ public class ReclamacoesController(ApplicationDbContext context) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ReclamacaoCreateViewModel model)
     {
-        var loteIds = model.LoteIds.Distinct().ToList();
+        var loteIds = (model.LoteIds ?? []).Distinct().ToList();
         var lotes = await context.Lotes.Where(lote => loteIds.Contains(lote.Id)).ToListAsync();
 
         if (lotes.Count != loteIds.Count || lotes.Any(lote => lote.ProdutoId != model.ProdutoId))
@@ -97,17 +97,58 @@ public class ReclamacoesController(ApplicationDbContext context) : Controller
             .Include(item => item.Cliente)
             .Include(item => item.Produto)
             .Include(item => item.Lotes).ThenInclude(item => item.Lote)
+            .Include(item => item.NaoConformidade)
             .SingleOrDefaultAsync(item => item.Id == id);
 
         return reclamacao is null ? NotFound() : View(reclamacao);
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Classificar(int id, ClassificacaoOcorrencia classificacao)
+    {
+        var reclamacao = await context.ReclamacoesClientes.FindAsync(id);
+        if (reclamacao is null) return NotFound();
+        reclamacao.Classificacao = classificacao;
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Classificação definida.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AvancarStatus(int id)
+    {
+        var reclamacao = await context.ReclamacoesClientes.FindAsync(id);
+        if (reclamacao is null) return NotFound();
+        reclamacao.Status = reclamacao.Status switch
+        {
+            StatusReclamacao.Rascunho              => StatusReclamacao.AguardandoValidacaoGq,
+            StatusReclamacao.AguardandoValidacaoGq => StatusReclamacao.EmInvestigacao,
+            StatusReclamacao.EmInvestigacao        => StatusReclamacao.AguardandoConclusao,
+            StatusReclamacao.AguardandoConclusao   => StatusReclamacao.Encerrada,
+            _                                      => reclamacao.Status
+        };
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Status atualizado.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
     private async Task PopulateOptions(int? selectedCliente = null, int? selectedProduto = null, IEnumerable<int>? selectedLotes = null)
     {
-        ViewBag.Clientes = new SelectList(await context.Clientes.OrderBy(cliente => cliente.Nome).ToListAsync(), nameof(Cliente.Id), nameof(Cliente.Nome), selectedCliente);
+        var clientes = await context.Clientes.OrderBy(cliente => cliente.Nome).ToListAsync();
+        ViewBag.Clientes = new SelectList(clientes, nameof(Cliente.Id), nameof(Cliente.Nome), selectedCliente);
+        ViewBag.ClientesJson = System.Text.Json.JsonSerializer.Serialize(
+            clientes.Select(c => new { c.Id, c.Contato }));
         ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(produto => produto.Nome).ToListAsync(), nameof(Produto.Id), nameof(Produto.Nome), selectedProduto);
+        var lotes = await context.Lotes
+            .OrderBy(lote => lote.Numero)
+            .Select(lote => new { lote.Id, lote.Numero, lote.ProdutoId })
+            .ToListAsync();
+
         ViewBag.Lotes = new MultiSelectList(
-            await context.Lotes.Include(lote => lote.Produto).OrderBy(lote => lote.Numero).Select(lote => new { lote.Id, Nome = $"{lote.Numero} — {lote.Produto.Nome}" }).ToListAsync(),
+            lotes.Select(lote => new { lote.Id, Nome = lote.Numero }),
             "Id", "Nome", selectedLotes);
+
+        ViewBag.LotesJson = System.Text.Json.JsonSerializer.Serialize(
+            lotes.Select(lote => new { lote.Id, Nome = lote.Numero, lote.ProdutoId }));
     }
 }

@@ -29,7 +29,7 @@ public class ReclamacaoCreateViewModel
     public int ProdutoId { get; set; }
 
     [Display(Name = "Lotes envolvidos")]
-    public List<int> LoteIds { get; set; } = [];
+    public List<int>? LoteIds { get; set; } = [];
 
     [Required(ErrorMessage = "Descreva a reclamação.")]
     [StringLength(4000)]

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace SGQ.Web.Models;
 
@@ -15,5 +16,6 @@ public class Lote
     [Display(Name = "Produto")]
     public int ProdutoId { get; set; }
 
+    [ValidateNever]
     public Produto Produto { get; set; } = null!;
 }
