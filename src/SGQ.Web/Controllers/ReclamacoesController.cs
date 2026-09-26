@@ -12,7 +12,7 @@ using SGQ.Web.Services;
 namespace SGQ.Web.Controllers;
 
 [Authorize]
-public class ReclamacoesController(ApplicationDbContext context, IPrazoService prazoService) : Controller
+public class ReclamacoesController(ApplicationDbContext context, IPrazoService prazoService, INotificacaoService notificacaoService) : Controller
 {
     public async Task<IActionResult> Index(string? busca, StatusReclamacao? status, ClassificacaoOcorrencia? classificacao, int? produtoId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
@@ -99,6 +99,7 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
             ProdutoDisponivel = model.ProdutoDisponivel,
             QuantidadeDisponivel = model.QuantidadeDisponivel,
             VolumeDisponivel = model.VolumeDisponivel,
+            Status = StatusReclamacao.AguardandoValidacaoGq,
             UsuarioAbertura = User.Identity?.Name ?? "Usuário autenticado",
             CriadaEm = DateTimeOffset.UtcNow
         };
@@ -109,8 +110,9 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         context.ReclamacoesClientes.Add(reclamacao);
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
+        await notificacaoService.EnviarParaPapeisAsync("RC aguardando validação", reclamacao.Codigo, [Roles.GarantiaQualidade], "Uma reclamação de cliente aguarda validação da Garantia da Qualidade.");
 
-        TempData["Success"] = $"Reclamação {reclamacao.Codigo} criada como rascunho.";
+        TempData["Success"] = $"Reclamação {reclamacao.Codigo} criada e encaminhada para validação da GQ.";
         return RedirectToAction(nameof(Details), new { id = reclamacao.Id });
     }
 
@@ -175,6 +177,9 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         }
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
+        await notificacaoService.EnviarParaPapeisAsync("RC validada e NC criada automaticamente", reclamacao.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico], "A reclamação foi validada e uma Não Conformidade foi criada automaticamente.");
+        if (classificacao == ClassificacaoOcorrencia.Critica)
+            await notificacaoService.EnviarParaPapeisAsync("NC crítica", $"NC vinculada a {reclamacao.Codigo}", [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade], "Uma Não Conformidade crítica requer acompanhamento imediato.");
         TempData["Success"] = "Reclamação validada e Não Conformidade criada automaticamente.";
         return RedirectToAction(nameof(Details), new { id });
     }

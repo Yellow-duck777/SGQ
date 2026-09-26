@@ -7,11 +7,12 @@ using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.ViewModels;
 using SGQ.Web.Security;
+using SGQ.Web.Services;
 
 namespace SGQ.Web.Controllers;
 
 [Authorize]
-public class RecallsController(ApplicationDbContext context) : Controller
+public class RecallsController(ApplicationDbContext context, INotificacaoService notificacaoService) : Controller
 {
     public async Task<IActionResult> Index(string? busca, StatusRecall? status, DecisaoRecall? decisao, int? produtoId, int? loteId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
@@ -86,6 +87,8 @@ public class RecallsController(ApplicationDbContext context) : Controller
         context.Recalls.Add(recall);
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
+        if (recall.Decisao != DecisaoRecall.NaoAplicavel)
+            await notificacaoService.EnviarParaPapeisAsync("Recall iniciado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade], "Um Recall foi iniciado e requer acompanhamento.");
         TempData["Success"] = $"Recall {recall.Codigo} registrado.";
         return RedirectToAction(nameof(Details), new { id = recall.Id });
     }
@@ -132,7 +135,12 @@ public class RecallsController(ApplicationDbContext context) : Controller
         else return Forbid();
         if ((recall.AprovadaRt && recall.ReprovadaGq) || (recall.AprovadaGq && recall.ReprovadaRt)) recall.Status = StatusRecall.AguardandoDecisaoCq;
         else if (recall.AprovadaRt && recall.AprovadaGq) recall.Status = StatusRecall.EmRecolhimento;
-        await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync();
+        if (recall.Status == StatusRecall.AguardandoDecisaoCq)
+            await notificacaoService.EnviarParaPapeisAsync("divergência entre RT e GQ", recall.Codigo, [Roles.ControleQualidade], "Há pareceres divergentes e o processo aguarda decisão do CQ.");
+        else if (recall.Status == StatusRecall.EmRecolhimento)
+            await notificacaoService.EnviarParaPapeisAsync("Recall aprovado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade], "O Recall foi aprovado e segue para recolhimento.");
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
@@ -153,7 +161,7 @@ public class RecallsController(ApplicationDbContext context) : Controller
         if (recall.Status != StatusRecall.AguardandoDecisaoCq || string.IsNullOrWhiteSpace(justificativa) || justificativa.Trim().Length < 10) { TempData["Error"] = "A decisão do CQ requer justificativa de ao menos 10 caracteres."; return RedirectToAction(nameof(Details), new { id }); }
         recall.DecisaoCq = favoravel ? StatusDecisaoCq.Favoravel : StatusDecisaoCq.Desfavoravel; recall.JustificativaDecisaoCq = justificativa.Trim(); recall.UsuarioDecisaoCq = User.Identity?.Name ?? "Usuário autenticado"; recall.DecididaPeloCqEm = DateTimeOffset.UtcNow;
         recall.Status = favoravel ? StatusRecall.EmRecolhimento : StatusRecall.EmAvaliacao;
-        await context.SaveChangesAsync(); TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; o Recall segue para recolhimento." : "Decisão desfavorável do CQ registrada; o Recall voltou para avaliação."; return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync(); await notificacaoService.EnviarParaPapeisAsync("decisão do CQ", recall.Codigo, [Roles.ResponsavelTecnico, Roles.GarantiaQualidade], favoravel ? "O CQ decidiu favoravelmente e o Recall segue para recolhimento." : "O CQ decidiu desfavoravelmente e o Recall retornou à avaliação."); TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; o Recall segue para recolhimento." : "Decisão desfavorável do CQ registrada; o Recall voltou para avaliação."; return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
