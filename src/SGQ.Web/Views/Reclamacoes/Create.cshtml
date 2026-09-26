@@ -6,11 +6,11 @@
     <div class="row g-3">
         <div class="col-md-4"><label asp-for="DataRecebimento" class="form-label"></label><input asp-for="DataRecebimento" class="form-control" /><span asp-validation-for="DataRecebimento" class="text-danger"></span></div>
         <div class="col-md-4"><label asp-for="DataAlvo" class="form-label">Data-alvo</label><input asp-for="DataAlvo" class="form-control" /><div class="form-text">Preencha quando houver prazo definido para a tratativa.</div><span asp-validation-for="DataAlvo" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="CanalRecebimento" class="form-label"></label><input asp-for="CanalRecebimento" class="form-control" placeholder="Ex.: E-mail, telefone, SAC" /><span asp-validation-for="CanalRecebimento" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ClienteId" class="form-label">Cliente</label><select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select"><option value="">Selecione</option></select><span asp-validation-for="ClienteId" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ContatoCliente" class="form-label"></label><input asp-for="ContatoCliente" class="form-control" /><span asp-validation-for="ContatoCliente" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Selecione</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="LoteIds" class="form-label">Lotes envolvidos</label><select asp-for="LoteIds" asp-items="ViewBag.Lotes" class="form-select" multiple size="4"></select><div class="form-text">Opcional; selecione apenas lotes do produto informado.</div><span asp-validation-for="LoteIds" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="CanalRecebimento" class="form-label"></label><select asp-for="CanalRecebimento" class="form-select"><option value="">Selecione</option><option>SAC</option><option>E-mail</option><option>Telefone</option><option>WhatsApp</option><option>Representante comercial</option><option>Visita presencial</option><option>Formulário web</option><option>Redes sociais</option><option>Carta / Correio</option><option>Outro</option></select><span asp-validation-for="CanalRecebimento" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="ClienteId" class="form-label">Cliente</label><select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select" id="ClienteId"><option value="">Selecione</option></select><span asp-validation-for="ClienteId" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="ContatoCliente" class="form-label"></label><input asp-for="ContatoCliente" class="form-control" id="ContatoCliente" /><span asp-validation-for="ContatoCliente" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select" id="ProdutoId"><option value="">Selecione</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="LoteIds" class="form-label">Lotes envolvidos</label><select asp-for="LoteIds" class="form-select" id="LoteIds" multiple size="4"></select><div class="form-text">Opcional; selecione apenas lotes do produto informado.</div><span asp-validation-for="LoteIds" class="text-danger"></span></div>
         <div class="col-12"><label asp-for="Descricao" class="form-label"></label><textarea asp-for="Descricao" class="form-control" rows="4"></textarea><span asp-validation-for="Descricao" class="text-danger"></span></div>
         <div class="col-md-4"><label asp-for="DataFabricacao" class="form-label"></label><input asp-for="DataFabricacao" class="form-control" /></div>
         <div class="col-md-4"><label asp-for="DataValidade" class="form-label"></label><input asp-for="DataValidade" class="form-control" /></div>
@@ -22,4 +22,40 @@
     </div>
     <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Criar rascunho</button><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div>
 </form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const todosClientes = @Html.Raw(ViewBag.ClientesJson ?? "[]");
+        const todosLotes = @Html.Raw(ViewBag.LotesJson ?? "[]");
+        const selectedLoteIds = new Set(@Html.Raw(
+            System.Text.Json.JsonSerializer.Serialize(Model.LoteIds ?? new List<int>())));
+
+        function atualizarLotes() {
+            const produtoId = parseInt(document.getElementById('ProdutoId').value);
+            const select = document.getElementById('LoteIds');
+            select.innerHTML = '';
+            if (!produtoId) return;
+            const lotesDoProduto = todosLotes.filter(l => l.ProdutoId === produtoId);
+            lotesDoProduto.forEach(lote => {
+                const opt = document.createElement('option');
+                opt.value = lote.Id;
+                opt.textContent = lote.Nome;
+                opt.selected = selectedLoteIds.has(lote.Id);
+                select.appendChild(opt);
+            });
+        }
+
+        document.getElementById('ClienteId').addEventListener('change', function () {
+            const id = parseInt(this.value);
+            const cliente = todosClientes.find(c => c.Id === id);
+            const campo = document.getElementById('ContatoCliente');
+            if (cliente && !campo.dataset.editado) campo.value = cliente.Contato;
+        });
+        document.getElementById('ContatoCliente').addEventListener('input', function () {
+            this.dataset.editado = '1';
+        });
+
+        document.getElementById('ProdutoId').addEventListener('change', atualizarLotes);
+        atualizarLotes();
+    </script>
+}

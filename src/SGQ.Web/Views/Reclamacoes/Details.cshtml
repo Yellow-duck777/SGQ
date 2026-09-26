@@ -1,16 +1,239 @@
 @model SGQ.Web.Models.ReclamacaoCliente
+@using SGQ.Web.Models
 @{ ViewData["Title"] = Model.Codigo; }
+
+@{
+    string StatusLabel(StatusReclamacao s) => s switch
+    {
+        StatusReclamacao.Rascunho              => "Rascunho",
+        StatusReclamacao.InformacoesPendentes  => "Informações Pendentes",
+        StatusReclamacao.AguardandoValidacaoGq => "Aguardando Validação GQ",
+        StatusReclamacao.EmInvestigacao        => "Em Investigação",
+        StatusReclamacao.AguardandoLaboratorioExterno => "Aguardando Laboratório",
+        StatusReclamacao.AguardandoConclusao   => "Aguardando Conclusão",
+        StatusReclamacao.Encerrada             => "Encerrada",
+        _ => s.ToString()
+    };
+    string StatusClass(StatusReclamacao s) => s switch
+    {
+        StatusReclamacao.Rascunho              => "text-bg-secondary",
+        StatusReclamacao.InformacoesPendentes  => "text-bg-warning",
+        StatusReclamacao.AguardandoValidacaoGq => "text-bg-warning",
+        StatusReclamacao.EmInvestigacao        => "text-bg-primary",
+        StatusReclamacao.AguardandoLaboratorioExterno => "text-bg-info",
+        StatusReclamacao.AguardandoConclusao   => "text-bg-warning",
+        StatusReclamacao.Encerrada             => "text-bg-success",
+        _ => "text-bg-secondary"
+    };
+    string ClassifLabel(ClassificacaoOcorrencia? c) => c switch
+    {
+        ClassificacaoOcorrencia.Critica => "Crítica",
+        ClassificacaoOcorrencia.Maior   => "Maior",
+        ClassificacaoOcorrencia.Menor   => "Menor",
+        _ => ""
+    };
+    string ClassifClass(ClassificacaoOcorrencia? c) => c switch
+    {
+        ClassificacaoOcorrencia.Critica => "text-bg-danger",
+        ClassificacaoOcorrencia.Maior   => "text-bg-warning",
+        ClassificacaoOcorrencia.Menor   => "text-bg-info",
+        _ => ""
+    };
+}
+
 @if (TempData["Success"] is string success) { <div class="alert alert-success" role="alert">@success</div> }
 @if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">Reclamação de Cliente</p><h1>@Model.Codigo</h1><span class="badge text-bg-secondary">@Model.Status</span></div><a class="btn btn-outline-secondary" asp-action="Index">Voltar</a></div>
-<div class="row g-4"><div class="col-lg-8"><div class="card shadow-sm border-0 p-4"><h2 class="h5">Ocorrência</h2><dl class="row mb-0"><dt class="col-sm-4">Cliente</dt><dd class="col-sm-8">@Model.Cliente.Nome</dd><dt class="col-sm-4">Contato</dt><dd class="col-sm-8">@Model.ContatoCliente</dd><dt class="col-sm-4">Produto</dt><dd class="col-sm-8">@Model.Produto.Nome</dd><dt class="col-sm-4">Lotes</dt><dd class="col-sm-8">@(Model.Lotes.Any() ? string.Join(", ", Model.Lotes.Select(item => item.Lote.Numero)) : "Não informado")</dd><dt class="col-sm-4">Descrição</dt><dd class="col-sm-8">@Model.Descricao</dd><dt class="col-sm-4">NC vinculada</dt><dd class="col-sm-8">@(Model.NaoConformidade?.Codigo ?? "Ainda não criada")</dd></dl></div></div><div class="col-lg-4"><div class="card shadow-sm border-0 p-4"><h2 class="h5">Registro</h2><p class="mb-2"><strong>Recebimento:</strong><br />@Model.DataRecebimento.ToString("dd/MM/yyyy")</p><p class="mb-2"><strong>Canal:</strong><br />@Model.CanalRecebimento</p><p class="mb-0"><strong>Criado por:</strong><br />@Model.UsuarioAbertura</p></div></div></div>
-@if (Model.Status is SGQ.Web.Models.StatusReclamacao.Rascunho or SGQ.Web.Models.StatusReclamacao.InformacoesPendentes or SGQ.Web.Models.StatusReclamacao.AguardandoValidacaoGq) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Validação da GQ</h2><p class="text-muted">A validação classifica a reclamação e cria automaticamente a NC vinculada.</p><form asp-action="Validar" method="post" class="d-flex flex-wrap gap-2 align-items-end"><input type="hidden" name="id" value="@Model.Id" /><div><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.ClassificacaoOcorrencia>()"></select></div><button class="btn btn-primary" type="submit">Validar e criar NC</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusReclamacao.EmInvestigacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Conclusão da investigação</h2><form asp-action="Concluir" method="post"><input type="hidden" name="Id" value="@Model.Id" /><div class="row g-3"><div class="col-12"><label class="form-label" for="Investigacao">Investigação</label><textarea class="form-control" name="Investigacao" id="Investigacao" rows="3" required></textarea></div><div class="col-md-4"><label class="form-label" for="Resultado">Resultado</label><select class="form-select" name="Resultado" id="Resultado" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.ResultadoReclamacao>()"></select></div><div class="col-md-8"><label class="form-label" for="TratamentoAplicado">Tratamento aplicado</label><input class="form-control" name="TratamentoAplicado" id="TratamentoAplicado" required /></div><div class="col-md-4"><label class="form-label" for="DataRespostaCliente">Data da resposta</label><input class="form-control" type="date" name="DataRespostaCliente" id="DataRespostaCliente" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div><div class="col-md-8"><label class="form-label" for="RespostaCliente">Resposta ao cliente</label><input class="form-control" name="RespostaCliente" id="RespostaCliente" required /></div></div><button class="btn btn-primary mt-3" type="submit">Registrar conclusão</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusReclamacao.AguardandoConclusao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Encerramento pela GQ</h2><p><strong>Resultado:</strong> @Model.Resultado<br /><strong>Tratamento:</strong> @Model.TratamentoAplicado<br /><strong>Resposta ao cliente:</strong> @Model.RespostaCliente</p><form asp-action="Encerrar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary" type="submit">Encerrar reclamação</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusReclamacao.Encerrada) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Reabertura</h2><p class="text-muted">A reabertura retorna a reclamação para investigação e mantém a NC vinculada.</p><form asp-action="Reabrir" method="post"><input type="hidden" name="Id" value="@Model.Id" /><label class="form-label" for="Justificativa">Justificativa</label><textarea class="form-control" id="Justificativa" name="Justificativa" rows="3" minlength="10" maxlength="2000" required></textarea><button class="btn btn-outline-danger mt-3" type="submit">Reabrir reclamação</button></form></section> }
-@if (Model.ReabertaEm.HasValue) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Última reabertura</h2><p class="mb-1">@Model.JustificativaReabertura</p><p class="mb-0 text-muted">Por @Model.UsuarioReabertura em @Model.ReabertaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"). Status anterior: @Model.StatusAnteriorReabertura.</p></section> }
-@if (Model.Status == SGQ.Web.Models.StatusReclamacao.EmInvestigacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Laboratório externo</h2><form asp-action="SolicitarLaboratorio" method="post" class="row g-2"><input type="hidden" name="Id" value="@Model.Id" /><div class="col-md-6"><input name="Laboratorio" class="form-control" placeholder="Laboratório responsável" required /></div><div class="col-md-4"><input name="DataEnvioAmostra" type="date" class="form-control" required /></div><div class="col-md-2"><button class="btn btn-outline-primary">Solicitar</button></div></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusReclamacao.AguardandoLaboratorioExterno) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Resultado do laboratório</h2><p>Envie o laudo como anexo crítico e depois registre o resultado.</p><form asp-action="RegistrarResultadoLaboratorio" method="post" class="row g-2"><input type="hidden" name="Id" value="@Model.Id" /><div class="col-md-3"><input name="DataRecebimento" type="date" class="form-control" required /></div><div class="col-md-4"><input name="IdentificacaoLaudo" class="form-control" placeholder="Identificação do laudo" required /></div><div class="col-md-5"><input name="Resultado" class="form-control" placeholder="Resultado" required /></div><div class="col-12"><button class="btn btn-primary">Registrar resultado</button></div></form></section> }
+
+<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <p class="eyebrow mb-1">Reclamação de Cliente</p>
+        <h1>@Model.Codigo</h1>
+        <span class="badge @StatusClass(Model.Status)">@StatusLabel(Model.Status)</span>
+        @if (Model.Classificacao.HasValue)
+        {
+            <span class="badge @ClassifClass(Model.Classificacao) ms-1">@ClassifLabel(Model.Classificacao)</span>
+        }
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8 d-flex flex-column gap-4">
+
+        <div class="card shadow-sm border-0 p-4">
+            <h2 class="h5 mb-3">Ocorrência</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8">@Model.Cliente.Nome</dd>
+                <dt class="col-sm-4">Contato</dt><dd class="col-sm-8">@Model.ContatoCliente</dd>
+                <dt class="col-sm-4">Produto</dt><dd class="col-sm-8">@Model.Produto.Nome</dd>
+                <dt class="col-sm-4">Lotes</dt><dd class="col-sm-8">@(Model.Lotes.Any() ? string.Join(", ", Model.Lotes.Select(l => l.Lote.Numero)) : "—")</dd>
+                <dt class="col-sm-4">Descrição</dt><dd class="col-sm-8">@Model.Descricao</dd>
+            </dl>
+        </div>
+
+        @if (Model.DataFabricacao.HasValue || Model.DataValidade.HasValue || Model.QuantidadeEnvolvida.HasValue || Model.LocalAquisicao != null || Model.ProdutoDisponivel)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Dados da amostra</h2>
+                <dl class="row mb-0">
+                    @if (Model.DataFabricacao.HasValue) { <dt class="col-sm-4">Fabricação</dt><dd class="col-sm-8">@Model.DataFabricacao.Value.ToString("dd/MM/yyyy")</dd> }
+                    @if (Model.DataValidade.HasValue) { <dt class="col-sm-4">Validade</dt><dd class="col-sm-8">@Model.DataValidade.Value.ToString("dd/MM/yyyy")</dd> }
+                    @if (Model.QuantidadeEnvolvida.HasValue) { <dt class="col-sm-4">Qtd. envolvida</dt><dd class="col-sm-8">@Model.QuantidadeEnvolvida</dd> }
+                    @if (Model.LocalAquisicao != null) { <dt class="col-sm-4">Local de aquisição</dt><dd class="col-sm-8">@Model.LocalAquisicao</dd> }
+                    <dt class="col-sm-4">Produto disponível</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.ProdutoDisponivel) { <span>Sim@(Model.QuantidadeDisponivel.HasValue ? $" — {Model.QuantidadeDisponivel}" : "")@(Model.VolumeDisponivel != null ? $" ({Model.VolumeDisponivel})" : "")</span> }
+                        else { <span>Não</span> }
+                    </dd>
+                </dl>
+            </div>
+        }
+
+        <div class="card shadow-sm border-0 p-4">
+            <h2 class="h5 mb-3">Investigação</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <p class="text-muted small mb-1">Classificação</p>
+                    @if (Model.Classificacao.HasValue)
+                    {
+                        <span class="badge @ClassifClass(Model.Classificacao) fs-6">@ClassifLabel(Model.Classificacao)</span>
+                        <form method="post" asp-action="Classificar" asp-route-id="@Model.Id" class="d-inline ms-2">
+                            @Html.AntiForgeryToken()
+                            <select name="classificacao" class="form-select form-select-sm d-inline-block w-auto">
+                                <option value="Critica">Crítica</option><option value="Maior">Maior</option><option value="Menor">Menor</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary ms-1" type="submit">Alterar</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form method="post" asp-action="Classificar" asp-route-id="@Model.Id" class="d-flex gap-2 align-items-center">
+                            @Html.AntiForgeryToken()
+                            <select name="classificacao" class="form-select form-select-sm w-auto" required>
+                                <option value="">Selecione</option><option value="Critica">Crítica</option><option value="Maior">Maior</option><option value="Menor">Menor</option>
+                            </select>
+                            <button class="btn btn-sm btn-primary" type="submit">Definir</button>
+                        </form>
+                    }
+                </div>
+                <div class="col-md-6">
+                    <p class="text-muted small mb-1">Não Conformidade</p>
+                    @if (Model.NaoConformidade is not null)
+                    {
+                        <a asp-controller="NaoConformidades" asp-action="Details" asp-route-id="@Model.NaoConformidade.Id" class="fw-semibold">@Model.NaoConformidade.Codigo</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Nenhuma NC aberta</span>
+                        <a asp-controller="NaoConformidades" asp-action="Create" asp-route-reclamacaoId="@Model.Id" class="btn btn-sm btn-outline-primary ms-2">Abrir NC</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Status is StatusReclamacao.Rascunho or StatusReclamacao.InformacoesPendentes or StatusReclamacao.AguardandoValidacaoGq)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Validação da GQ</h2>
+                <p class="text-muted">A validação classifica a reclamação e cria automaticamente a NC vinculada.</p>
+                <form asp-action="Validar" method="post" class="d-flex flex-wrap gap-2 align-items-end">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.ClassificacaoOcorrencia>()"></select></div>
+                    <button class="btn btn-primary" type="submit">Validar e criar NC</button>
+                </form>
+            </div>
+        }
+
+        @if (Model.Status == StatusReclamacao.EmInvestigacao)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Conclusão da investigação</h2>
+                <form asp-action="Concluir" method="post">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label" for="Investigacao">Investigação</label><textarea class="form-control" name="Investigacao" id="Investigacao" rows="3" required></textarea></div>
+                        <div class="col-md-4"><label class="form-label" for="Resultado">Resultado</label><select class="form-select" name="Resultado" id="Resultado" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.ResultadoReclamacao>()"></select></div>
+                        <div class="col-md-8"><label class="form-label" for="TratamentoAplicado">Tratamento aplicado</label><input class="form-control" name="TratamentoAplicado" id="TratamentoAplicado" required /></div>
+                        <div class="col-md-4"><label class="form-label" for="DataRespostaCliente">Data da resposta</label><input class="form-control" type="date" name="DataRespostaCliente" id="DataRespostaCliente" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+                        <div class="col-md-8"><label class="form-label" for="RespostaCliente">Resposta ao cliente</label><input class="form-control" name="RespostaCliente" id="RespostaCliente" required /></div>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Registrar conclusão</button>
+                </form>
+            </div>
+        }
+
+        @if (Model.Status == StatusReclamacao.AguardandoConclusao)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Encerramento pela GQ</h2>
+                <p><strong>Resultado:</strong> @Model.Resultado<br /><strong>Tratamento:</strong> @Model.TratamentoAplicado<br /><strong>Resposta ao cliente:</strong> @Model.RespostaCliente</p>
+                <form asp-action="Encerrar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary" type="submit">Encerrar reclamação</button></form>
+            </div>
+        }
+
+        @if (Model.Status == StatusReclamacao.Encerrada)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Reabertura</h2>
+                <p class="text-muted">A reabertura retorna a reclamação para investigação e mantém a NC vinculada.</p>
+                <form asp-action="Reabrir" method="post">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <label class="form-label" for="Justificativa">Justificativa</label>
+                    <textarea class="form-control" id="Justificativa" name="Justificativa" rows="3" minlength="10" maxlength="2000" required></textarea>
+                    <button class="btn btn-outline-danger mt-3" type="submit">Reabrir reclamação</button>
+                </form>
+            </div>
+        }
+
+        @if (Model.Status == StatusReclamacao.EmInvestigacao)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Laboratório externo</h2>
+                <form asp-action="SolicitarLaboratorio" method="post" class="row g-2">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <div class="col-md-6"><input name="Laboratorio" class="form-control" placeholder="Laboratório responsável" required /></div>
+                    <div class="col-md-4"><input name="DataEnvioAmostra" type="date" class="form-control" required /></div>
+                    <div class="col-md-2"><button class="btn btn-outline-primary">Solicitar</button></div>
+                </form>
+            </div>
+        }
+
+        @if (Model.Status == StatusReclamacao.AguardandoLaboratorioExterno)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Resultado do laboratório</h2>
+                <p>Envie o laudo como anexo crítico e depois registre o resultado.</p>
+                <form asp-action="RegistrarResultadoLaboratorio" method="post" class="row g-2">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <div class="col-md-3"><input name="DataRecebimento" type="date" class="form-control" required /></div>
+                    <div class="col-md-4"><input name="IdentificacaoLaudo" class="form-control" placeholder="Identificação do laudo" required /></div>
+                    <div class="col-md-5"><input name="Resultado" class="form-control" placeholder="Resultado" required /></div>
+                    <div class="col-12"><button class="btn btn-primary">Registrar resultado</button></div>
+                </form>
+            </div>
+        }
+
+        @if (Model.ReabertaEm.HasValue)
+        {
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="h5 mb-3">Última reabertura</h2>
+                <p class="mb-1">@Model.JustificativaReabertura</p>
+                <p class="mb-0 text-muted">Por @Model.UsuarioReabertura em @Model.ReabertaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"). Status anterior: @Model.StatusAnteriorReabertura.</p>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4 d-flex flex-column gap-4">
+        <div class="card shadow-sm border-0 p-4">
+            <h2 class="h5 mb-3">Registro</h2>
+            <p class="mb-2"><strong>Recebimento:</strong><br />@Model.DataRecebimento.ToString("dd/MM/yyyy")</p>
+            @if (Model.DataAlvo.HasValue) { <p class="mb-2"><strong>Data-alvo:</strong><br />@Model.DataAlvo.Value.ToString("dd/MM/yyyy")</p> }
+            <p class="mb-2"><strong>Canal:</strong><br />@Model.CanalRecebimento</p>
+            <p class="mb-0"><strong>Criado por:</strong><br />@Model.UsuarioAbertura</p>
+        </div>
+    </div>
+</div>
+
 <partial name="_Anexos" model='("Reclamacoes", Model.Id)' />
 <partial name="_ProrrogacaoPrazo" model='("Prorrogar", Model.Id, Model.DataAlvo)' />
 <partial name="_HistoricoAuditoria" model='(IEnumerable<SGQ.Web.Models.HistoricoAuditoria>)ViewBag.HistoricoAuditoria' />

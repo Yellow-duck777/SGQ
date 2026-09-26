@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace SGQ.Web.Models;
 
@@ -25,6 +26,7 @@ public class ReclamacaoCliente
     [Required]
     public int ClienteId { get; set; }
 
+    [ValidateNever]
     public Cliente Cliente { get; set; } = null!;
 
     [Required]
@@ -34,6 +36,7 @@ public class ReclamacaoCliente
     [Required]
     public int ProdutoId { get; set; }
 
+    [ValidateNever]
     public Produto Produto { get; set; } = null!;
 
     [Required]
