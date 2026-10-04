@@ -7,11 +7,12 @@ using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.ViewModels;
 using SGQ.Web.Security;
+using SGQ.Web.Services;
 
 namespace SGQ.Web.Controllers;
 
 [Authorize]
-public class RecallsController(ApplicationDbContext context) : Controller
+public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoService? notificacoes = null) : Controller
 {
     public async Task<IActionResult> Index(string? busca, StatusRecall? status, DecisaoRecall? decisao, int? produtoId, int? loteId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
@@ -86,6 +87,9 @@ public class RecallsController(ApplicationDbContext context) : Controller
         context.Recalls.Add(recall);
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
+        if (recall.Decisao == DecisaoRecall.Aplicavel)
+            await NotificarAsync("RecallIniciado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade],
+                $"SGQ: Recall iniciado — {recall.Codigo}", $"O Recall {recall.Codigo} foi iniciado e requer avaliação técnica.");
         TempData["Success"] = $"Recall {recall.Codigo} registrado.";
         return RedirectToAction(nameof(Details), new { id = recall.Id });
     }
@@ -132,7 +136,11 @@ public class RecallsController(ApplicationDbContext context) : Controller
         else return Forbid();
         if ((recall.AprovadaRt && recall.ReprovadaGq) || (recall.AprovadaGq && recall.ReprovadaRt)) recall.Status = StatusRecall.AguardandoDecisaoCq;
         else if (recall.AprovadaRt && recall.AprovadaGq) recall.Status = StatusRecall.EmRecolhimento;
-        await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync();
+        if (recall.Status == StatusRecall.EmRecolhimento)
+            await NotificarAsync("RecallAprovado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade],
+                $"SGQ: Recall aprovado — {recall.Codigo}", $"O Recall {recall.Codigo} foi aprovado e segue para recolhimento.");
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
@@ -143,7 +151,11 @@ public class RecallsController(ApplicationDbContext context) : Controller
         else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { recall.ReprovadaGq = true; recall.AprovadaGq = false; }
         else return Forbid();
         recall.Status = (recall.ReprovadaRt && recall.AprovadaGq) || (recall.ReprovadaGq && recall.AprovadaRt) ? StatusRecall.AguardandoDecisaoCq : StatusRecall.EmAvaliacao;
-        await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync();
+        if (recall.Status == StatusRecall.AguardandoDecisaoCq)
+            await NotificarAsync("DivergenciaRtGq", recall.Codigo, [Roles.ControleQualidade],
+                $"SGQ: divergência requer decisão do CQ — {recall.Codigo}", $"Há divergência entre RT e GQ na aprovação do Recall {recall.Codigo}. O CQ deve registrar a decisão.");
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ControleQualidade + "," + Roles.Administrador)]
@@ -153,7 +165,13 @@ public class RecallsController(ApplicationDbContext context) : Controller
         if (recall.Status != StatusRecall.AguardandoDecisaoCq || string.IsNullOrWhiteSpace(justificativa) || justificativa.Trim().Length < 10) { TempData["Error"] = "A decisão do CQ requer justificativa de ao menos 10 caracteres."; return RedirectToAction(nameof(Details), new { id }); }
         recall.DecisaoCq = favoravel ? StatusDecisaoCq.Favoravel : StatusDecisaoCq.Desfavoravel; recall.JustificativaDecisaoCq = justificativa.Trim(); recall.UsuarioDecisaoCq = User.Identity?.Name ?? "Usuário autenticado"; recall.DecididaPeloCqEm = DateTimeOffset.UtcNow;
         recall.Status = favoravel ? StatusRecall.EmRecolhimento : StatusRecall.EmAvaliacao;
-        await context.SaveChangesAsync(); TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; o Recall segue para recolhimento." : "Decisão desfavorável do CQ registrada; o Recall voltou para avaliação."; return RedirectToAction(nameof(Details), new { id });
+        await context.SaveChangesAsync();
+        await NotificarAsync("DecisaoCqRegistrada", recall.Codigo, [Roles.ResponsavelTecnico, Roles.GarantiaQualidade],
+            $"SGQ: decisão do CQ registrada — {recall.Codigo}", $"O CQ registrou decisão {(favoravel ? "favorável" : "desfavorável")} para o Recall {recall.Codigo}.");
+        if (favoravel)
+            await NotificarAsync("RecallAprovado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade],
+                $"SGQ: Recall aprovado — {recall.Codigo}", $"O Recall {recall.Codigo} foi aprovado e segue para recolhimento.");
+        TempData["Success"] = favoravel ? "Decisão favorável do CQ registrada; o Recall segue para recolhimento." : "Decisão desfavorável do CQ registrada; o Recall voltou para avaliação."; return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -198,7 +216,10 @@ public class RecallsController(ApplicationDbContext context) : Controller
     {
         var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound();
         if (recall.Status != StatusRecall.AguardandoEncerramento || !recall.AprovadaRt || !recall.AprovadaGq || recall.ComunicadaAutoridadeEm is null) { TempData["Error"] = "O Recall precisa de aprovações, comunicação regulatória e destinação antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
-        recall.Status = StatusRecall.Encerrado; recall.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado"; recall.EncerradaEm = DateTimeOffset.UtcNow; await context.SaveChangesAsync(); return RedirectToAction(nameof(Details), new { id });
+        recall.Status = StatusRecall.Encerrado; recall.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado"; recall.EncerradaEm = DateTimeOffset.UtcNow; await context.SaveChangesAsync();
+        await NotificarAsync("ProcessoEncerrado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade],
+            $"SGQ: processo encerrado — {recall.Codigo}", $"O Recall {recall.Codigo} foi encerrado.", [recall.UsuarioAbertura, recall.UsuarioDecisaoCq ?? string.Empty, recall.UsuarioEncerramento]);
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -239,7 +260,10 @@ public class RecallsController(ApplicationDbContext context) : Controller
         var item = await context.Recalls.FindAsync(model.Id); if (item is null) return NotFound();
         if (!item.DataAlvo.HasValue || model.NovaData <= item.DataAlvo) { TempData["Error"] = "Informe uma nova data posterior ao prazo atual."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
         context.ProrrogacoesPrazo.Add(new ProrrogacaoPrazo { RecallId = item.Id, DataAnterior = item.DataAlvo.Value, NovaData = model.NovaData.Value, Motivo = model.Motivo.Trim(), ClienteComunicado = model.ClienteComunicado, RegistroComunicacaoCliente = model.RegistroComunicacaoCliente?.Trim(), Usuario = User.Identity?.Name ?? "Usuário autenticado", RegistradaEm = DateTimeOffset.UtcNow });
-        item.DataAlvo = model.NovaData; await context.SaveChangesAsync(); TempData["Success"] = "Prazo prorrogado e registrado no histórico."; return RedirectToAction(nameof(Details), new { id = model.Id });
+        item.DataAlvo = model.NovaData; await context.SaveChangesAsync();
+        await NotificarAsync("ProrrogacaoRegistrada", item.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico],
+            $"SGQ: prazo prorrogado — {item.Codigo}", $"O prazo do Recall {item.Codigo} foi prorrogado para {item.DataAlvo:dd/MM/yyyy}.");
+        TempData["Success"] = "Prazo prorrogado e registrado no histórico."; return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     private async Task PopulateOptions(int? produtoId = null, int? loteId = null, int? ncId = null, int? rcId = null)
@@ -250,4 +274,7 @@ public class RecallsController(ApplicationDbContext context) : Controller
         ViewBag.NaoConformidades = new SelectList(await context.NaoConformidades.OrderByDescending(item => item.CriadaEm).ToListAsync(), "Id", "Codigo", ncId);
         ViewBag.Reclamacoes = new SelectList(await context.ReclamacoesClientes.OrderByDescending(item => item.CriadaEm).ToListAsync(), "Id", "Codigo", rcId);
     }
+
+    private Task NotificarAsync(string tipo, string referencia, IEnumerable<string> perfis, string assunto, string corpo, IEnumerable<string>? usuariosEnvolvidos = null) =>
+        notificacoes?.NotificarAsync(tipo, referencia, perfis, assunto, corpo, usuariosEnvolvidos) ?? Task.CompletedTask;
 }

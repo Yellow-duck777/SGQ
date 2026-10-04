@@ -58,6 +58,17 @@ Sistema web para registrar, tratar e rastrear processos de qualidade.
    dotnet run --project src/SGQ.Web
    ```
 
+## Apresentação local
+
+Para mostrar o SGQ neste computador:
+
+1. Abra o PowerShell na pasta do projeto.
+2. Execute `dotnet run --project src/SGQ.Web`.
+3. Abra no navegador o endereço mostrado após `Now listening on`. Por padrão, o perfil HTTP usa `http://localhost:5024`.
+4. Quando terminar, pressione `Ctrl + C` no PowerShell para encerrar o servidor.
+
+O endereço funciona apenas neste computador enquanto o servidor estiver ligado. As credenciais e as configurações do banco continuam locais e não são exibidas neste guia.
+
 ## Desenvolvimento
 
 Para validar a compilação:
