@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build e testes (.NET + PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Conexão sem nome de banco: cada execução de teste cria e descarta o seu próprio banco.
+      SGQ_TEST_PG: Host=localhost;Port=5432;Username=postgres;Password=postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restaurar
+        run: dotnet restore SGQ.slnx
+
+      - name: Compilar
+        run: dotnet build SGQ.slnx --no-restore
+
+      - name: Testar
+        run: dotnet test SGQ.slnx --no-build --verbosity normal
+
+  docs:
+    name: Documentação (markdownlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint dos arquivos Markdown
+        run: npx --yes markdownlint-cli2@0.18.1
