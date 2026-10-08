@@ -147,10 +147,16 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.GestaoQualidade)]
-    public async Task<IActionResult> Validar(int id, ClassificacaoOcorrencia classificacao)
+    public async Task<IActionResult> Validar(int id, [FromForm(Name = "classificacao")] ClassificacaoOcorrencia? classificacaoInformada)
     {
         var reclamacao = await context.ReclamacoesClientes.Include(item => item.NaoConformidade).SingleOrDefaultAsync(item => item.Id == id);
         if (reclamacao is null) return NotFound();
+        if (!classificacaoInformada.HasValue || !Enum.IsDefined(classificacaoInformada.Value))
+        {
+            TempData["Error"] = "Informe a classificação da ocorrência para validar a reclamação.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        var classificacao = classificacaoInformada.Value;
         if (reclamacao.Status is not (StatusReclamacao.Rascunho or StatusReclamacao.InformacoesPendentes or StatusReclamacao.AguardandoValidacaoGq))
         {
             TempData["Error"] = "Esta reclamação não está disponível para validação.";
@@ -305,38 +311,27 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         reclamacao.JustificativaReabertura = model.Justificativa.Trim();
         reclamacao.UsuarioReabertura = User.Identity?.Name ?? "Usuário autenticado";
         reclamacao.ReabertaEm = DateTimeOffset.UtcNow;
+        reclamacao.UsuarioEncerramento = null;
+        reclamacao.EncerradaEm = null;
         reclamacao.Status = StatusReclamacao.EmInvestigacao;
         await context.SaveChangesAsync();
         TempData["Success"] = "Reclamação reaberta. Registre uma nova conclusão antes do encerramento pela GQ.";
         return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Classificar(int id, ClassificacaoOcorrencia classificacao)
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.GestaoQualidade)]
+    public async Task<IActionResult> Classificar(int id, ClassificacaoOcorrencia? classificacao)
     {
         var reclamacao = await context.ReclamacoesClientes.FindAsync(id);
         if (reclamacao is null) return NotFound();
-        reclamacao.Classificacao = classificacao;
+        if (!classificacao.HasValue || !Enum.IsDefined(classificacao.Value) || reclamacao.Status is StatusReclamacao.Encerrada or StatusReclamacao.Rascunho)
+        {
+            TempData["Error"] = "Informe uma classificação válida para uma reclamação em andamento.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        reclamacao.Classificacao = classificacao.Value;
         await context.SaveChangesAsync();
         TempData["Success"] = "Classificação definida.";
-        return RedirectToAction(nameof(Details), new { id });
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AvancarStatus(int id)
-    {
-        var reclamacao = await context.ReclamacoesClientes.FindAsync(id);
-        if (reclamacao is null) return NotFound();
-        reclamacao.Status = reclamacao.Status switch
-        {
-            StatusReclamacao.Rascunho              => StatusReclamacao.AguardandoValidacaoGq,
-            StatusReclamacao.AguardandoValidacaoGq => StatusReclamacao.EmInvestigacao,
-            StatusReclamacao.EmInvestigacao        => StatusReclamacao.AguardandoConclusao,
-            StatusReclamacao.AguardandoConclusao   => StatusReclamacao.Encerrada,
-            _                                      => reclamacao.Status
-        };
-        await context.SaveChangesAsync();
-        TempData["Success"] = "Status atualizado.";
         return RedirectToAction(nameof(Details), new { id });
     }
 
