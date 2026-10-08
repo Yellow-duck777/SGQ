@@ -29,6 +29,8 @@ body {
   border-bottom: 1px solid #cdebd7;
   box-shadow: 0 0.3rem 1rem rgba(8, 116, 67, 0.07);
   backdrop-filter: blur(0.75rem);
+  position: relative;
+  z-index: 1030;
 }
 
 .navbar {
@@ -41,7 +43,7 @@ body {
 .nav-link:hover, .nav-link:focus { color: var(--sgq-green-700); }
 .nav-link { transition: color .2s ease, transform .2s ease; }
 .nav-link:hover { transform: translateY(-1px); }
-.dropdown-menu { padding: 0.35rem; border-color: #cdebd7; border-radius: 0.65rem; box-shadow: 0 0.75rem 1.5rem rgba(8, 116, 67, 0.12); }
+.dropdown-menu { z-index: 1031; padding: 0.35rem; border-color: #cdebd7; border-radius: 0.65rem; box-shadow: 0 0.75rem 1.5rem rgba(8, 116, 67, 0.12); }
 .dropdown-item { padding: 0.45rem 0.6rem; border-radius: 0.3rem; font-size: 0.875rem; }
 
 .brand {
