@@ -14,7 +14,7 @@ using SGQ.Web.Services;
 namespace SGQ.Web.Controllers;
 
 [Authorize]
-public class ReclamacoesController(ApplicationDbContext context, IPrazoService prazoService, INotificacaoService notificacaoService) : Controller
+public class ReclamacoesController(ApplicationDbContext context, IPrazoService prazoService, IFluxoNotificacaoService? notificacoes = null) : Controller
 {
     public async Task<IActionResult> Index(string? busca, StatusReclamacao? status, ClassificacaoOcorrencia? classificacao, int? produtoId, string? responsavel, DateOnly? inicio, DateOnly? fim)
     {
@@ -112,7 +112,8 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         context.ReclamacoesClientes.Add(reclamacao);
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
-        await notificacaoService.EnviarParaPapeisAsync("RC aguardando validação", reclamacao.Codigo, [Roles.GarantiaQualidade], "Uma reclamação de cliente aguarda validação da Garantia da Qualidade.");
+        await NotificarAsync("RcAguardandoValidacao", reclamacao.Codigo, [Roles.GarantiaQualidade],
+            $"SGQ: RC aguardando validação — {reclamacao.Codigo}", $"A reclamação {reclamacao.Codigo} aguarda validação da Garantia da Qualidade.");
 
         TempData["Success"] = $"Reclamação {reclamacao.Codigo} criada e encaminhada para validação da GQ.";
         return RedirectToAction(nameof(Details), new { id = reclamacao.Id });
@@ -161,14 +162,16 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         reclamacao.Status = StatusReclamacao.EmInvestigacao;
         reclamacao.UsuarioValidacao = User.Identity?.Name ?? "Usuário autenticado";
         reclamacao.ValidadaEm = DateTimeOffset.UtcNow;
+        string? codigoNcCriada = null;
         if (reclamacao.NaoConformidade is null)
         {
             var year = reclamacao.DataRecebimento.Year;
             var lastSequence = await context.NaoConformidades.Where(item => item.Ano == year).MaxAsync(item => (int?)item.SequenciaAnual) ?? 0;
             var sequence = lastSequence + 1;
+            codigoNcCriada = $"NC-{year}-{sequence:D6}";
             context.NaoConformidades.Add(new NaoConformidade
             {
-                Ano = year, SequenciaAnual = sequence, Codigo = $"NC-{year}-{sequence:D6}",
+                Ano = year, SequenciaAnual = sequence, Codigo = codigoNcCriada,
                 Origem = OrigemNaoConformidade.ReclamacaoCliente, ReclamacaoClienteId = reclamacao.Id,
                 DataAbertura = DateOnly.FromDateTime(DateTime.Today),
                 DataAlvo = await prazoService.CalcularPrazoNaoConformidadeAsync(DateOnly.FromDateTime(DateTime.Today), classificacao),
@@ -179,9 +182,15 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         }
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
-        await notificacaoService.EnviarParaPapeisAsync("RC validada e NC criada automaticamente", reclamacao.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico], "A reclamação foi validada e uma Não Conformidade foi criada automaticamente.");
-        if (classificacao == ClassificacaoOcorrencia.Critica)
-            await notificacaoService.EnviarParaPapeisAsync("NC crítica", $"NC vinculada a {reclamacao.Codigo}", [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade], "Uma Não Conformidade crítica requer acompanhamento imediato.");
+        if (codigoNcCriada is not null)
+        {
+            await NotificarAsync("RcValidadaNcCriada", reclamacao.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico],
+                $"SGQ: RC validada e NC criada — {reclamacao.Codigo}",
+                $"A reclamação {reclamacao.Codigo} foi validada. A Não Conformidade {codigoNcCriada} foi criada automaticamente.");
+            if (classificacao == ClassificacaoOcorrencia.Critica)
+                await NotificarAsync("NcCritica", codigoNcCriada, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade],
+                    $"SGQ: NC crítica — {codigoNcCriada}", $"A Não Conformidade {codigoNcCriada}, originada da reclamação {reclamacao.Codigo}, foi classificada como Crítica.");
+        }
         TempData["Success"] = "Reclamação validada e Não Conformidade criada automaticamente.";
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -216,7 +225,10 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         var item = await context.ReclamacoesClientes.FindAsync(model.Id); if (item is null) return NotFound();
         if (item.Status != StatusReclamacao.EmInvestigacao) return RedirectToAction(nameof(Details), new { id = model.Id });
         item.LaboratorioExterno = model.Laboratorio.Trim(); item.DataEnvioAmostraLaboratorio = model.DataEnvioAmostra; item.LaudoLaboratorioAnexoId = null; item.Status = StatusReclamacao.AguardandoLaboratorioExterno;
-        await context.SaveChangesAsync(); TempData["Success"] = "Laboratório externo solicitado."; return RedirectToAction(nameof(Details), new { id = model.Id });
+        await context.SaveChangesAsync();
+        await NotificarAsync("LaboratorioExternoSolicitado", item.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico],
+            $"SGQ: laboratório externo solicitado — {item.Codigo}", $"A reclamação {item.Codigo} aguarda análise do laboratório {item.LaboratorioExterno}.");
+        TempData["Success"] = "Laboratório externo solicitado."; return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -227,7 +239,10 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         var laudoValido = item.LaudoLaboratorioAnexoId.HasValue && await context.Anexos.AnyAsync(a => a.Id == item.LaudoLaboratorioAnexoId && a.ReclamacaoClienteId == item.Id && a.Critico && a.Ativo);
         if (item.Status != StatusReclamacao.AguardandoLaboratorioExterno || !laudoValido) { TempData["Error"] = "Envie o laudo como anexo crítico antes de registrar o resultado."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
         item.DataRecebimentoResultadoLaboratorio = model.DataRecebimento; item.IdentificacaoLaudoLaboratorio = model.IdentificacaoLaudo.Trim(); item.ResultadoLaboratorio = model.Resultado.Trim(); item.Status = StatusReclamacao.EmInvestigacao;
-        await context.SaveChangesAsync(); TempData["Success"] = "Resultado laboratorial registrado. A reclamação voltou para investigação."; return RedirectToAction(nameof(Details), new { id = model.Id });
+        await context.SaveChangesAsync();
+        await NotificarAsync("ResultadoLaboratorioRecebido", item.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico],
+            $"SGQ: resultado de laboratório recebido — {item.Codigo}", $"O resultado do laboratório externo da reclamação {item.Codigo} foi registrado e o processo voltou para investigação.");
+        TempData["Success"] = "Resultado laboratorial registrado. A reclamação voltou para investigação."; return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.GarantiaQualidade + "," + Roles.ResponsavelTecnico)]
@@ -237,7 +252,10 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         var item = await context.ReclamacoesClientes.FindAsync(model.Id); if (item is null) return NotFound();
         if (!item.DataAlvo.HasValue || model.NovaData <= item.DataAlvo) { TempData["Error"] = "Informe uma nova data posterior ao prazo atual."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
         context.ProrrogacoesPrazo.Add(new ProrrogacaoPrazo { ReclamacaoClienteId = item.Id, DataAnterior = item.DataAlvo.Value, NovaData = model.NovaData.Value, Motivo = model.Motivo.Trim(), ClienteComunicado = model.ClienteComunicado, RegistroComunicacaoCliente = model.RegistroComunicacaoCliente?.Trim(), Usuario = User.Identity?.Name ?? "Usuário autenticado", RegistradaEm = DateTimeOffset.UtcNow });
-        item.DataAlvo = model.NovaData; await context.SaveChangesAsync(); TempData["Success"] = "Prazo prorrogado e registrado no histórico."; return RedirectToAction(nameof(Details), new { id = model.Id });
+        item.DataAlvo = model.NovaData; await context.SaveChangesAsync();
+        await NotificarAsync("ProrrogacaoRegistrada", item.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico],
+            $"SGQ: prazo prorrogado — {item.Codigo}", $"O prazo da reclamação {item.Codigo} foi prorrogado para {item.DataAlvo:dd/MM/yyyy}.");
+        TempData["Success"] = "Prazo prorrogado e registrado no histórico."; return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     [HttpPost]
@@ -257,6 +275,9 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         reclamacao.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado";
         reclamacao.EncerradaEm = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
+        await NotificarAsync("ProcessoEncerrado", reclamacao.Codigo, [Roles.GarantiaQualidade],
+            $"SGQ: processo encerrado — {reclamacao.Codigo}", $"A reclamação {reclamacao.Codigo} foi encerrada.",
+            [reclamacao.UsuarioAbertura, reclamacao.UsuarioValidacao ?? string.Empty, reclamacao.UsuarioEncerramento]);
         TempData["Success"] = "Reclamação encerrada pela GQ.";
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -338,4 +359,7 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         ViewBag.LotesJson = System.Text.Json.JsonSerializer.Serialize(
             lotes.Select(lote => new { lote.Id, Nome = lote.Numero, lote.ProdutoId }));
     }
+
+    private Task NotificarAsync(string tipo, string referencia, IEnumerable<string> perfis, string assunto, string corpo, IEnumerable<string>? usuariosEnvolvidos = null) =>
+        notificacoes?.NotificarAsync(tipo, referencia, perfis, assunto, corpo, usuariosEnvolvidos) ?? Task.CompletedTask;
 }

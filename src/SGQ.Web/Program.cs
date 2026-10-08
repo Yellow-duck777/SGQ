@@ -31,7 +31,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPrazoService, PrazoService>();
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
+builder.Services.AddScoped<IFluxoNotificacaoService, FluxoNotificacaoService>();
 builder.Services.AddHostedService<AlertasPrazoHostedService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

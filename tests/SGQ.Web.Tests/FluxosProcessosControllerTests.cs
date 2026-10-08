@@ -106,9 +106,8 @@ public class FluxosProcessosControllerTests
         public void SaveTempData(HttpContext context, IDictionary<string, object> values) { }
     }
 
-    private sealed class NotificacaoStub : INotificacaoService
+    private sealed class NotificacaoStub : IFluxoNotificacaoService
     {
-        public Task EnviarParaPapeisAsync(string evento, string codigo, IEnumerable<string> papeis, string mensagem, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task EnviarParaUsuariosEPapeisAsync(string evento, string codigo, IEnumerable<string> usuarios, IEnumerable<string> papeis, string mensagem, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task NotificarAsync(string tipo, string referencia, IEnumerable<string> perfis, string assunto, string corpo, IEnumerable<string>? usuariosEnvolvidos = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }
