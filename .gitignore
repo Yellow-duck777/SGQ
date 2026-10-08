@@ -33,3 +33,5 @@ logs/
 Thumbs.db
 Desktop.ini
 .data-protection/
+# Anexos enviados em desenvolvimento: nunca versionar evidências
+App_Data/

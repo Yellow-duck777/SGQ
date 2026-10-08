@@ -196,7 +196,12 @@ public class RelatoriosController(ApplicationDbContext context) : Controller
     private async Task PopularProdutosAsync(int? produtoId) =>
         ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(item => item.Nome).ToListAsync(), "Id", "Nome", produtoId);
 
-    private static string Csv(string value) => $"\"{value.Replace("\"", "\"\"")}\"";
+    // Neutraliza injeção de fórmula: o Excel interpreta células que começam com = + - @ (ou tab/CR) como fórmula.
+    private static string Csv(string value)
+    {
+        if (value.Length > 0 && value[0] is '=' or '+' or '-' or '@' or '\t' or '\r') value = "'" + value;
+        return $"\"{value.Replace("\"", "\"\"")}\"";
+    }
 
     private static string Periodo(DateOnly? inicio, DateOnly? fim) =>
         $"{inicio?.ToString("dd/MM/yyyy") ?? "início"} a {fim?.ToString("dd/MM/yyyy") ?? "hoje"}";
