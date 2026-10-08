@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +53,14 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// Toda rota exige usuário autenticado COM perfil reconhecido. Uma conta recém-cadastrada fica sem acesso
+// até que um Administrador atribua um perfil. Páginas públicas precisam de [AllowAnonymous] explícito.
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .RequireRole(Roles.Todos)
+        .Build());
+
 var app = builder.Build();
 
 if (DevelopmentTestUsers.HasRequestedOperation(args))
@@ -73,9 +82,13 @@ await using (var scope = app.Services.CreateAsyncScope())
     if (!string.IsNullOrWhiteSpace(initialAdminEmail))
     {
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var user = await userManager.FindByEmailAsync(initialAdminEmail);
-        if (user is not null && !await userManager.IsInRoleAsync(user, Roles.Administrador))
-            await userManager.AddToRoleAsync(user, Roles.Administrador);
+        // Só promove quando ainda não existe nenhum Administrador, para que o e-mail configurado não
+        // reaplique o perfil a cada reinício nem sirva de atalho depois da implantação inicial.
+        if ((await userManager.GetUsersInRoleAsync(Roles.Administrador)).Count == 0)
+        {
+            var user = await userManager.FindByEmailAsync(initialAdminEmail);
+            if (user is not null) await userManager.AddToRoleAsync(user, Roles.Administrador);
+        }
     }
 }
 
@@ -98,7 +111,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+app.MapStaticAssets().AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",
