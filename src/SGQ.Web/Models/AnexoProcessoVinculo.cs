@@ -1,3 +1,4 @@
+using SGQ.Domain.Entities;
 namespace SGQ.Web.Models;
 
 public class AnexoProcessoVinculo

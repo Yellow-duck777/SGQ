@@ -19,4 +19,10 @@
     <PackageReference Include="QuestPDF" Version="2025.7.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SGQ.Application\SGQ.Application.csproj" />
+    <ProjectReference Include="..\SGQ.Domain\SGQ.Domain.csproj" />
+    <ProjectReference Include="..\SGQ.Infrastructure\SGQ.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using SGQ.Domain.Entities;
+using SGQ.Domain.Enums;
 
 namespace SGQ.Web.Models;
 

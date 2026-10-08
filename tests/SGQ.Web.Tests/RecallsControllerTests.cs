@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using SGQ.Web.Controllers;
+using SGQ.Domain.Entities;
+using SGQ.Domain.Enums;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.ViewModels;

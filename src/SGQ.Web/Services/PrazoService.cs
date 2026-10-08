@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SGQ.Web.Data;
+using SGQ.Domain.Enums;
 using SGQ.Web.Models;
 
 namespace SGQ.Web.Services;

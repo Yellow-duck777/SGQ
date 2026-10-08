@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SGQ.Domain.Entities;
+using SGQ.Domain.Enums;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
 using SGQ.Web.ViewModels;
@@ -137,7 +139,10 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
         if ((recall.AprovadaRt && recall.ReprovadaGq) || (recall.AprovadaGq && recall.ReprovadaRt)) recall.Status = StatusRecall.AguardandoDecisaoCq;
         else if (recall.AprovadaRt && recall.AprovadaGq) recall.Status = StatusRecall.EmRecolhimento;
         await context.SaveChangesAsync();
-        if (recall.Status == StatusRecall.EmRecolhimento)
+        if (recall.Status == StatusRecall.AguardandoDecisaoCq)
+            await NotificarAsync("DivergenciaRtGq", recall.Codigo, [Roles.ControleQualidade],
+                $"SGQ: divergência requer decisão do CQ — {recall.Codigo}", $"Há divergência entre RT e GQ na aprovação do Recall {recall.Codigo}. O CQ deve registrar a decisão.");
+        else if (recall.Status == StatusRecall.EmRecolhimento)
             await NotificarAsync("RecallAprovado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade],
                 $"SGQ: Recall aprovado — {recall.Codigo}", $"O Recall {recall.Codigo} foi aprovado e segue para recolhimento.");
         return RedirectToAction(nameof(Details), new { id });

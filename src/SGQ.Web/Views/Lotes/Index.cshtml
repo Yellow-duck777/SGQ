@@ -1,4 +1,4 @@
-@model IEnumerable<SGQ.Web.Models.Lote>
+@model IEnumerable<SGQ.Domain.Entities.Lote>
 @{ ViewData["Title"] = "Lotes"; }
 <div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">Cadastros básicos</p><h1>Lotes</h1><p class="text-muted mb-0">Vincule cada lote ao respectivo produto.</p></div><a class="btn btn-primary" asp-action="Create">Novo lote</a></div>
 @if (TempData["Success"] is string success) { <div class="alert alert-success" role="alert">@success</div> }

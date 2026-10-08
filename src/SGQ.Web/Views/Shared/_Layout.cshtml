@@ -1,73 +1,83 @@
-﻿<!DOCTYPE html>
+@using Microsoft.AspNetCore.Identity
+@using SGQ.Web.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    var signedIn = SignInManager.IsSignedIn(User);
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+}
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SGQ</title>
+    <meta name="theme-color" content="#123D2B" />
+    <title>@ViewData["Title"] · SGQ</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SGQ.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header class="site-header">
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm" aria-label="Navegação principal">
-            <div class="container">
-                <a class="navbar-brand brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="SGQ - Página inicial">
-                    <span class="brand-mark" aria-hidden="true">S</span>
-                    <span>SGQ</span>
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Abrir navegação">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Início</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Reclamacoes" asp-action="Index">Reclamações</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="NaoConformidades" asp-action="Index">Não Conformidades</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Recalls" asp-action="Index">Recalls</a></li>
-                        @if (User.IsInRole("Administrador") || User.IsInRole("GQ") || User.IsInRole("Auditor"))
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Relatorios" asp-action="Index">Relatórios</a></li>
-                        }
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastros</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Clientes" asp-action="Index">Clientes</a></li>
-                                <li><a class="dropdown-item" asp-controller="Produtos" asp-action="Index">Produtos</a></li>
-                                <li><a class="dropdown-item" asp-controller="Lotes" asp-action="Index">Lotes</a></li>
-                                <li><a class="dropdown-item" asp-controller="DiasNaoUteis" asp-action="Index">Calendário de dias não úteis</a></li>
-                            </ul>
-                        </li>
-                        @if (User.IsInRole("Administrador"))
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Usuarios" asp-action="Index">Usuários</a></li>
-                        }
-                    </ul>
-                    <div class="ms-auto">
-                        <partial name="_LoginPartial" />
-                    </div>
-                </div>
+<body class="@(signedIn ? "app-body" : "auth-body")">
+@if (signedIn)
+{
+    <a class="skip-link" href="#conteudo-principal">Ir para o conteúdo</a>
+    <div class="app-frame">
+        <aside class="app-sidebar" id="app-sidebar" aria-label="Navegação principal">
+            <div class="sidebar-brand">
+                <span class="brand-symbol" aria-hidden="true">S</span>
+                <span><strong>SGQ.</strong><small>Gestão da Qualidade</small></span>
             </div>
-        </nav>
-    </header>
-    <div class="page-shell">
-        <main role="main" class="container py-5">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="site-footer">
-        <div class="container">
-            <span>&copy; 2026 SGQ</span>
-            <span class="footer-separator" aria-hidden="true">•</span>
-            <span>Sistema de Gestão da Qualidade</span>
+            <nav class="sidebar-nav">
+                <p class="sidebar-label">Operação</p>
+                <a class="sidebar-link @(controller == "Home" ? "active" : null)" asp-controller="Home" asp-action="Index"><span class="nav-symbol" aria-hidden="true">01</span><span>Visão geral</span></a>
+                <a class="sidebar-link @(controller == "Reclamacoes" ? "active" : null)" asp-controller="Reclamacoes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RC</span><span>Reclamações</span></a>
+                <a class="sidebar-link @(controller == "NaoConformidades" ? "active" : null)" asp-controller="NaoConformidades" asp-action="Index"><span class="nav-symbol" aria-hidden="true">NC</span><span>Não conformidades</span></a>
+                <a class="sidebar-link @(controller == "Recalls" ? "active" : null)" asp-controller="Recalls" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RE</span><span>Recall</span></a>
+                @if (User.IsInRole("Administrador") || User.IsInRole("GQ") || User.IsInRole("Auditor"))
+                {
+                    <a class="sidebar-link @(controller == "Relatorios" ? "active" : null)" asp-controller="Relatorios" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RL</span><span>Relatórios</span></a>
+                }
+                <p class="sidebar-label">Cadastros</p>
+                <a class="sidebar-link @(controller == "Clientes" ? "active" : null)" asp-controller="Clientes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">CL</span><span>Clientes</span></a>
+                <a class="sidebar-link @(controller == "Produtos" ? "active" : null)" asp-controller="Produtos" asp-action="Index"><span class="nav-symbol" aria-hidden="true">PR</span><span>Produtos</span></a>
+                <a class="sidebar-link @(controller == "Lotes" ? "active" : null)" asp-controller="Lotes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">LT</span><span>Lotes</span></a>
+                <a class="sidebar-link @(controller == "DiasNaoUteis" ? "active" : null)" asp-controller="DiasNaoUteis" asp-action="Index"><span class="nav-symbol" aria-hidden="true">CA</span><span>Calendário</span></a>
+                @if (User.IsInRole("Administrador"))
+                {
+                    <p class="sidebar-label">Administração</p>
+                    <a class="sidebar-link @(controller == "Usuarios" ? "active" : null)" asp-controller="Usuarios" asp-action="Index"><span class="nav-symbol" aria-hidden="true">US</span><span>Usuários</span></a>
+                }
+            </nav>
+            <div class="sidebar-footer">
+                <a class="user-panel @(currentPage?.StartsWith("/Account/Manage") == true ? "active" : null)" asp-area="Identity" asp-page="/Account/Manage/Index">
+                    <span class="user-avatar" aria-hidden="true">@((User.Identity?.Name ?? "U")[0].ToString().ToUpperInvariant())</span>
+                    <span><strong>Administrador</strong><small>@User.Identity?.Name</small></span>
+                </a>
+                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Account/Login", new { area = "Identity" })">
+                    <button class="sidebar-logout" type="submit">Sair do sistema <span aria-hidden="true">↗</span></button>
+                </form>
+            </div>
+        </aside>
+        <div class="sidebar-scrim" data-sidebar-close></div>
+        <div class="app-workspace">
+            <header class="app-topbar">
+                <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="app-sidebar" aria-expanded="false"><span aria-hidden="true">☰</span><span class="visually-hidden">Abrir menu</span></button>
+                <div><p class="topbar-context">Ambiente de desenvolvimento</p><strong>@(ViewData["Title"] ?? "SGQ")</strong></div>
+                <div class="topbar-status"><span></span>Sistema operacional</div>
+            </header>
+            <main id="conteudo-principal" class="app-content" role="main">@RenderBody()</main>
+            <footer class="app-footer"><span>SGQ · Sistema de Gestão da Qualidade</span><span>Ambiente local</span></footer>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    </div>
+}
+else
+{
+    <main role="main">@RenderBody()</main>
+}
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -50,7 +50,7 @@ public class LoginModel : PageModel
             Input.Email,
             Input.Password,
             Input.RememberMe,
-            lockoutOnFailure: false);
+            lockoutOnFailure: true);
 
         if (result.Succeeded)
         {

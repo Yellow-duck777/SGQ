@@ -6,8 +6,8 @@
     <div class="row g-3">
         <div class="col-md-4"><label asp-for="DataAbertura" class="form-label">Data de abertura</label><input asp-for="DataAbertura" class="form-control" /><span asp-validation-for="DataAbertura" class="text-danger"></span></div>
         <div class="col-md-4"><label asp-for="DataAlvo" class="form-label">Data-alvo</label><input asp-for="DataAlvo" class="form-control" /><div class="form-text">Prazo para conclusão da NC.</div><span asp-validation-for="DataAlvo" class="text-danger"></span></div>
-        <div class="col-md-4"><label asp-for="Origem" class="form-label"></label><select asp-for="Origem" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.OrigemNaoConformidade>()" class="form-select"></select></div>
-        <div class="col-md-6"><label asp-for="Classificacao" class="form-label">Classificação</label><select asp-for="Classificacao" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.ClassificacaoOcorrencia>()" class="form-select"></select></div>
+        <div class="col-md-4"><label asp-for="Origem" class="form-label"></label><select asp-for="Origem" asp-items="Html.GetEnumSelectList<OrigemNaoConformidade>()" class="form-select"></select></div>
+        <div class="col-md-6"><label asp-for="Classificacao" class="form-label">Classificação</label><select asp-for="Classificacao" asp-items="Html.GetEnumSelectList<ClassificacaoOcorrencia>()" class="form-select"></select></div>
         <div class="col-md-6"><label asp-for="Area" class="form-label">Área</label><input asp-for="Area" class="form-control" /><span asp-validation-for="Area" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Não aplicável</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div>
         <div class="col-12"><label asp-for="Descricao" class="form-label">Descrição</label><textarea asp-for="Descricao" rows="4" class="form-control"></textarea><span asp-validation-for="Descricao" class="text-danger"></span></div>

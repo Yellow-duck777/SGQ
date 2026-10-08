@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using SGQ.Domain.Enums;
 using SGQ.Web.Models;
 
 namespace SGQ.Web.ViewModels;

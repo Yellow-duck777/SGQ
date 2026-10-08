@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SGQ.Domain.Entities;
+using SGQ.Domain.Enums;
 using SGQ.Web.Models;
 using Microsoft.AspNetCore.Http;
 
