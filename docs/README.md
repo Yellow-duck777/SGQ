@@ -23,6 +23,7 @@ Este diretório é a fonte versionada de produto, arquitetura, desenvolvimento, 
 ## Desenvolvimento
 
 - [Ambiente local](desenvolvimento/ambiente-local.md)
+- [Usuários de teste em Development](usuarios-teste-development.md)
 - [Padrões de código](desenvolvimento/padroes-codigo.md)
 - [Tutorial de commit](desenvolvimento/tutorial-commit.md)
 - [Fluxo de Pull Request](desenvolvimento/fluxo-pull-request.md)
@@ -31,10 +32,16 @@ Este diretório é a fonte versionada de produto, arquitetura, desenvolvimento, 
 
 - [Roadmap](gestao/roadmap.md)
 - [Backlog](gestao/backlog.md)
+- [Planejamento histórico de entregas](03-planejamento-desenvolvimento.md)
+- [Proposta de AGENTS.md unificado](gestao/proposta-agents-unificado.md)
 - [Desenho do programa de evolução](gestao/planos/2026-09-22-evolucao-completa-sgq-design.md)
 - [Implementação da fundação arquitetural](gestao/planos/2026-09-22-fundacao-arquitetura-implementacao.md)
 - [Desenho da experiência operacional](gestao/planos/2026-09-22-experiencia-operacional-design.md)
 - [Template de daily](gestao/dailies/TEMPLATE.md)
+- Dailies em `gestao/dailies/AAAA/MM/`:
+  [fundação documental](gestao/dailies/2026/09/2026-09-22.md),
+  [fundação arquitetural](gestao/dailies/2026/09/2026-09-22-fundacao-arquitetura.md),
+  [correções de segurança e documentação](gestao/dailies/2026/10/2026-10-08-correcoes-seguranca-fluxos-e-documentacao.md)
 
 ## Qualidade
 
@@ -45,4 +52,4 @@ Este diretório é a fonte versionada de produto, arquitetura, desenvolvimento, 
 
 ## Regra de atualização
 
-Não duplique regras. Documentos de visão explicam intenção; requisitos definem comportamento; decisões arquiteturais justificam soluções; dailies definem trabalho; roteiros verificam resultados. Links devem apontar para a fonte responsável.
+Não duplique regras. Documentos de visão explicam intenção; requisitos definem comportamento; decisões arquiteturais justificam soluções; dailies definem trabalho; roteiros verificam resultados. Links devem apontar para a fonte responsável. O estado de cada requisito é registrado somente na matriz de rastreabilidade.

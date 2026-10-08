@@ -66,6 +66,6 @@ O sistema deverá possuir:
 
 ## Situação atual
 
-Autenticação, cadastros básicos e abertura de RC como rascunho possuem implementação parcial. Perfis, permissões, auditoria, anexos, fluxos completos, testes e preparação de produção ainda fazem parte do roadmap.
+Os três fluxos (RC, NC e Recall), perfis, auditoria, anexos, calendário de dias úteis, prazos, notificações por e-mail, pesquisa, filtros e relatório com exportação estão implementados em parte. Aprovação de conta, MFA, antimalware, inativação de cadastros, CI e preparação de produção seguem no roadmap.
 
 O MVP planejado contempla Reclamação de Cliente, Não Conformidade e Recall com rastreabilidade, auditoria, anexos, aprovações, prazos em dias úteis, notificações por e-mail, dashboard e relatórios. A situação verificável de cada item fica na [matriz de rastreabilidade](matriz-rastreabilidade.md).

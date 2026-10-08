@@ -11,6 +11,11 @@ O SGQ crescerá em regras e módulos, mas é desenvolvido por uma equipe pequena
 
 Separar Domain, Application, Infrastructure e Web na mesma solução e no mesmo processo de implantação. RC, NC e Recall serão módulos internos, não serviços independentes.
 
+## Alternativas
+
+- Microsserviços por processo: rejeitado pelo custo operacional para uma equipe pequena.
+- Projeto único sem camadas: rejeitado por dificultar testes das regras e o controle de dependências.
+
 ## Consequências
 
 Regras tornam-se testáveis sem banco ou MVC, enquanto implantação e transações permanecem simples. Testes arquiteturais serão necessários para preservar as fronteiras.

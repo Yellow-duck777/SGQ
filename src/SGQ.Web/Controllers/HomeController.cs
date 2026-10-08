@@ -6,6 +6,7 @@ using SGQ.Domain.Entities;
 using SGQ.Domain.Enums;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
+using SGQ.Web.Security;
 using SGQ.Web.Services;
 using SGQ.Web.ViewModels;
 
@@ -18,6 +19,7 @@ public class HomeController(ApplicationDbContext context, IPrazoService prazoSer
     {
         if (User.Identity?.IsAuthenticated != true)
             return RedirectToPage("/Account/Login", new { area = "Identity" });
+        if (!Roles.Todos.Any(User.IsInRole)) return Forbid();
 
         var hoje = DateOnly.FromDateTime(DateTime.Today);
         var limiteProximoVencimento = await prazoService.AdicionarDiasUteisAsync(hoje, 2);
@@ -62,6 +64,7 @@ public class HomeController(ApplicationDbContext context, IPrazoService prazoSer
         return View();
     }
 
+    [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

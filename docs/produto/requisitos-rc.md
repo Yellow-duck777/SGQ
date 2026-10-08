@@ -1,6 +1,6 @@
 # Requisitos de Reclamação de Cliente
 
-Fonte completa: seções **7**, **10** e **Status da Reclamação de Cliente** de [requisitos-consolidados.md](requisitos-consolidados.md).
+Fonte completa: seções **7**, **10** e **Status da Reclamação de Cliente** de [requisitos-consolidados.md](requisitos-consolidados.md). O estado de cada requisito está na [matriz de rastreabilidade](matriz-rastreabilidade.md).
 
 ## Escopo documentado
 
@@ -13,8 +13,10 @@ Fonte completa: seções **7**, **10** e **Status da Reclamação de Cliente** d
 
 ## Situação atual
 
-A aplicação cria uma RC em `Rascunho`, gera código anual e relaciona cliente, produto e lotes. Não implementa validação da GQ, transições, prazo, anexos, investigação, conclusão, resposta, auditoria nem geração automática da NC.
+O fluxo principal está implementado: abertura com código anual, vínculo de cliente, produto e lotes, validação e classificação pela GQ, geração atômica da NC, investigação, laboratório externo com laudo crítico, conclusão (Procedente ou Improcedente), resposta ao cliente, prorrogação, encerramento pela GQ e reabertura com justificativa.
 
-## Critério para iniciar implementação
+Lacunas conhecidas: busca de reclamações semelhantes e avaliação de risco estruturada (RF-RC-022 a RF-RC-025), início do prazo apenas com informações completas e 24 horas depois (RN-010 e RN-011), transições dos estados `Rascunho` e `Informações Pendentes`, tratamento comercial e definição de quem reabre (requisito: GQ ou RT; código: GQ e Administrador). Cada lacuna tem demanda no [backlog](../gestao/backlog.md).
 
-Todos os requisitos do recorte do PR devem estar `Validado`, possuir critérios de aceite e casos negativos. A criação automática da NC deve ser atômica com a validação da GQ.
+## Critério para alterar o módulo
+
+Todos os requisitos do recorte do PR devem estar `Validado`, `Implementado` ou `Verificado`, possuir critérios de aceite e casos negativos. A criação automática da NC deve permanecer atômica com a validação da GQ.

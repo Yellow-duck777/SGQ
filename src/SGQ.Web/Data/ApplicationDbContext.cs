@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SGQ.Domain.Entities;
@@ -30,11 +31,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<AlertaEnviado> AlertasEnviados => Set<AlertaEnviado>();
     public DbSet<ProrrogacaoPrazo> ProrrogacoesPrazo => Set<ProrrogacaoPrazo>();
 
+    // Credenciais e segredos de autenticação nunca entram na trilha de auditoria.
+    private static readonly HashSet<string> PropriedadesSensiveis = ["PasswordHash", "SecurityStamp", "ConcurrencyStamp"];
+
+    private static bool EntidadeSemAuditoria(Type tipo) =>
+        tipo.IsGenericType && (tipo.GetGenericTypeDefinition() == typeof(IdentityUserToken<>) || tipo.GetGenericTypeDefinition() == typeof(IdentityUserLogin<>));
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ChangeTracker.DetectChanges();
-        var pendentes = ChangeTracker.Entries().Where(item => item.Entity is not HistoricoAuditoria && item.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
-            .Select(item => new { Entry = item, Estado = item.State, Alteracoes = string.Join("; ", item.Properties.Where(p => item.State == EntityState.Added || item.State == EntityState.Deleted || p.IsModified).Select(p => $"{p.Metadata.Name}: {p.OriginalValue} → {p.CurrentValue}")) }).ToList();
+        var pendentes = ChangeTracker.Entries().Where(item => item.Entity is not HistoricoAuditoria && !EntidadeSemAuditoria(item.Metadata.ClrType) && item.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Select(item => new { Entry = item, Estado = item.State, Alteracoes = string.Join("; ", item.Properties.Where(p => !PropriedadesSensiveis.Contains(p.Metadata.Name) && (item.State == EntityState.Added || item.State == EntityState.Deleted || p.IsModified)).Select(p => $"{p.Metadata.Name}: {p.OriginalValue} → {p.CurrentValue}")) }).ToList();
         var result = await base.SaveChangesAsync(cancellationToken);
         if (pendentes.Count == 0) return result;
         var usuario = httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "Sistema";

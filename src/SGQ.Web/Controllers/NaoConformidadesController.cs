@@ -164,6 +164,7 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         var nc = await context.NaoConformidades.Include(item => item.Acoes).SingleOrDefaultAsync(item => item.Id == id); if (nc is null) return NotFound();
         if (nc.Status != StatusNaoConformidade.EmTratamento || !nc.Acoes.Any() || nc.Acoes.Any(item => item.Obrigatoria && item.DataConclusao is null)) { TempData["Error"] = "Conclua todas as ações obrigatórias antes de avaliar a eficácia."; return RedirectToAction(nameof(Details), new { id }); }
         nc.Eficaz = eficaz; nc.Status = eficaz ? StatusNaoConformidade.AguardandoAprovacao : StatusNaoConformidade.EmInvestigacao;
+        ZerarRodadaDeAprovacao(nc);
         await context.SaveChangesAsync();
         if (eficaz)
             await NotificarAsync("NcAguardandoAprovacao", nc.Codigo, [Roles.ResponsavelTecnico, Roles.GarantiaQualidade],
@@ -172,12 +173,22 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    [Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
+    [Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade)]
     public async Task<IActionResult> Aprovar(int id, string perfil)
     {
         var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound(); if (nc.Status != StatusNaoConformidade.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
-        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { nc.AprovadaRt = true; nc.ReprovadaRt = false; }
-        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { nc.AprovadaGq = true; nc.ReprovadaGq = false; }
+        var usuario = User.Identity?.Name ?? "Usuário autenticado";
+        if (nc.DecisaoCq == StatusDecisaoCq.Favoravel) { TempData["Error"] = "O CQ já decidiu a divergência; a NC aguarda o encerramento pela GQ."; return RedirectToAction(nameof(Details), new { id }); }
+        if (perfil == "RT" && User.IsInRole(Roles.ResponsavelTecnico))
+        {
+            if (MesmoUsuario(nc.UsuarioParecerGq, usuario)) return PareceresDistintosExigidos(id);
+            nc.AprovadaRt = true; nc.ReprovadaRt = false; nc.UsuarioParecerRt = usuario;
+        }
+        else if (perfil == "GQ" && User.IsInRole(Roles.GarantiaQualidade))
+        {
+            if (MesmoUsuario(nc.UsuarioParecerRt, usuario)) return PareceresDistintosExigidos(id);
+            nc.AprovadaGq = true; nc.ReprovadaGq = false; nc.UsuarioParecerGq = usuario;
+        }
         else return Forbid();
         if ((nc.AprovadaRt && nc.ReprovadaGq) || (nc.AprovadaGq && nc.ReprovadaRt)) nc.Status = StatusNaoConformidade.AguardandoDecisaoCq;
         await context.SaveChangesAsync();
@@ -188,12 +199,22 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    [Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
+    [Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade)]
     public async Task<IActionResult> Reprovar(int id, string perfil)
     {
         var nc = await context.NaoConformidades.FindAsync(id); if (nc is null) return NotFound(); if (nc.Status != StatusNaoConformidade.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
-        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { nc.ReprovadaRt = true; nc.AprovadaRt = false; }
-        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { nc.ReprovadaGq = true; nc.AprovadaGq = false; }
+        var usuario = User.Identity?.Name ?? "Usuário autenticado";
+        if (nc.DecisaoCq == StatusDecisaoCq.Favoravel) { TempData["Error"] = "O CQ já decidiu a divergência; a NC aguarda o encerramento pela GQ."; return RedirectToAction(nameof(Details), new { id }); }
+        if (perfil == "RT" && User.IsInRole(Roles.ResponsavelTecnico))
+        {
+            if (MesmoUsuario(nc.UsuarioParecerGq, usuario)) return PareceresDistintosExigidos(id);
+            nc.ReprovadaRt = true; nc.AprovadaRt = false; nc.UsuarioParecerRt = usuario;
+        }
+        else if (perfil == "GQ" && User.IsInRole(Roles.GarantiaQualidade))
+        {
+            if (MesmoUsuario(nc.UsuarioParecerRt, usuario)) return PareceresDistintosExigidos(id);
+            nc.ReprovadaGq = true; nc.AprovadaGq = false; nc.UsuarioParecerGq = usuario;
+        }
         else return Forbid();
         nc.Status = (nc.ReprovadaRt && nc.AprovadaGq) || (nc.ReprovadaGq && nc.AprovadaRt) ? StatusNaoConformidade.AguardandoDecisaoCq : StatusNaoConformidade.EmTratamento;
         await context.SaveChangesAsync();
@@ -251,8 +272,9 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         nc.JustificativaReabertura = model.Justificativa.Trim();
         nc.UsuarioReabertura = User.Identity?.Name ?? "Usuário autenticado";
         nc.ReabertaEm = DateTimeOffset.UtcNow;
-        nc.AprovadaRt = false;
-        nc.AprovadaGq = false;
+        nc.UsuarioEncerramento = null;
+        nc.EncerradaEm = null;
+        ZerarRodadaDeAprovacao(nc);
         nc.Eficaz = null;
         nc.Status = StatusNaoConformidade.EmInvestigacao;
         await context.SaveChangesAsync();
@@ -261,6 +283,24 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
     }
 
     private async Task PopulateProdutos(int? produtoId = null) => ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(item => item.Nome).ToListAsync(), "Id", "Nome", produtoId);
+
+    private static bool MesmoUsuario(string? parecerAnterior, string usuario) =>
+        parecerAnterior is not null && string.Equals(parecerAnterior, usuario, StringComparison.OrdinalIgnoreCase);
+
+    private IActionResult PareceresDistintosExigidos(int id)
+    {
+        TempData["Error"] = "Os pareceres de RT e GQ devem ser dados por contas distintas.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // Cada rodada de aprovação começa limpa: pareceres, decisão do CQ e autores anteriores não se acumulam.
+    private static void ZerarRodadaDeAprovacao(NaoConformidade nc)
+    {
+        nc.AprovadaRt = false; nc.AprovadaGq = false;
+        nc.ReprovadaRt = false; nc.ReprovadaGq = false;
+        nc.UsuarioParecerRt = null; nc.UsuarioParecerGq = null;
+        nc.DecisaoCq = null; nc.JustificativaDecisaoCq = null; nc.UsuarioDecisaoCq = null; nc.DecididaPeloCqEm = null;
+    }
 
     private Task NotificarAsync(string tipo, string referencia, IEnumerable<string> perfis, string assunto, string corpo, IEnumerable<string>? usuariosEnvolvidos = null) =>
         notificacoes?.NotificarAsync(tipo, referencia, perfis, assunto, corpo, usuariosEnvolvidos) ?? Task.CompletedTask;

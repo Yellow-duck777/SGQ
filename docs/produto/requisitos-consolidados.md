@@ -1510,7 +1510,7 @@ As exportações obrigatórias do MVP serão XLSX e PDF. CSV poderá ser disponi
 
 Esta seção preserva perguntas levantadas durante a descoberta. Ela não representa, isoladamente, o backlog atual. A seção 14 registra decisões já encerradas e a [matriz de rastreabilidade](matriz-rastreabilidade.md) controla o estado vigente. Um item só é considerado aberto quando estiver marcado como `Proposto` na matriz.
 
-## P-001 - Status da Reclamação
+## P-001 - Status da Reclamação (Resolvido)
 
 Definir os possíveis status.
 
@@ -1525,41 +1525,41 @@ Exemplos apenas para discussão:
 - Encerrada;
 - Atrasada.
 
-Não implementar esses status sem confirmação.
+Status confirmados e consolidados em "Status da Reclamação de Cliente" (ST-RC-001 a ST-RC-007).
 
 ---
 
-## P-002 - Status da NC
+## P-002 - Status da NC (Resolvido)
 
 Definir os possíveis status da Não Conformidade.
 
 ---
 
-## P-003 - Status do Recall
+## P-003 - Status do Recall (Resolvido)
 
 Definir os possíveis status do processo de Recall.
 
 ---
 
-## P-004 - Reabertura
+## P-004 - Reabertura (Resolvido)
 
 Confirmar se processos encerrados poderão ser reabertos.
 
 ---
 
-## P-005 - Responsável pela reabertura
+## P-005 - Responsável pela reabertura (Resolvido)
 
 Caso seja permitida reabertura, definir quem poderá realizá-la.
 
 ---
 
-## P-006 - Justificativa de reabertura
+## P-006 - Justificativa de reabertura (Resolvido)
 
 Confirmar se justificativa será obrigatória.
 
 ---
 
-## P-007 - Numeração da Reclamação
+## P-007 - Numeração da Reclamação (Resolvido)
 
 Definir padrão definitivo.
 
@@ -1569,7 +1569,7 @@ RC-2026-000001
 
 ---
 
-## P-008 - Numeração da NC
+## P-008 - Numeração da NC (Resolvido)
 
 Definir padrão definitivo.
 
@@ -1579,57 +1579,57 @@ NC-2026-000001
 
 ---
 
-## P-009 - Numeração do Recall
+## P-009 - Numeração do Recall (Resolvido)
 
 Definir padrão definitivo.
 
 ---
 
-## P-010 - Mais de um produto
+## P-010 - Mais de um produto (Resolvido)
 
 Confirmar se uma Reclamação poderá envolver mais de
 um produto.
 
 ---
 
-## P-011 - Mais de um lote
+## P-011 - Mais de um lote (Resolvido)
 
 Confirmar se uma Reclamação poderá envolver mais de um lote.
 
 ---
 
-## P-012 - Formatos de anexos
+## P-012 - Formatos de anexos (Resolvido)
 
 Definir quais extensões serão permitidas.
 
 ---
 
-## P-013 - Tamanho dos anexos
+## P-013 - Tamanho dos anexos (Resolvido)
 
 Definir tamanho máximo por arquivo.
 
 ---
 
-## P-014 - Quantidade de anexos
+## P-014 - Quantidade de anexos (Resolvido)
 
 Definir se haverá limite de anexos por processo.
 
 ---
 
-## P-015 - Edição após aprovação
+## P-015 - Edição após aprovação (Resolvido)
 
 Definir se um registro aprovado poderá ser alterado.
 
 ---
 
-## P-016 - Alteração após aprovação
+## P-016 - Alteração após aprovação (Resolvido)
 
 Caso possa ser alterado, definir se nova aprovação
 será obrigatória.
 
 ---
 
-## P-017 - Aprovação da Reclamação
+## P-017 - Aprovação da Reclamação (Resolvido)
 
 Definir exatamente quais etapas exigirão:
 
@@ -1639,13 +1639,13 @@ Definir exatamente quais etapas exigirão:
 
 ---
 
-## P-018 - Aprovação da NC
+## P-018 - Aprovação da NC (Resolvido)
 
 Definir exatamente quais etapas exigirão aprovação.
 
 ---
 
-## P-019 - Aprovação do Recall
+## P-019 - Aprovação do Recall (Resolvido)
 
 Definir exatamente quem deverá aprovar o início do Recall.
 
@@ -1664,64 +1664,64 @@ avaliação técnica.
 
 ---
 
-## P-022 - Recall não aplicável
+## P-022 - Recall não aplicável (Resolvido)
 
 Definir como deverá ser registrada a decisão de
 não realizar Recall.
 
 ---
 
-## P-023 - Justificativa de não Recall
+## P-023 - Justificativa de não Recall (Resolvido)
 
 Confirmar se será obrigatória justificativa técnica.
 
 ---
 
-## P-024 - Comunicação regulatória
+## P-024 - Comunicação regulatória (Resolvido)
 
 Definir exatamente quando deverá haver comunicação
 à autoridade sanitária.
 
 ---
 
-## P-025 - Notificações
+## P-025 - Notificações (Resolvido)
 
 Definir todos os eventos que deverão gerar notificação.
 
 ---
 
-## P-026 - Notificação de nova Reclamação
+## P-026 - Notificação de nova Reclamação (Resolvido)
 
 Confirmar quem deverá receber.
 
 ---
 
-## P-027 - Notificação de NC crítica
+## P-027 - Notificação de NC crítica (Resolvido)
 
 Confirmar quem deverá receber imediatamente.
 
 ---
 
-## P-028 - Notificação de Recall
+## P-028 - Notificação de Recall (Resolvido)
 
 Confirmar todos os destinatários.
 
 ---
 
-## P-029 - Notificação de ação vencida
+## P-029 - Notificação de ação vencida (Resolvido)
 
 Confirmar se responsáveis deverão receber alertas.
 
 ---
 
-## P-030 - Feriados
+## P-030 - Feriados (Resolvido)
 
 Definir como o sistema reconhecerá feriados para cálculo
 de dias úteis.
 
 ---
 
-## P-031 - Calendário
+## P-031 - Calendário (Resolvido)
 
 Definir se serão considerados:
 
@@ -1731,7 +1731,7 @@ Definir se serão considerados:
 
 ---
 
-## P-032 - Prazo da NC
+## P-032 - Prazo da NC (Resolvido)
 
 O POP atual apresenta prazos recomendados conforme
 classificação.
@@ -1740,39 +1740,39 @@ Confirmar como esses prazos serão implementados no sistema.
 
 ---
 
-## P-033 - Prazo do Recall
+## P-033 - Prazo do Recall (Resolvido)
 
 Definir se Recall possuirá prazo próprio.
 
 ---
 
-## P-034 - Laboratório externo
+## P-034 - Laboratório externo (Resolvido)
 
 Definir se o laudo do laboratório externo será obrigatório
 como anexo antes do encerramento.
 
 ---
 
-## P-035 - Amostra interna
+## P-035 - Amostra interna (Resolvido)
 
 Definir como será registrado o controle da amostra utilizada.
 
 ---
 
-## P-036 - Indicadores
+## P-036 - Indicadores (Resolvido)
 
 Definir quais indicadores obrigatoriamente estarão
 no dashboard do MVP.
 
 ---
 
-## P-037 - Relatórios
+## P-037 - Relatórios (Resolvido)
 
 Definir quais relatórios serão obrigatórios no MVP.
 
 ---
 
-## P-038 - Exportação
+## P-038 - Exportação (Resolvido)
 
 Definir necessidade de:
 
@@ -1782,13 +1782,13 @@ Definir necessidade de:
 
 ---
 
-## P-039 - Dashboard
+## P-039 - Dashboard (Resolvido)
 
 Definir informações que deverão aparecer ao entrar no sistema.
 
 ---
 
-## P-040 - Tratamento comercial
+## P-040 - Tratamento comercial (Resolvido)
 
 Definir se o tratamento comercial será registrado dentro
 do SGQ ou somente referenciado.
@@ -1841,16 +1841,15 @@ Também ficam consolidadas as seguintes decisões:
 
 ## 15. Situação atual do levantamento
 
-Os requisitos centrais do MVP estão consolidados. Permanecem pendências pontuais que devem ser resolvidas antes da implementação dos respectivos recursos.
+Os requisitos centrais do MVP estão consolidados e todos os pontos P-001 a P-040 estão resolvidos. As lacunas de implementação são controladas pela [matriz de rastreabilidade](matriz-rastreabilidade.md) e pelo [backlog](../gestao/backlog.md).
 
-## Próximas etapas
+## Etapas já percorridas
 
-1. Resolver pendências remanescentes de negócio;
-2. Desenhar fluxos e critérios de transição;
-3. Refinar a matriz de permissões;
-4. Modelar entidades e relacionamentos;
-5. Modelar banco de dados;
-6. Implementar gradualmente os módulos do MVP.
+- Fluxos e critérios de transição desenhados (seções de status);
+- Matriz de permissões: perfis fixos implementados; matriz papel x ação para escrita pendente (backlog);
+- Entidades e relacionamentos modelados;
+- Banco modelado (ver [banco de dados](../arquitetura/banco-de-dados.md));
+- Módulos do MVP implementados gradualmente.
 
 ## Status da Reclamação de Cliente
 
@@ -1961,6 +1960,7 @@ Rascunho
 - Em Investigação;
 - Em Tratamento;
 - Aguardando Aprovação;
+- Aguardando Decisão do CQ (divergência entre RT e GQ);
 - Aguardando Laboratório Externo;
 - Encerrada.
 
@@ -1971,6 +1971,8 @@ Em Investigação → Em Tratamento → Aguardando Aprovação → Encerrada
 Em Investigação → Aguardando Laboratório Externo → Em Investigação
 Em Tratamento → Em Investigação, quando a eficácia for Ineficaz
 Aguardando Aprovação → Em Tratamento, quando houver reprovação
+Aguardando Aprovação → Aguardando Decisão do CQ, quando RT e GQ divergem
+Aguardando Decisão do CQ → Aguardando Aprovação (favorável) ou Em Tratamento (desfavorável)
 Encerrada → Em Investigação, em reabertura autorizada
 ```
 
@@ -1984,6 +1986,7 @@ Encerrada → Em Investigação, em reabertura autorizada
 
 - Em Avaliação;
 - Aguardando Aprovação;
+- Aguardando Decisão do CQ (divergência entre RT e GQ);
 - Em Recolhimento;
 - Aguardando Retorno;
 - Em Avaliação de Destinação;
@@ -1995,6 +1998,8 @@ Encerrada → Em Investigação, em reabertura autorizada
 ```text
 Em Avaliação → Aguardando Aprovação → Em Recolhimento → Aguardando Retorno
 → Em Avaliação de Destinação → Aguardando Encerramento → Encerrado
+Aguardando Aprovação → Aguardando Decisão do CQ, quando RT e GQ divergem
+Aguardando Decisão do CQ → Em Recolhimento (favorável) ou Em Avaliação (desfavorável)
 ```
 
 Se o resultado da avaliação for Não Aplicável, o Recall passa de Em Avaliação para Encerrado; o resultado não cria status próprio.

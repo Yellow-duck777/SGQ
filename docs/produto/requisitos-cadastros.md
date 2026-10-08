@@ -4,7 +4,7 @@ Fonte completa: seção **6. Cadastros básicos** de [requisitos-consolidados.md
 
 ## Situação atual
 
-Clientes, produtos e lotes possuem criação, listagem e edição. Não existem inativação, paginação, pesquisa, auditoria, concorrência ou autorização por perfil.
+Clientes, produtos e lotes possuem criação, listagem e edição, com auditoria básica e acesso restrito a contas com perfil. Não existem inativação, paginação, pesquisa, concorrência otimista nem perfis específicos por operação.
 
 ## Itens que exigem validação da Qualidade
 

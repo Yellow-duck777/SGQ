@@ -2,22 +2,22 @@
 
 ## Objetivo
 
-Verificar o comportamento de autenticação existente antes do hardening planejado.
+Verificar autenticação, bloqueio e comportamento de contas novas.
 
 ## Passos
 
 1. Acesse `http://localhost:5024` sem sessão.
 2. Abra uma rota protegida, como `/Clientes`.
-3. Confirme o redirecionamento para login.
-4. Registre uma conta fictícia.
-5. Entre com a conta criada.
-6. Saia e tente uma senha incorreta.
+3. Confirme o redirecionamento para o login.
+4. Cadastre uma conta fictícia (`@sgq.test`).
+5. Entre com a conta criada e abra `/Clientes`.
+6. Saia e tente uma senha incorreta cinco vezes seguidas.
 
-## Resultado atual esperado
+## Resultado esperado
 
-- a página inicial ainda é pública;
-- rotas de negócio exigem autenticação;
-- cadastro padrão permite acesso após login;
-- senha incorreta apresenta mensagem genérica.
+- sem sessão, a página inicial e as rotas de negócio redirecionam ao login;
+- a conta recém-cadastrada autentica, mas recebe 403 nos módulos até que um Administrador atribua um perfil;
+- senha incorreta apresenta mensagem genérica;
+- após cinco falhas a conta fica bloqueada por 15 minutos.
 
-Esses resultados descrevem a baseline, não o comportamento de segurança aprovado para o produto.
+A confirmação de e-mail, a aprovação administrativa formal e o MFA ainda não existem (DEM-2026-005).

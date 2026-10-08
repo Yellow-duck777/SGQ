@@ -11,7 +11,9 @@ Este documento mantém o histórico do desenvolvimento do **Sistema de Gestão d
 - a ordem recomendada para as próximas entregas;
 - os critérios usados para considerar cada entrega concluída.
 
-Os requisitos de negócio detalhados estão em [02-requisitos.md](02-requisitos.md).
+Os requisitos de negócio detalhados estão em [requisitos consolidados](produto/requisitos-consolidados.md).
+
+> Documento histórico de entregas. Em caso de divergência, prevalecem a [matriz de rastreabilidade](produto/matriz-rastreabilidade.md) e o [backlog](gestao/backlog.md).
 
 ---
 
@@ -33,9 +35,9 @@ O princípio central é que uma RC validada pela Garantia da Qualidade (GQ) gera
 
 **Última entrega consolidada em código:** fluxos principais de RC, NC e Recall, perfis, auditoria, anexos e indicadores básicos.
 
-**Último commit funcional:** `f8a7ef2 feat: implementa fluxos e controles do SGQ`.
+**Estado por requisito:** consulte a [matriz de rastreabilidade](produto/matriz-rastreabilidade.md), que é a fonte de verdade. Este documento preserva o histórico de entregas e o roteiro de continuidade.
 
-**Validação técnica mais recente:** `dotnet build SGQ.slnx --no-restore` concluído sem avisos ou erros.
+**Verificações:** `dotnet restore`, `dotnet build --no-restore` e `dotnet test --no-build` (ver [estratégia de testes](qualidade/estrategia-de-testes.md)); a lista de testes está na [matriz de testes](qualidade/matriz-de-testes.md).
 
 **Atenção antes de uso local:** as migrações criadas devem ser aplicadas ao banco PostgreSQL com `dotnet ef database update --project src/SGQ.Web --startup-project src/SGQ.Web`.
 
@@ -50,7 +52,7 @@ O princípio central é que uma RC validada pela Garantia da Qualidade (GQ) gera
 | Banco de dados | Modelado | PostgreSQL via Entity Framework Core. |
 | Migrações | Criadas | Migrações para os módulos desenvolvidos. |
 | Interface | Implementada parcialmente | Layout, menu, dashboard, formulários e páginas de detalhes. |
-| Armazenamento de anexos | Implementado | Arquivos em `App_Data/uploads`, fora da pasta pública. |
+| Armazenamento de anexos | Implementado (decisão atual) | Arquivos em `App_Data/uploads`, fora da pasta pública; ver [ADR 0002](arquitetura/decisoes/0002-anexos-postgresql.md). |
 
 ---
 
@@ -79,7 +81,7 @@ Implementado:
 - Encerramento formal.
 - Registro de usuário e data de validação/encerramento.
 
-**Status:** fluxo principal concluído; reabertura por GQ com justificativa e auditoria foi implementada. Faltam laboratório externo, prorrogação e notificações de eventos do fluxo.
+**Status:** fluxo principal concluído; reabertura com justificativa e auditoria, laboratório externo, prorrogação e notificações foram implementados. A reabertura de RC é permitida a GQ e Administrador no código, enquanto o requisito prevê GQ ou RT (decisão pendente no backlog).
 
 ### 5.3 Não Conformidade
 
@@ -94,7 +96,7 @@ Implementado:
 - Reprovação retorna a NC para tratamento.
 - Encerramento após aprovações necessárias.
 
-**Status:** fluxo principal concluído; reabertura com justificativa, auditoria e nova rodada de aprovações foi implementada para NC. Faltam notificações, laboratório externo e decisão de divergência pelo CQ.
+**Status:** fluxo principal concluído; reabertura com justificativa, auditoria e nova rodada de aprovações foi implementada para NC. Notificações, laboratório externo e decisão de divergência pelo CQ foram implementados. Aprovações de RT e GQ exigem contas distintas e registram o usuário de cada parecer.
 
 ### 5.4 Recall
 
@@ -108,7 +110,7 @@ Implementado:
 - Registro de destinação e evidência.
 - Encerramento condicionado às aprovações, comunicação regulatória e destinação.
 
-**Status:** fluxo principal concluído; reabertura com justificativa, auditoria e nova rodada de aprovações foi implementada para Recall. Faltam decisão de divergência pelo CQ e maior detalhamento regulatório.
+**Status:** fluxo principal concluído; reabertura com justificativa, auditoria e nova rodada de aprovações foi implementada para Recall. A decisão de divergência pelo CQ foi implementada; falta maior detalhamento regulatório.
 
 ### 5.5 Segurança e governança
 
@@ -120,7 +122,7 @@ Implementado:
 - Restrições de backend para ações críticas de GQ, RT e Administrador.
 - Auditoria automática de criações, alterações e exclusões.
 
-**Status:** base concluída; falta ampliar as restrições de interface e tratar formalmente a decisão do CQ em divergências.
+**Status:** base concluída. Contas sem perfil não acessam o sistema (política de fallback). Pendências: perfis por ação nas ações de escrita, MFA e hardening de produção (ver backlog).
 
 ### 5.6 Anexos e evidências
 
@@ -133,7 +135,7 @@ Implementado:
 - Marcação de evidência crítica.
 - Anulação lógica com justificativa, usuário e data/hora.
 
-**Status:** concluído parcialmente; falta reutilizar uma única evidência entre vários processos sem duplicação física.
+**Status:** concluído parcialmente; o vínculo múltiplo foi implementado. Faltam limite de 20 anexos por registro, validação de conteúdo, SHA-256 e antimalware.
 
 ### 5.7 Dashboard
 
@@ -143,6 +145,7 @@ Implementado:
 - Quantidade de NC abertas.
 - Quantidade de Recalls ativos.
 - Quantidade de processos aguardando aprovação.
+- Processos vencidos e próximos do vencimento.
 
 **Status:** indicadores básicos concluídos; faltam indicadores de prazo, classificação, laboratório externo e relatórios.
 
@@ -162,7 +165,7 @@ Entregas:
 - Regras de prazo de NC por classificação. **Concluído:** Maior em 15 dias úteis, Menor em 30 dias úteis e Crítica com data-alvo obrigatoriamente definida pela GQ.
 - Indicadores de vencidos e vencendo em breve. **Concluído:** o dashboard considera RC, NC e Recall abertos com data-alvo, usando a janela de 48 horas úteis.
 - Alertas de 48 horas úteis antes do vencimento. **Concluído:** serviço em segundo plano executado a cada hora, com alerta único por prazo para GQ e RT e registro de envio.
-- E-mails para os responsáveis definidos nos requisitos. **Concluído para alertas de prazo:** RC, NC e Recall com data-alvo; ações de NC vencidas notificam o responsável e GQ, incluindo RT quando a NC é Crítica. Notificações dos demais eventos do fluxo permanecem pendentes.
+- E-mails para os responsáveis definidos nos requisitos. **Concluído para alertas de prazo:** RC, NC e Recall com data-alvo; ações de NC vencidas notificam o responsável e GQ, incluindo RT quando a NC é Crítica. Notificações dos eventos do fluxo também foram implementadas.
 
 Critério de aceite:
 
@@ -177,7 +180,7 @@ Critério de aceite:
 Entregas:
 
 - Laboratório externo para RC e NC, com laudo crítico obrigatório quando utilizado para conclusão. **Concluído:** solicitação, envio da amostra, anexo do laudo, resultado e retorno à investigação.
-- Reabertura de RC, NC e Recall com justificativa e auditoria. **Concluído:** Recall pode ser reaberto por GQ ou RT, preservando o número e o encerramento anterior, exigindo motivo e justificativa e reiniciando as aprovações. NC pode ser reaberta por GQ, RT ou Auditor, retorna à investigação e invalida as aprovações anteriores. RC pode ser reaberta pela GQ, retorna à investigação e mantém a NC vinculada.
+- Reabertura de RC, NC e Recall com justificativa e auditoria. **Concluído:** Recall pode ser reaberto por GQ ou RT, preservando o número e o encerramento anterior, exigindo motivo e justificativa e reiniciando as aprovações. NC pode ser reaberta por GQ, RT ou Auditor, retorna à investigação e invalida as aprovações anteriores. RC pode ser reaberta por GQ ou Administrador, retorna à investigação e mantém a NC vinculada.
 - Prorrogação de prazo com motivo, responsável e histórico. **Concluído:** RC, NC e Recall exigem motivo, preservam a data anterior e registram responsável e comunicação ao cliente.
 - Divergência entre RT e GQ encaminhada ao CQ para decisão. **Concluído:** nas aprovações de NC e Recall, pareceres opostos encaminham o processo ao CQ; a decisão fundamentada fica rastreada e determina o prosseguimento ou retorno ao tratamento/avaliação.
 - Controle de amostras internas, se confirmado como escopo imediato.
@@ -243,13 +246,13 @@ Critério de aceite:
 |---|---|---|---|
 | 1 | Aplicar migrações e validar ambiente local | PostgreSQL configurado | Pendente |
 | 2 | Datas-alvo na interface e calendário | Etapa 1 | Concluído em código (migração pendente de aplicação) |
-| 3 | Alertas e notificações | Etapa 2 | Alertas de prazo concluídos em código; notificações dos eventos de fluxo pendentes |
+| 3 | Alertas e notificações | Etapa 2 | Alertas de prazo e notificações de eventos concluídos em código |
 | 4 | Laboratório, reabertura e prorrogação | Etapa 1 | Concluído em código (migrações pendentes de aplicação) |
 | 5 | Divergência e decisão do CQ | Perfis ativos | Concluído em código (migração pendente de aplicação) |
 | 6 | Pesquisa e filtros | Etapa 1 | Concluído em código |
-| 7 | Relatórios e exportações | Pesquisa/filtros | Concluído em código: relatório de processos e exportações CSV, XLSX e PDF |
+| 7 | Relatórios e exportações | Pesquisa/filtros | Parcial: relatório único de processos com exportações CSV, XLSX e PDF; relatórios do MVP restantes no backlog |
 | 8 | Vínculos múltiplos de anexos | Anexos atuais | Concluído em código (migração pendente de aplicação) |
-| 9 | Testes ponta a ponta e revisão de segurança | Todas as anteriores | Em andamento: proteção antiforgery global aplicada e quatro testes automatizados aprovados para prazos e vínculos de anexos; validação ponta a ponta depende do banco configurado |
+| 9 | Testes ponta a ponta e revisão de segurança | Todas as anteriores | Em andamento: testes de fluxo com EF InMemory e testes arquiteturais (ver matriz de testes); faltam testes com PostgreSQL real e E2E |
 
 ---
 
@@ -257,21 +260,21 @@ Critério de aceite:
 
 Ao retomar o desenvolvimento:
 
-1. Ler este documento e [02-requisitos.md](02-requisitos.md).
+1. Ler a [matriz de rastreabilidade](produto/matriz-rastreabilidade.md), o [backlog](gestao/backlog.md) e a daily ativa.
 2. Executar `git status` para identificar mudanças pendentes.
-3. Executar `dotnet build SGQ.slnx --no-restore` antes de iniciar uma nova entrega.
-4. Selecionar uma única entrega da Prioridade 1 ou 2.
+3. Executar `dotnet restore SGQ.slnx`, `dotnet build SGQ.slnx --no-restore` e `dotnet test SGQ.slnx --no-build` antes de iniciar uma nova entrega.
+4. Selecionar uma única demanda do backlog com requisito `Validado`, `Implementado` ou `Verificado` e critérios de aceite.
 5. Implementar modelo, banco, backend, interface e validação na mesma entrega.
 6. Criar migração quando houver alteração de entidades.
-7. Compilar novamente e registrar a conclusão neste documento.
-8. Criar commit descritivo após validação.
+7. Compilar e testar novamente e registrar a conclusão na daily e na matriz de rastreabilidade (este documento não é mais atualizado por entrega).
+8. Criar commit seguindo [tutorial-commit.md](desenvolvimento/tutorial-commit.md).
 
 ---
 
 ## 9. Pendências de implantação
 
 - Configurar `ConnectionStrings:DefaultConnection` com User Secrets ou variável de ambiente.
-- Configurar `InitialAdminEmail` para provisionar o primeiro administrador.
+- Configurar `InitialAdminEmail` para provisionar o primeiro administrador (só vale enquanto não houver Administrador).
 - Configurar SMTP por User Secrets ou variável de ambiente (`Smtp:Host`, `Smtp:Port`, `Smtp:EnableSsl`, `Smtp:UserName`, `Smtp:Password` e `Smtp:From`) antes de ativar os alertas por e-mail.
 - Aplicar as migrações pendentes.
 - Criar usuários de teste para Administrador, GQ, RT, CQ e usuário comum.
@@ -297,8 +300,8 @@ O MVP estará pronto para validação quando:
 
 Executar este checklist imediatamente antes da entrega/implantação:
 
-- [ ] Alterar a senha do usuário de banco `sgq_app`.
-- [ ] Confirmar que a aplicação não utiliza o usuário `postgres`.
+- [ ] Alterar a senha do usuário de banco da aplicação.
+- [ ] Confirmar que a aplicação não utiliza o superusuário do PostgreSQL.
 - [ ] Desativar `DevelopmentTestUsers`.
 - [ ] Remover ou invalidar contas e senhas de teste.
 - [ ] Criar os usuários reais.

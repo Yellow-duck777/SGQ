@@ -1,5 +1,7 @@
 # Fundação Arquitetural — Plano de Implementação
 
+> Plano histórico, concluído em 2026-09-22. Caminhos locais foram substituídos por marcadores e os SHAs citados referem-se a branches locais anteriores ao merge.
+>
 > **Para agentes de IA:** use a skill `executing-plans` para executar este plano tarefa por tarefa. Cada passo usa checkbox para permitir acompanhamento e revisão.
 
 **Objetivo:** integrar a fundação documental e a interface aprovada, criar as fronteiras iniciais do monólito modular e mover os modelos de negócio puros para `SGQ.Domain` sem alterar o comportamento do sistema.
@@ -29,7 +31,7 @@
 
 - Consumir commits documentais: `dfb2348` e `3a9bfd5`
 - Consumir commit visual: `bdaa9f4`
-- Criar worktree: `C:\laragon\www\sis_cris-foundation`
+- Criar worktree: `<raiz-do-repositório>-foundation`
 - Criar branch: `refactor/fundacao-arquitetura`
 
 **Interfaces:**
@@ -40,8 +42,8 @@
 - [x] **Passo 1: confirmar que as branches de origem estão limpas**
 
 ```powershell
-git -C C:\laragon\www\sis_cris status --short
-git -C C:\laragon\www\sis_cris-ui status --short
+git -C <raiz-do-repositório> status --short
+git -C <raiz-do-repositório>-ui status --short
 ```
 
 Esperado: nenhuma saída em ambas.
@@ -49,9 +51,9 @@ Esperado: nenhuma saída em ambas.
 - [x] **Passo 2: criar a branch a partir da documentação**
 
 ```powershell
-git -C C:\laragon\www\sis_cris worktree add `
+git -C <raiz-do-repositório> worktree add `
   -b refactor/fundacao-arquitetura `
-  C:\laragon\www\sis_cris-foundation `
+  <raiz-do-repositório>-foundation `
   docs/fundacao-governanca
 ```
 
@@ -60,7 +62,7 @@ Esperado: worktree criada no commit `f05c292`, que já contém o plano de implem
 - [x] **Passo 3: integrar o frontend aprovado**
 
 ```powershell
-git -C C:\laragon\www\sis_cris-foundation cherry-pick bdaa9f4
+git -C <raiz-do-repositório>-foundation cherry-pick bdaa9f4
 ```
 
 Esperado: cherry-pick sem conflito, preservando a mensagem `feat(ui): redesenhar login e área autenticada`.
@@ -68,8 +70,8 @@ Esperado: cherry-pick sem conflito, preservando a mensagem `feat(ui): redesenhar
 - [x] **Passo 4: restaurar e compilar a baseline**
 
 ```powershell
-$env:DOTNET_ROOT = "$env:LOCALAPPDATA\SGQ\dotnet"
-$env:PATH = "$env:DOTNET_ROOT;$env:LOCALAPPDATA\SGQ\tools;$env:PATH"
+$env:DOTNET_ROOT = "<diretório-do-sdk-local>"
+$env:PATH = "$env:DOTNET_ROOT;<diretório-de-ferramentas-local>;$env:PATH"
 dotnet restore SGQ.slnx
 dotnet build SGQ.slnx --no-restore
 ```

@@ -5,8 +5,8 @@ Este repositório usa entregas pequenas, rastreáveis e revisadas. Código gerad
 ## Antes de começar
 
 1. Leia [AGENTS.md](AGENTS.md).
-2. Localize a demanda em `docs/gestao/dailies/AAAA/MM/AAAA-MM-DD.md`.
-3. Confirme que os requisitos relacionados estão `Validado` na [matriz de rastreabilidade](docs/produto/matriz-rastreabilidade.md).
+2. Localize a demanda em `docs/gestao/dailies/AAAA/MM/AAAA-MM-DD[-slug].md`. O sufixo `-slug` é opcional e identifica a demanda quando há mais de uma daily no dia.
+3. Confirme na [matriz de rastreabilidade](docs/produto/matriz-rastreabilidade.md) que os requisitos relacionados estão `Validado`, `Implementado` ou `Verificado`. Requisitos `Proposto` ou `Adiado` não autorizam código funcional.
 4. Atualize a `main` e crie uma branch.
 
 ```powershell
@@ -40,7 +40,7 @@ tipo(escopo): descrição curta no imperativo
 
 Tipos: `feat`, `fix`, `docs`, `test`, `refactor`, `style`, `perf`, `build`, `ci`, `chore` e `revert`.
 
-Escopos iniciais: `auth`, `usuarios`, `cadastros`, `rc`, `nc`, `recall`, `banco`, `ui`, `testes`, `docs` e `infra`.
+Escopos: `auth`, `usuarios`, `cadastros`, `rc`, `nc`, `recall`, `anexos`, `prazos`, `relatorios`, `banco`, `ui`, `testes`, `docs` e `infra`.
 
 Exemplos:
 
@@ -55,15 +55,16 @@ Antes de pedir um commit à IA, use o fluxo de [tutorial-commit.md](docs/desenvo
 
 ## Qualidade obrigatória
 
-Execute as verificações aplicáveis à mudança. Quando a fundação de testes estiver disponível, todo PR deverá passar por:
+Execute as verificações aplicáveis à mudança:
 
 ```powershell
 dotnet restore SGQ.slnx
 dotnet build SGQ.slnx --no-restore
 dotnet test SGQ.slnx --no-build
+npx --yes markdownlint-cli2@0.18.1
 ```
 
-Regras de negócio em `Domain` e `Application` terão cobertura mínima de 80%. Alterações de banco exigem migration, atualização do diagrama e teste contra PostgreSQL.
+Ainda não há integração contínua (DEM-2026-003): quem abre o PR é responsável por executar e registrar esses comandos. Regras de negócio em `Domain` e `Application` terão cobertura mínima de 80% quando o CI existir. Alterações de banco exigem migration, snapshot coerente (`dotnet ef migrations has-pending-model-changes`), atualização de [banco-de-dados.md](docs/arquitetura/banco-de-dados.md) e teste contra PostgreSQL quando houver infraestrutura. Decisões arquiteturais novas exigem um [ADR](docs/arquitetura/decisoes/README.md).
 
 ## Pull Requests
 
@@ -74,9 +75,10 @@ Cada PR deve:
 - explicar comportamento anterior e novo;
 - apresentar como validar e as evidências;
 - incluir testes ou uma justificativa objetiva;
+- atualizar a matriz de rastreabilidade quando mudar o estado de um requisito;
 - informar migrations, riscos de segurança e impactos de implantação;
 - não conter segredos nem dados reais;
-- receber aprovação de `@ViniciusLgo` antes do merge.
+- receber aprovação do revisor técnico (`@ViniciusLgo`) antes do merge.
 
 Use o template do repositório. Conversas devem estar resolvidas e os checks obrigatórios concluídos.
 

@@ -3,22 +3,22 @@
 ## C# e .NET
 
 - nullable reference types permanecem ativos;
-- warnings serão tratados como erros na fundação técnica;
+- warnings são tratados como erros no código próprio (`Directory.Build.props`);
 - código assíncrono usa sufixo `Async` fora de actions MVC convencionais;
-- controllers recebem ViewModels/Requests, nunca entidades persistentes em edição;
+- controllers recebem ViewModels/Requests, nunca entidades persistentes em edição (meta; os cadastros ainda fazem binding direto, DEM-2026-010);
 - regras de negócio ficam no Domain/Application;
 - acesso a dados e serviços externos ficam na Infrastructure;
 - datas instantâneas usam UTC; datas civis usam `DateOnly`;
 - dinheiro e quantidades usam precisão explícita;
-- cancelamento deve ser propagado com `CancellationToken`.
+- cancelamento deve ser propagado com `CancellationToken` (meta; ainda não adotado nos controllers);
 
 ## Banco
 
 - migrations acompanham qualquer alteração persistente;
 - FKs, índices, unicidade e deleção são explícitos;
 - cadastros referenciados são inativados, não apagados;
-- ações relevantes geram auditoria;
-- queries de lista usam paginação e projeção.
+- ações relevantes geram auditoria, sem gravar dados do Identity ou segredos;
+- queries de lista usam paginação e projeção (meta; DEM-2026-103).
 
 ## Interface
 

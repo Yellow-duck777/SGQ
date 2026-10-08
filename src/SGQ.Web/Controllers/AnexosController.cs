@@ -53,6 +53,7 @@ public class AnexosController(ApplicationDbContext context, IWebHostEnvironment 
     public async Task<IActionResult> Baixar(int id)
     {
         var anexo = await context.Anexos.FindAsync(id); if (anexo is null) return NotFound();
+        if (!anexo.Ativo && !User.IsInRole(Roles.Administrador) && !User.IsInRole(Roles.GarantiaQualidade) && !User.IsInRole(Roles.Auditor)) return NotFound();
         var path = Path.Combine(environment.ContentRootPath, "App_Data", "uploads", anexo.NomeArmazenado); if (!System.IO.File.Exists(path)) return NotFound();
         return File(await System.IO.File.ReadAllBytesAsync(path), anexo.TipoConteudo, anexo.NomeOriginal);
     }

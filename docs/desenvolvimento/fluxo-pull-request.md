@@ -6,7 +6,7 @@
 2. Crie uma branch curta.
 3. Implemente somente a daily selecionada.
 4. Faça commits separados por intenção.
-5. Atualize requisitos, arquitetura e testes afetados.
+5. Atualize requisitos, matriz de rastreabilidade, arquitetura (incluindo ADR e banco de dados) e testes afetados.
 
 ## Conteúdo do PR
 
@@ -17,7 +17,8 @@
 - evidências de testes;
 - migration e impacto em dados;
 - riscos de segurança;
-- itens deliberadamente fora do escopo.
+- itens deliberadamente fora do escopo;
+- resultado de `dotnet test` e, para documentação, de `markdownlint-cli2`.
 
 ## Revisão
 
