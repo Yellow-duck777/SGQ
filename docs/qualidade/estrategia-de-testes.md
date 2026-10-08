@@ -9,27 +9,32 @@ Demonstrar que regras, integrações, autorização e fluxos funcionam no ambien
 | Projeto | Existe | Responsabilidade |
 | --- | --- | --- |
 | `SGQ.ArchitectureTests` | Sim | Dependências entre projetos (xUnit) |
-| `SGQ.Web.Tests` | Sim | Testes de controllers e serviços com xUnit e EF Core InMemory |
+| `SGQ.Web.Tests` | Sim | Controllers e serviços com xUnit e EF Core InMemory |
+| `SGQ.IntegrationTests` | Sim | Pipeline real com `WebApplicationFactory` e PostgreSQL real: política de acesso por perfil, migrations, restrições e auditoria |
 | `SGQ.UnitTests` | Não (planejado) | Regras de Domain e Application sem infraestrutura |
-| `SGQ.IntegrationTests` | Não (planejado) | EF Core, PostgreSQL, migrations, controllers e políticas |
 | `SGQ.EndToEndTests` | Não (planejado) | Fluxos no navegador com Playwright |
 
 A lista de testes e a cobertura por requisito estão na [matriz de testes](matriz-de-testes.md). O número de testes não é fixado neste documento.
 
-### Riscos do estado atual
+### Testes de integração com PostgreSQL
 
-- O provedor InMemory não aplica restrições relacionais, índices únicos, `CHECK`, comportamento de exclusão nem concorrência; um teste verde não prova que o PostgreSQL aceita a operação.
-- Não há testes de autorização por perfil via HTTP (política de fallback e `[Authorize(Roles)]` são verificados manualmente pelos roteiros).
-- Não há testes das migrations, de calendário, notificações, relatórios e administração de usuários.
-- Não existe CI: nada executa automaticamente em PR (DEM-2026-003).
+`SGQ.IntegrationTests` usa a variável de ambiente `SGQ_TEST_PG`, com a conexão do servidor sem nome de banco (por exemplo `Host=127.0.0.1;Port=5432;Username=postgres;Password=<senha-local>`). Cada execução cria um banco próprio e o descarta ao final; os testes nunca usam `sgq_dev`. Sem a variável, os testes aparecem como ignorados e `dotnet test` continua verde. No CI a variável é sempre definida.
 
-## Plano
+### Integração contínua
 
-Integração usará PostgreSQL descartável via Testcontainers (exige Docker ativo e nunca aponta para `sgq_dev`), `WebApplicationFactory` para autorização e Playwright para fluxos críticos. O CI executará restore, build, testes, `markdownlint-cli2`, busca de segredos e análise de dependências (DEM-2026-003 e DEM-2026-117).
+O workflow `.github/workflows/ci.yml` tem dois jobs: `build-test` (Ubuntu, serviço `postgres:17`, `dotnet restore`, `build` e `test` com `SGQ_TEST_PG`) e `docs` (`markdownlint-cli2`). Ainda não há varredura de segredos, análise de dependências vulneráveis nem cobertura (DEM-2026-003).
+
+### Limitações e riscos
+
+- A autenticação nos testes de integração é simulada por um esquema de teste que lê cabeçalhos; o fluxo real de login por cookie, o bloqueio por falhas e a confirmação de conta não são exercitados.
+- `SGQ.Web.Tests` usa InMemory, que não aplica restrições relacionais; qualquer verificação de restrição deve ir em `SGQ.IntegrationTests`.
+- Não há testes de concorrência (numeração anual simultânea), carga nem E2E com navegador (DEM-2026-117).
+- Não há testes de calendário via HTTP, notificações, relatórios (exceto CSV) nem administração de usuários além de `/Usuarios` por perfil.
+- Um erro de autorização foi encontrado apenas pelo teste de integração (ver [Errata](revisao-seguranca.md)); correções de acesso devem sempre ter teste contra o pipeline real.
 
 ## Cobertura
 
-`SGQ.Domain` e `SGQ.Application` devem manter cobertura de linhas igual ou superior a 80% quando houver regras nessas camadas. Cobertura não substitui cenários relevantes nem será artificialmente ampliada por testes sem comportamento.
+`SGQ.Domain` e `SGQ.Application` devem manter cobertura de linhas igual ou superior a 80% quando houver regras nessas camadas. A cobertura ainda não é medida. Ela não substitui cenários relevantes nem será artificialmente ampliada por testes sem comportamento.
 
 ## Cenários obrigatórios
 
@@ -41,7 +46,7 @@ Integração usará PostgreSQL descartável via Testcontainers (exige Docker ati
 - prazos em dias úteis;
 - auditoria sem dados sensíveis;
 - anexos maliciosos, tipo falso, limite e quantidade;
-- migrations em banco vazio;
+- migrations em banco vazio e em banco existente;
 - fluxos completos de RC, NC e Recall;
 - acessibilidade e responsividade.
 

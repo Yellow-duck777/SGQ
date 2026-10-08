@@ -64,7 +64,7 @@ dotnet test SGQ.slnx --no-build
 npx --yes markdownlint-cli2@0.18.1
 ```
 
-Ainda não há integração contínua (DEM-2026-003): quem abre o PR é responsável por executar e registrar esses comandos. Regras de negócio em `Domain` e `Application` terão cobertura mínima de 80% quando o CI existir. Alterações de banco exigem migration, snapshot coerente (`dotnet ef migrations has-pending-model-changes`), atualização de [banco-de-dados.md](docs/arquitetura/banco-de-dados.md) e teste contra PostgreSQL quando houver infraestrutura. Decisões arquiteturais novas exigem um [ADR](docs/arquitetura/decisoes/README.md).
+O CI (`.github/workflows/ci.yml`) executa `restore`, `build` e `test` (com PostgreSQL 17 e a variável `SGQ_TEST_PG`) e o `markdownlint-cli2` em todo PR; ele deve estar verde para o merge. Rode os mesmos comandos localmente antes de abrir o PR; para os testes de integração, defina `SGQ_TEST_PG` com uma conexão de servidor sem nome de banco (veja [ambiente local](docs/desenvolvimento/ambiente-local.md)); sem a variável eles aparecem como ignorados e o CI continua sendo a verificação oficial. Regras de negócio em `Domain` e `Application` terão cobertura mínima de 80% quando o CI existir. Alterações de banco exigem migration, snapshot coerente (`dotnet ef migrations has-pending-model-changes`), atualização de [banco-de-dados.md](docs/arquitetura/banco-de-dados.md) e teste contra PostgreSQL quando houver infraestrutura. Decisões arquiteturais novas exigem um [ADR](docs/arquitetura/decisoes/README.md).
 
 ## Pull Requests
 

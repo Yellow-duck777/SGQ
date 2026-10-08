@@ -2,7 +2,7 @@
 
 Esta matriz liga requisitos, código, testes e evidências e é a única fonte do estado de cada requisito. O detalhamento por requisito deve ser acrescentado no mesmo PR que o valida ou implementa.
 
-Estados: `Proposto`, `Validado`, `Implementado`, `Verificado` e `Adiado`, conforme [requisitos gerais](requisitos-gerais.md). Nenhum requisito está `Verificado` ainda: a verificação independente e a evidência de CI estão pendentes (DEM-2026-003 no [backlog](../gestao/backlog.md)).
+Estados: `Proposto`, `Validado`, `Implementado`, `Verificado` e `Adiado`, conforme [requisitos gerais](requisitos-gerais.md). Nenhum requisito está `Verificado` ainda: faltam a verificação independente e o registro formal de aprovação. Já existem CI (`.github/workflows/ci.yml`) e testes de integração em PostgreSQL real (`tests/SGQ.IntegrationTests`); a autenticação desses testes é simulada e o login por cookie não é exercitado (DEM-2026-003 e DEM-2026-117 no [backlog](../gestao/backlog.md)).
 
 Atualização: 2026-10-08. Itens marcados com **(DEM-2026-008)** foram corrigidos na branch `fix/seguranca-fluxos-e-docs` e dependem do resultado dos testes registrado na [daily](../gestao/dailies/2026/10/2026-10-08-correcoes-seguranca-fluxos-e-documentacao.md). Os nomes de testes citados existem em `tests/SGQ.Web.Tests` e `tests/SGQ.ArchitectureTests`; a lista completa está na [matriz de testes](../qualidade/matriz-de-testes.md).
 
@@ -19,13 +19,13 @@ Atualização: 2026-10-08. Itens marcados com **(DEM-2026-008)** foram corrigido
 | --- | --- | --- | --- | --- |
 | RF-001 | Implementado | ASP.NET Identity, login individual, bloqueio após 5 falhas por 15 min | Roteiro AUTH-001 | Aprovação de conta, MFA e política de senha 12+ (DEM-2026-005, DEM-2026-113, DEM-2026-115) |
 | RF-002 | Implementado | Usuário autenticado gravado como texto (`UsuarioAbertura` etc.); pareceres RT e GQ gravam o usuário **(DEM-2026-008)** | Roteiro AUTH-002; `NaoConformidadesControllerTests`, `RecallsControllerTests` | Trocar texto por FK auditável (DEM-2026-004) |
-| RF-003 | Implementado | Perfis Administrador, GQ, RT, CQ e Auditor; política de fallback nega acesso a contas sem perfil **(DEM-2026-008)** | Roteiro SEC-001 | Matriz papel x ação para escrita, pendente de decisão da Qualidade (DEM-2026-101) |
+| RF-003 | Implementado | Perfis Administrador, GQ, RT, CQ e Auditor; política padrão e de fallback nega acesso a contas sem perfil **(DEM-2026-008)** | Roteiro SEC-001; `AcessoPorPerfilTests` (integração) | Matriz papel x ação para escrita, pendente de decisão da Qualidade (DEM-2026-101) |
 | RF-004 | Implementado (parcial) | `[Authorize(Roles)]` nas transições críticas; antiforgery global; segregação RT/GQ no backend **(DEM-2026-008)** | `NaoConformidadesControllerTests`, `RecallsControllerTests` | Ações de escrita sem perfil específico (DEM-2026-101) |
 | RF-005 | Implementado (parcial) | `HistoricoAuditoria` gravado em `SaveChangesAsync`; consulta por processo | Sem teste dedicado | Imutabilidade, FK de usuário, justificativa e testes (DEM-2026-004) |
-| RF-006 | Implementado (parcial) | Usuário, data/hora, ação, entidade, chave e alterações; entidades do Identity deixam de ser auditadas **(DEM-2026-008)** | Sem teste dedicado | Justificativa e valor anterior estruturado |
+| RF-006 | Implementado (parcial) | Usuário, data/hora, ação, entidade, chave e alterações; entidades do Identity deixam de ser auditadas **(DEM-2026-008)** | `BancoPostgresTests.CriarUsuario_NaoGravaHashNemCarimbosNaAuditoria`, `AtribuirPerfil_FicaRegistradoNaAuditoria` (integração) | Justificativa e valor anterior estruturado |
 | RF-007 | Implementado (parcial) | Sem exclusão física pela interface de processos; `Produto→Lote` com `Restrict` | Sem teste | Cadastros ainda permitem exclusão onde a FK não impede |
 | RF-008 | Implementado (parcial) | Anulação lógica de anexo com justificativa, usuário e data | `AnexosControllerTests` | Inativação de clientes, produtos e lotes (DEM-2026-010) |
-| RF-009 | Implementado (parcial) | Anexos em RC, NC e Recall; 25 MB; extensões permitidas; crítico; anulação lógica; vínculo múltiplo sem cópia; download autenticado (anexo anulado: GQ, Administrador e Auditor) **(DEM-2026-008)** | `AnexosControllerTests` (`Enviar_EvidenciaCriticaComum_NaoExigeFluxoDeLaboratorio`, `Vincular_CriaVinculoParaProcessoDeDestino_EImpedeDuplicidade`) | Limite de 20 por registro, assinatura/MIME, SHA-256 e antimalware (DEM-2026-050); armazenamento disco x `bytea` (DEM-2026-102) |
+| RF-009 | Implementado (parcial) | Anexos em RC, NC e Recall; 25 MB; extensões permitidas; crítico; anulação lógica; vínculo múltiplo sem cópia; download autenticado (anexo anulado: GQ, Administrador e Auditor) **(DEM-2026-008)** | `AnexosControllerTests` (`Enviar_EvidenciaCriticaComum_NaoExigeFluxoDeLaboratorio`, `Vincular_CriaVinculoParaProcessoDeDestino_EImpedeDuplicidade`); `BancoPostgresTests.VinculoDeAnexo_ExigeExatamenteUmProcesso` (integração) | Limite de 20 por registro, assinatura/MIME, SHA-256 e antimalware (DEM-2026-050); armazenamento disco x `bytea` (DEM-2026-102) |
 | RF-010 | Implementado | Código, cliente, produto, lote, período, classificação, status, responsável e área nas listagens | Sem teste | Navegação entre processos relacionados e anexos |
 | RF-011 | Implementado (parcial) | Busca por código e relacionamentos em RC, NC e Recall | Sem teste | Pesquisa global; índices e paginação (DEM-2026-103) |
 | RF-012 | Implementado | Filtros por status, classificação/decisão, produto, lote, responsável e período | Sem teste | — |
@@ -33,7 +33,7 @@ Atualização: 2026-10-08. Itens marcados com **(DEM-2026-008)** foram corrigido
 | RF-014 | Implementado | Eventos e destinatários da matriz do RF-014 e alertas de prazo e de ação de NC vencida | Sem teste dedicado | Deduplicação por evento/outbox (DEM-2026-105); "áreas envolvidas" do Recall aprovado |
 | RS-001 | Implementado | Identity | Roteiro AUTH-001 | — |
 | RS-002 | Implementado | Hash de senha pelo Identity | Roteiro AUTH-001 | — |
-| RS-003 | Implementado (parcial) | Política de fallback exige perfil **(DEM-2026-008)**; transições críticas por perfil | Roteiro SEC-001 | Perfis por ação de escrita (DEM-2026-101) |
+| RS-003 | Implementado (parcial) | Política padrão e de fallback (mesma política) exige perfil **(DEM-2026-008)**; transições críticas por perfil | `AcessoPorPerfilTests` (integração, PostgreSQL real): `Anonimo_RotasDeNegocio_ExigemAutenticacao`, `AutenticadoSemPerfil_RecebeAcessoNegado`, `QualquerPerfilReconhecido_AcessaListagensEDashboard`, `Usuarios_SoAdministrador`; roteiro SEC-001 | Perfis por ação de escrita (DEM-2026-101) |
 | RS-004 | Implementado (parcial) | Auditoria em `SaveChanges` | — | Ver RF-005 |
 | RS-005 | Implementado (parcial) | Download exige autenticação e perfil | `AnexosControllerTests` | Antimalware, validação de conteúdo e armazenamento (DEM-2026-050, DEM-2026-102) |
 | RS-006 | Implementado | User Secrets; nenhuma credencial no repositório (varredura manual de 2026-10-08) | Revisão manual | Varredura automática no CI (DEM-2026-003) |
@@ -67,7 +67,7 @@ Atualização: 2026-10-08. Itens marcados com **(DEM-2026-008)** foram corrigido
 
 | Requisito | Estado | Implementação atual | Teste/evidência | Lacuna / próxima ação |
 | --- | --- | --- | --- | --- |
-| RF-NC-001–RF-NC-012 | Implementado | Abertura manual (GQ e Administrador) ou por RC, origem, área, produto, classificação | `FluxosProcessosControllerTests.Validar_*` | — |
+| RF-NC-001–RF-NC-012 | Implementado | Abertura manual (GQ e Administrador) ou por RC, origem, área, produto, classificação | `FluxosProcessosControllerTests.Validar_*`; `BancoPostgresTests.CodigoAnualDeNc_NaoPodeSerDuplicado` (integração) | — |
 | RF-NC-013–RF-NC-017 | Implementado | Criticidade, contenção e notificação de NC crítica | Sem teste | — |
 | RF-NC-018–RF-NC-027 | Implementado (parcial) | Investigação, causa provável e raiz, método, ações com responsável, prazo e evidência, laboratório externo | Sem teste específico | Revisão documental e treinamento (RF-NC-026 e RF-NC-027) sem campos próprios |
 | RF-NC-028–RF-NC-030 | Implementado | Eficácia eficaz ou ineficaz; ineficaz volta à investigação | Sem teste específico | — |

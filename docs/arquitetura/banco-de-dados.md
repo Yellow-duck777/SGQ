@@ -26,12 +26,12 @@ Colunas de status e classificação são gravadas como texto. A sequência anual
 
 ### Migrations aplicadas
 
-`InitialIdentity`, `AddCadastrosBasicos`, `RestringeExclusaoDeProdutoComLotes`, `AddReclamacoesClientes`, `AddNaoConformidades`, `AddRecalls`, `CompleteReclamacoesClientes`, `CompleteNaoConformidades`, `CompleteRecallWorkflow`, `AddHistoricoAuditoria`, `AddAnexos`, `AddAnexoCriticalidade`, `AddDatasAlvo`, `AddCalendarioDiasNaoUteis`, `AddAlertasPrazo`, `AddReaberturaRecall`, `AddReaberturaNaoConformidade`, `AddReaberturaReclamacao`, `AddLaboratorioExterno`, `AddProrrogacoesPrazo`, `AddDecisaoCqDivergencia`, `SyncCurrentModel` e `AddAnexoProcessoVinculos`.
+Histórico completo (25 migrations; as duas últimas são da DEM-2026-008): `InitialIdentity`, `AddCadastrosBasicos`, `RestringeExclusaoDeProdutoComLotes`, `AddReclamacoesClientes`, `AddNaoConformidades`, `AddRecalls`, `CompleteReclamacoesClientes`, `CompleteNaoConformidades`, `CompleteRecallWorkflow`, `AddHistoricoAuditoria`, `AddAnexos`, `AddAnexoCriticalidade`, `AddDatasAlvo`, `AddCalendarioDiasNaoUteis`, `AddAlertasPrazo`, `AddReaberturaRecall`, `AddReaberturaNaoConformidade`, `AddReaberturaReclamacao`, `AddLaboratorioExterno`, `AddProrrogacoesPrazo`, `AddDecisaoCqDivergencia`, `SyncCurrentModel` `AddAnexoProcessoVinculos`, `AddParecerUsuariosRtGq` e `LimpaAuditoriaIdentity`.
 
-### Migrations a criar na branch `fix/seguranca-fluxos-e-docs` (DEM-2026-008)
+### Migrations da DEM-2026-008 (aplicadas e verificadas em PostgreSQL 17 real)
 
-- `AddParecerUsuariosRtGq`: acrescenta `UsuarioParecerRt` e `UsuarioParecerGq` em `NaoConformidades` e `Recalls`, para registrar quem emitiu cada parecer e sustentar a segregação RT/GQ.
-- `LimpaAuditoriaIdentity`: remove de `HistoricosAuditoria` os registros das entidades do Identity, que continham hash de senha e carimbo de segurança. A limpeza não é reversível.
+- `AddParecerUsuariosRtGq`: cria as colunas `UsuarioParecerRt` e `UsuarioParecerGq` em `NaoConformidades` e em `Recalls` (4 colunas), para registrar quem emitiu cada parecer e sustentar a segregação RT/GQ. Pareceres já registrados ficam sem usuário.
+- `LimpaAuditoriaIdentity`: mascara nas linhas de `HistoricosAuditoria` as propriedades sensíveis (`PasswordHash: [removido]`, `SecurityStamp`, `ConcurrencyStamp` e tokens) e apaga as linhas de `IdentityUserToken` e `IdentityUserLogin`; o restante da auditoria permanece. A limpeza é irreversível: o `Down` é intencionalmente vazio. Faça backup antes de aplicar (ver [checklist de publicação](../desenvolvimento/publicacao-checklist.md)).
 
 ## Problemas conhecidos
 

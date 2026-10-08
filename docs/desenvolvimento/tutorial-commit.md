@@ -30,6 +30,8 @@ dotnet build SGQ.slnx --no-restore
 dotnet test SGQ.slnx --no-build
 ```
 
+Os testes de integração precisam de um PostgreSQL real: defina `SGQ_TEST_PG` (conexão do servidor sem nome de banco; cada execução cria e descarta um banco próprio). Sem a variável, eles aparecem como ignorados e o resultado local não os inclui; informe isso nas evidências. O CI sempre os executa.
+
 Para documentação, valide links, títulos, ortografia, comandos e coerência com o estado real, e execute `npx --yes markdownlint-cli2@0.18.1`. Atualize a matriz de rastreabilidade quando o estado de um requisito mudar. Para migrations, teste aplicação em PostgreSQL limpo.
 
 ## 4. Escolha a mensagem

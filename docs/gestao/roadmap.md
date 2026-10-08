@@ -27,18 +27,18 @@ Saída: documentos coerentes, links válidos e aprovação do revisor técnico.
 ## Onda 2 — Fundação técnica (Parcial)
 
 - projetos Domain, Application, Infrastructure e Web (feitos, mas `Application` e `Infrastructure` vazios);
-- projetos de testes (existem dois) e CI (pendente);
-- PostgreSQL descartável via Testcontainers (pendente);
+- projetos de testes (arquitetura, Web e integração) e CI com build, testes e markdownlint (feitos);
+- PostgreSQL real nos testes de integração (via `SGQ_TEST_PG`; no CI, serviço `postgres:17`); Testcontainers não é usado;
 - migrations consolidadas e banco documentado (documentado; consolidação pendente).
 
-Saída: build e testes verdes, fronteiras arquiteturais verificadas.
+Saída: build e testes verdes no CI, fronteiras arquiteturais verificadas. Pendentes: cobertura, varredura de segredos e dependências, concorrência, carga e E2E com navegador.
 
 ## Onda 3 — Identidade e segurança (Parcial)
 
 - cadastro e confirmação por SMTP (pendente);
 - aprovação administrativa e múltiplos perfis (perfis feitos; aprovação formal pendente);
 - MFA para perfis críticos (pendente);
-- políticas, auditoria, rate limiting e headers (política de fallback e auditoria feitas; restante pendente).
+- políticas, auditoria, rate limiting e headers (política padrão e de fallback e auditoria feitas; restante pendente).
 
 Saída: cenários positivos e negativos automatizados, sem acesso operacional indevido.
 

@@ -18,7 +18,7 @@ Não inclua credenciais, dados pessoais, dumps reais, documentos internos ou evi
 
 O SGQ está em desenvolvimento e ainda não deve ser tratado como pronto para produção. Situação dos controles:
 
-- perfis e autorização no backend: parcial (transições críticas e política de fallback implementadas; perfis por ação de escrita planejados);
+- perfis e autorização no backend: parcial (transições críticas e política padrão e de fallback implementadas; perfis por ação de escrita planejados);
 - auditoria: parcial (existe e é mutável);
 - anexos protegidos: parcial (extensão, tamanho e download autorizado; validação de conteúdo e antimalware planejados);
 - aprovação de conta, MFA, rate limiting e hardening de produção: planejados.

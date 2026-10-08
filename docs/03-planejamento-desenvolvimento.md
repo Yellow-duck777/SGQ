@@ -122,7 +122,7 @@ Implementado:
 - Restrições de backend para ações críticas de GQ, RT e Administrador.
 - Auditoria automática de criações, alterações e exclusões.
 
-**Status:** base concluída. Contas sem perfil não acessam o sistema (política de fallback). Pendências: perfis por ação nas ações de escrita, MFA e hardening de produção (ver backlog).
+**Status:** base concluída. Contas sem perfil não acessam o sistema (política padrão e de fallback). Pendências: perfis por ação nas ações de escrita, MFA e hardening de produção (ver backlog).
 
 ### 5.6 Anexos e evidências
 
@@ -297,6 +297,8 @@ O MVP estará pronto para validação quando:
 ---
 
 ## 11. Checklist obrigatório de pré-entrega
+
+> O [checklist de publicação](desenvolvimento/publicacao-checklist.md) é a versão atual e mais completa (backup, script de migrations, contas sem perfil); esta seção é mantida como histórico.
 
 Executar este checklist imediatamente antes da entrega/implantação:
 

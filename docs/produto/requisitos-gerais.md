@@ -18,7 +18,7 @@ Somente requisitos `Validado`, `Implementado` ou `Verificado` orientam implement
 
 | Grupo | Tema | Situação do código |
 | --- | --- | --- |
-| RF-001–RF-004 | Autenticação e autorização | Perfis, lockout, política de fallback e segregação RT/GQ implementados; MFA, aprovação de conta e perfis por ação de escrita pendentes |
+| RF-001–RF-004 | Autenticação e autorização | Perfis, lockout, política padrão e de fallback e segregação RT/GQ implementados; MFA, aprovação de conta e perfis por ação de escrita pendentes |
 | RF-005–RF-006 | Histórico e auditoria | Implementado em parte; sem imutabilidade nem FK de usuário |
 | RF-007–RF-008 | Exclusão e inativação | Anulação lógica de anexos; inativação de cadastros pendente |
 | RF-009 | Anexos | Implementado em parte; ver matriz |

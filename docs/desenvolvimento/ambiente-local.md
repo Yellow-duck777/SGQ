@@ -7,7 +7,7 @@
 - `dotnet-ef` 10 (somente para criar migrations ou diagnosticar);
 - Git;
 - Node.js (somente para executar `npx markdownlint-cli2`);
-- Docker Desktop: necessário apenas quando existirem testes com PostgreSQL descartável (planejado; ver [backlog](../gestao/backlog.md)).
+- Um PostgreSQL acessível para os testes de integração (`SGQ_TEST_PG`); não é necessário Docker localmente.
 
 ## Conexão local
 
@@ -32,6 +32,30 @@ Nunca grave a conexão com senha em `appsettings*.json`.
 | `DevelopmentTestUsers:*` | Contas de teste, descritas em [usuários de teste](../usuarios-teste-development.md) |
 
 Arquivos de anexos ficam em `src/SGQ.Web/App_Data/uploads` e as chaves de Data Protection em `src/SGQ.Web/.data-protection`. Ambos são locais e não devem ser versionados.
+
+## Primeiro acesso e contas sem perfil
+
+O cadastro é aberto, mas uma conta sem perfil não acessa nenhuma tela de negócio: recebe 403 até que um Administrador atribua um perfil em **Usuários**. Para ter o primeiro Administrador:
+
+1. Defina `InitialAdminEmail` com o e-mail da conta **antes do primeiro start** (a conta é cadastrada pela tela de login e recebe o perfil na inicialização seguinte, somente se ainda não existir nenhum Administrador); ou
+2. se a aplicação já rodou, atribua o perfil Administrador diretamente no banco (tabelas `AspNetRoles` e `AspNetUserRoles`) a uma conta existente.
+
+Uma conta existente sem perfil continua bloqueada até que o Administrador atribua um perfil em Usuários. Na inicialização, a aplicação registra um aviso (`LogWarning`) com a quantidade de contas sem perfil. Consulte também o [checklist de publicação](../desenvolvimento/publicacao-checklist.md).
+
+## Testes
+
+```powershell
+dotnet test SGQ.slnx --no-build
+```
+
+Os testes de integração (`tests/SGQ.IntegrationTests`) exigem um PostgreSQL real, informado pela variável de ambiente `SGQ_TEST_PG` com a conexão do servidor sem nome de banco. Cada execução cria e descarta um banco próprio e nunca usa `sgq_dev`.
+
+```powershell
+$env:SGQ_TEST_PG = "Host=127.0.0.1;Port=5432;Username=postgres;Password=<senha-local>"
+dotnet test SGQ.slnx --no-build
+```
+
+Sem a variável, esses testes aparecem como ignorados. O CI (`.github/workflows/ci.yml`) sempre os executa contra um serviço `postgres:17`.
 
 ## Banco e aplicação
 

@@ -18,3 +18,5 @@ Banco de teste e contas fictícias: uma sem perfil, uma para cada perfil (Admini
 - o download de anexo anulado é permitido apenas a GQ, Administrador e Auditor.
 
 Ações de escrita não críticas (cadastros, abertura de RC e Recall) ainda aceitam qualquer perfil; essa lacuna está em DEM-2026-101 e não deve ser reportada como falha deste roteiro.
+
+A parte de acesso por perfil e a ausência de perfil têm cobertura automatizada em `AcessoPorPerfilTests` (autenticação simulada); este roteiro continua necessário para validar o login real por cookie e as ações de escrita por interface.
