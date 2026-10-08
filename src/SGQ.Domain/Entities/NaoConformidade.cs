@@ -45,6 +45,8 @@ public class NaoConformidade
     public bool AprovadaGq { get; set; }
     public bool ReprovadaRt { get; set; }
     public bool ReprovadaGq { get; set; }
+    [StringLength(256)] public string? UsuarioParecerRt { get; set; }
+    [StringLength(256)] public string? UsuarioParecerGq { get; set; }
     public StatusDecisaoCq? DecisaoCq { get; set; }
     [StringLength(2000)] public string? JustificativaDecisaoCq { get; set; }
     [StringLength(256)] public string? UsuarioDecisaoCq { get; set; }

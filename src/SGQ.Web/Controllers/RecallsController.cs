@@ -86,6 +86,11 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
             Status = model.Decisao == DecisaoRecall.NaoAplicavel ? StatusRecall.Encerrado : StatusRecall.EmAvaliacao,
             UsuarioAbertura = User.Identity?.Name ?? "Usuário autenticado", CriadaEm = DateTimeOffset.UtcNow
         };
+        if (model.Decisao == DecisaoRecall.NaoAplicavel)
+        {
+            recall.UsuarioEncerramento = recall.UsuarioAbertura;
+            recall.EncerradaEm = recall.CriadaEm;
+        }
         context.Recalls.Add(recall);
         await context.SaveChangesAsync();
         await transaction.CommitAsync();
@@ -123,18 +128,27 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
     public async Task<IActionResult> SolicitarAprovacao(int id)
     {
         var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound();
-        if (recall.Status == StatusRecall.EmAvaliacao) { recall.Status = StatusRecall.AguardandoAprovacao; await context.SaveChangesAsync(); }
+        if (recall.Status == StatusRecall.EmAvaliacao) { ZerarRodadaDeAprovacao(recall); recall.Status = StatusRecall.AguardandoAprovacao; await context.SaveChangesAsync(); }
         return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    [Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
+    [Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade)]
     public async Task<IActionResult> Aprovar(int id, string perfil)
     {
         var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound();
         if (recall.Status != StatusRecall.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
-        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { recall.AprovadaRt = true; recall.ReprovadaRt = false; }
-        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { recall.AprovadaGq = true; recall.ReprovadaGq = false; }
+        var usuario = User.Identity?.Name ?? "Usuário autenticado";
+        if (perfil == "RT" && User.IsInRole(Roles.ResponsavelTecnico))
+        {
+            if (MesmoUsuario(recall.UsuarioParecerGq, usuario)) return PareceresDistintosExigidos(id);
+            recall.AprovadaRt = true; recall.ReprovadaRt = false; recall.UsuarioParecerRt = usuario;
+        }
+        else if (perfil == "GQ" && User.IsInRole(Roles.GarantiaQualidade))
+        {
+            if (MesmoUsuario(recall.UsuarioParecerRt, usuario)) return PareceresDistintosExigidos(id);
+            recall.AprovadaGq = true; recall.ReprovadaGq = false; recall.UsuarioParecerGq = usuario;
+        }
         else return Forbid();
         if ((recall.AprovadaRt && recall.ReprovadaGq) || (recall.AprovadaGq && recall.ReprovadaRt)) recall.Status = StatusRecall.AguardandoDecisaoCq;
         else if (recall.AprovadaRt && recall.AprovadaGq) recall.Status = StatusRecall.EmRecolhimento;
@@ -148,12 +162,21 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade + "," + Roles.Administrador)]
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = Roles.ResponsavelTecnico + "," + Roles.GarantiaQualidade)]
     public async Task<IActionResult> Reprovar(int id, string perfil)
     {
         var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound(); if (recall.Status != StatusRecall.AguardandoAprovacao) return RedirectToAction(nameof(Details), new { id });
-        if (perfil == "RT" && (User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador))) { recall.ReprovadaRt = true; recall.AprovadaRt = false; }
-        else if (perfil == "GQ" && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Administrador))) { recall.ReprovadaGq = true; recall.AprovadaGq = false; }
+        var usuario = User.Identity?.Name ?? "Usuário autenticado";
+        if (perfil == "RT" && User.IsInRole(Roles.ResponsavelTecnico))
+        {
+            if (MesmoUsuario(recall.UsuarioParecerGq, usuario)) return PareceresDistintosExigidos(id);
+            recall.ReprovadaRt = true; recall.AprovadaRt = false; recall.UsuarioParecerRt = usuario;
+        }
+        else if (perfil == "GQ" && User.IsInRole(Roles.GarantiaQualidade))
+        {
+            if (MesmoUsuario(recall.UsuarioParecerRt, usuario)) return PareceresDistintosExigidos(id);
+            recall.ReprovadaGq = true; recall.AprovadaGq = false; recall.UsuarioParecerGq = usuario;
+        }
         else return Forbid();
         recall.Status = (recall.ReprovadaRt && recall.AprovadaGq) || (recall.ReprovadaGq && recall.AprovadaRt) ? StatusRecall.AguardandoDecisaoCq : StatusRecall.EmAvaliacao;
         await context.SaveChangesAsync();
@@ -220,7 +243,7 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
     public async Task<IActionResult> Encerrar(int id)
     {
         var recall = await context.Recalls.FindAsync(id); if (recall is null) return NotFound();
-        if (recall.Status != StatusRecall.AguardandoEncerramento || !recall.AprovadaRt || !recall.AprovadaGq || recall.ComunicadaAutoridadeEm is null) { TempData["Error"] = "O Recall precisa de aprovações, comunicação regulatória e destinação antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
+        if (recall.Status != StatusRecall.AguardandoEncerramento || (!(recall.AprovadaRt && recall.AprovadaGq) && recall.DecisaoCq != StatusDecisaoCq.Favoravel) || recall.ComunicadaAutoridadeEm is null) { TempData["Error"] = "O Recall precisa de aprovações, comunicação regulatória e destinação antes do encerramento."; return RedirectToAction(nameof(Details), new { id }); }
         recall.Status = StatusRecall.Encerrado; recall.UsuarioEncerramento = User.Identity?.Name ?? "Usuário autenticado"; recall.EncerradaEm = DateTimeOffset.UtcNow; await context.SaveChangesAsync();
         await NotificarAsync("ProcessoEncerrado", recall.Codigo, [Roles.GarantiaQualidade, Roles.ResponsavelTecnico, Roles.ControleQualidade],
             $"SGQ: processo encerrado — {recall.Codigo}", $"O Recall {recall.Codigo} foi encerrado.", [recall.UsuarioAbertura, recall.UsuarioDecisaoCq ?? string.Empty, recall.UsuarioEncerramento]);
@@ -250,8 +273,9 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
         recall.JustificativaReabertura = model.Justificativa.Trim();
         recall.UsuarioReabertura = User.Identity?.Name ?? "Usuário autenticado";
         recall.ReabertaEm = DateTimeOffset.UtcNow;
-        recall.AprovadaRt = false;
-        recall.AprovadaGq = false;
+        ZerarRodadaDeAprovacao(recall);
+        recall.UsuarioEncerramento = null;
+        recall.EncerradaEm = null;
         recall.Status = StatusRecall.EmAvaliacao;
         await context.SaveChangesAsync();
         TempData["Success"] = "Recall reaberto. A avaliação e as aprovações técnicas devem ser realizadas novamente.";
@@ -278,6 +302,24 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
             .Select(item => new { item.Id, Nome = $"{item.Numero} — {item.Produto.Nome}" }).ToListAsync(), "Id", "Nome", loteId);
         ViewBag.NaoConformidades = new SelectList(await context.NaoConformidades.OrderByDescending(item => item.CriadaEm).ToListAsync(), "Id", "Codigo", ncId);
         ViewBag.Reclamacoes = new SelectList(await context.ReclamacoesClientes.OrderByDescending(item => item.CriadaEm).ToListAsync(), "Id", "Codigo", rcId);
+    }
+
+    private static bool MesmoUsuario(string? parecerAnterior, string usuario) =>
+        parecerAnterior is not null && string.Equals(parecerAnterior, usuario, StringComparison.OrdinalIgnoreCase);
+
+    private IActionResult PareceresDistintosExigidos(int id)
+    {
+        TempData["Error"] = "Os pareceres de RT e GQ devem ser dados por contas distintas.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // Cada rodada de aprovação começa limpa: pareceres, decisão do CQ e autores anteriores não se acumulam.
+    private static void ZerarRodadaDeAprovacao(Recall recall)
+    {
+        recall.AprovadaRt = false; recall.AprovadaGq = false;
+        recall.ReprovadaRt = false; recall.ReprovadaGq = false;
+        recall.UsuarioParecerRt = null; recall.UsuarioParecerGq = null;
+        recall.DecisaoCq = null; recall.JustificativaDecisaoCq = null; recall.UsuarioDecisaoCq = null; recall.DecididaPeloCqEm = null;
     }
 
     private Task NotificarAsync(string tipo, string referencia, IEnumerable<string> perfis, string assunto, string corpo, IEnumerable<string>? usuariosEnvolvidos = null) =>
