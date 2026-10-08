@@ -45,6 +45,8 @@ O código de domínio, EF Core, Identity, controllers e apresentação estavam c
 
 ## Evidências
 
+Evidências datadas de 2026-09-22; o número de testes e o estado do snapshot do EF mudaram depois da integração com a linha funcional (ver [daily de 2026-10-08](../10/2026-10-08-correcoes-seguranca-fluxos-e-documentacao.md)).
+
 - `dotnet restore SGQ.slnx`: projetos restaurados.
 - `dotnet build SGQ.slnx --no-restore`: zero erro e zero warning.
 - `dotnet test SGQ.slnx --no-build`: três testes aprovados.

@@ -1,5 +1,7 @@
 # Daily — AAAA-MM-DD
 
+<!-- Arquivo: docs/gestao/dailies/AAAA/MM/AAAA-MM-DD[-slug].md -->
+
 ## Identificação
 
 - Demanda: `DEM-AAAA-NNN`
@@ -38,8 +40,10 @@ Explique o problema, os usuários afetados e os requisitos relacionados.
 ## Verificações esperadas
 
 ```powershell
-dotnet build SGQ.slnx
-dotnet test SGQ.slnx
+dotnet restore SGQ.slnx
+dotnet build SGQ.slnx --no-restore
+dotnet test SGQ.slnx --no-build
+npx --yes markdownlint-cli2@0.18.1
 ```
 
 Adapte os comandos ao tipo da mudança.

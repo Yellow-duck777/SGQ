@@ -1,5 +1,7 @@
 # Desenho do programa de evolução do SGQ
 
+> Documento histórico de 2026-09-22. O estado atual das ondas está em [roadmap.md](../roadmap.md) e as demandas em [backlog.md](../backlog.md).
+
 ## Propósito
 
 Este documento organiza a evolução do SGQ em entregas pequenas, executáveis e verificáveis. Ele estabelece a sequência entre governança, arquitetura, banco, segurança, módulos funcionais e operação sem transformar o trabalho num único refactor de alto risco.

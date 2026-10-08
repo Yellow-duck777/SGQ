@@ -1,7 +1,7 @@
 # Desenho da experiência operacional do SGQ
 
 **Data:** 22/09/2026  
-**Estado:** aprovado para detalhamento técnico  
+**Estado:** aprovado para detalhamento técnico; implementação não iniciada em 2026-10-08
 **Escopo:** dashboard, cadastros básicos e configurações da conta
 
 ## 1. Objetivo
@@ -257,4 +257,3 @@ Os campos definitivos de clientes, produtos e lotes também não serão ampliado
 sem validação dos requisitos `CAD-001`, `CAD-002` e `CAD-003`. Esta especificação
 define a experiência e o ciclo de vida dos registros, mas não inventa campos de
 negócio.
-

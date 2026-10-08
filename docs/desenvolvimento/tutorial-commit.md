@@ -30,7 +30,7 @@ dotnet build SGQ.slnx --no-restore
 dotnet test SGQ.slnx --no-build
 ```
 
-Para documentação, valide links, títulos, ortografia, comandos e coerência com o estado real. Para migrations, teste aplicação em PostgreSQL limpo.
+Para documentação, valide links, títulos, ortografia, comandos e coerência com o estado real, e execute `npx --yes markdownlint-cli2@0.18.1`. Atualize a matriz de rastreabilidade quando o estado de um requisito mudar. Para migrations, teste aplicação em PostgreSQL limpo.
 
 ## 4. Escolha a mensagem
 
@@ -44,6 +44,7 @@ Boas mensagens:
 
 ```text
 docs(docs): organiza governança do projeto
+fix(anexos): restringe download de anexo anulado
 feat(auth): adiciona aprovação de usuários
 fix(rc): impede lote de outro produto
 test(nc): cobre reprovação de plano de ação

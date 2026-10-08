@@ -2,9 +2,18 @@
 
 ## Estado atual
 
-O SGQ continua sendo um único sistema implantável, agora dividido inicialmente nos projetos `SGQ.Domain`, `SGQ.Application`, `SGQ.Infrastructure` e `SGQ.Web`. Entidades e enums operacionais estão em `Domain`; testes automatizados protegem as dependências entre as camadas.
+O SGQ é um único sistema implantável, dividido nos projetos `SGQ.Domain`, `SGQ.Application`, `SGQ.Infrastructure` e `SGQ.Web`. Testes arquiteturais (`SGQ.ArchitectureTests`) protegem as dependências entre as camadas.
 
-Esta é uma separação incremental. `ApplicationDbContext`, Identity, migrations, controllers e apresentação ainda permanecem em `Web`. Por isso, `Web` mantém temporariamente uma referência direta a `Domain` e os controllers ainda acessam EF Core. A próxima fatia criará casos de uso em `Application`, moverá persistência para `Infrastructure` e eliminará esse acesso direto.
+A separação é incremental e ainda parcial:
+
+| Projeto | O que contém hoje |
+| --- | --- |
+| `SGQ.Domain` | Entidades `Cliente`, `Produto`, `Lote`, `ReclamacaoCliente`, `ReclamacaoClienteLote`, `NaoConformidade` e `AcaoNaoConformidade`; enums de classificação, origem, resultado e status de RC e NC, e `StatusDecisaoCq` |
+| `SGQ.Application` | Somente `ApplicationAssembly` (sem casos de uso) |
+| `SGQ.Infrastructure` | Somente `InfrastructureAssembly` (sem persistência ou integrações) |
+| `SGQ.Web` | MVC, Identity, `ApplicationDbContext`, migrations, serviços (prazos, e-mail, notificações, alertas), 10 controllers que acessam o `DbContext` diretamente, e as entidades `Recall`, `RetornoRecall`, `Anexo`, `AnexoProcessoVinculo`, `DiaNaoUtil`, `HistoricoAuditoria`, `ProrrogacaoPrazo`, `AlertaEnviado`, `ApplicationUser` e os enums de Recall (`StatusRecall`, `OrigemRecall`, `DecisaoRecall`, `TipoDiaNaoUtil`) |
+
+Por isso `Web` referencia `Domain`, `Application` e `Infrastructure` diretamente. A conclusão da refatoração (casos de uso em `Application`, persistência em `Infrastructure`, entidades restantes em `Domain`) é a demanda DEM-2026-007 do backlog.
 
 ## Arquitetura alvo
 
@@ -26,12 +35,12 @@ SGQ.Web            → SGQ.Application
 SGQ.Web            → SGQ.Infrastructure somente na composição
 ```
 
-`Domain` não referencia outros projetos. `Application` não conhece MVC, EF Core ou PostgreSQL. `Web` usa `Infrastructure` apenas no ponto de composição para registrar as implementações dos contratos; controllers e páginas dependem de casos de uso da `Application`.
+`Domain` não referencia outros projetos. `Application` não conhece MVC, EF Core ou PostgreSQL. `Web` usa `Infrastructure` apenas no ponto de composição; controllers e páginas dependem de casos de uso da `Application`.
 
 ## Módulos
 
-Cadastros, RC, NC e Recall permanecem módulos do mesmo sistema. Cada módulo expõe casos de uso pela camada Application e mantém regras no Domain. Serviços compartilhados incluem identidade, auditoria, calendário, anexos, notificações, numeração e relatórios.
+Cadastros, RC, NC e Recall permanecem módulos do mesmo sistema. Os serviços compartilhados (identidade, auditoria, calendário, anexos, notificações, numeração e relatórios) existem hoje dentro de `SGQ.Web`; as [decisões arquiteturais](decisoes/README.md) registram o racional de cada um.
 
 ## Evolução
 
-A primeira separação foi executada com testes arquiteturais e sem alteração do esquema físico do PostgreSQL. As próximas mudanças continuarão em PRs próprios. Nenhuma funcionalidade será reescrita apenas para “aproveitar” a reorganização.
+A primeira separação foi executada com testes arquiteturais e sem alteração do esquema físico. As próximas mudanças continuarão em PRs próprios. Nenhuma funcionalidade será reescrita apenas para "aproveitar" a reorganização.
