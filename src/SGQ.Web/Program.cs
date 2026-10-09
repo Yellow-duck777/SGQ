@@ -73,6 +73,12 @@ if (DevelopmentTestUsers.HasRequestedOperation(args))
     return;
 }
 
+if (DevelopmentDemoData.HasRequestedOperation(args))
+{
+    await DevelopmentDemoData.ExecuteAsync(app.Services, app.Environment, app.Configuration);
+    return;
+}
+
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
