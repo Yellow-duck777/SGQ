@@ -1,17 +1,495 @@
 @model SGQ.Domain.Entities.NaoConformidade
-@{ ViewData["Title"] = Model.Codigo; }
-@if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> } @if (TempData["Error"] is string error) { <div class="alert alert-danger">@error</div> }
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">Não Conformidade</p><h1>@Model.Codigo</h1><span class="badge text-bg-secondary">@Model.Status</span></div><a class="btn btn-outline-secondary" asp-action="Index">Voltar</a></div>
-<div class="card shadow-sm border-0 p-4"><dl class="row mb-0"><dt class="col-sm-3">Origem</dt><dd class="col-sm-9">@Model.Origem</dd><dt class="col-sm-3">Produto</dt><dd class="col-sm-9">@(Model.Produto?.Nome ?? "Não informado")</dd><dt class="col-sm-3">Área</dt><dd class="col-sm-9">@Model.Area</dd><dt class="col-sm-3">Descrição</dt><dd class="col-sm-9">@Model.Descricao</dd><dt class="col-sm-3">NC vinculada</dt><dd class="col-sm-9">@(Model.ReclamacaoCliente?.Codigo ?? "Não aplicável")</dd></dl></div>
-@if (Model.Status == StatusNaoConformidade.EmInvestigacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Investigação</h2><form asp-action="RegistrarInvestigacao" method="post"><input type="hidden" name="id" value="@Model.Id" /><div class="row g-3"><div class="col-12"><label class="form-label">Contenção</label><textarea name="contencao" class="form-control" rows="2" required>@Model.Contencao</textarea></div><div class="col-12"><label class="form-label">Investigação</label><textarea name="investigacao" class="form-control" rows="3" required>@Model.Investigacao</textarea></div><div class="col-md-6"><label class="form-label">Causa provável</label><input name="causaProvavel" value="@Model.CausaProvavel" class="form-control" required /></div><div class="col-md-6"><label class="form-label">Causa raiz</label><input name="causaRaiz" value="@Model.CausaRaiz" class="form-control" required /></div><div class="col-12"><label class="form-label">Método de análise</label><input name="metodoAnalise" value="@Model.MetodoAnalise" class="form-control" placeholder="Ex.: 5 Porquês" required /></div></div><button class="btn btn-primary mt-3">Salvar investigação</button></form></section> }
-@if (Model.Status == StatusNaoConformidade.EmTratamento) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Plano de ação</h2><div class="table-responsive"><table class="table"><thead><tr><th>Ação</th><th>Responsável</th><th>Prazo</th><th>Situação</th><th></th></tr></thead><tbody>@foreach (var acao in Model.Acoes) { <tr><td>@acao.Descricao</td><td>@acao.Responsavel</td><td>@acao.Prazo.ToString("dd/MM/yyyy")</td><td>@(acao.DataConclusao.HasValue ? "Concluída" : "Pendente")</td><td>@if (!acao.DataConclusao.HasValue) { <form asp-action="ConcluirAcao" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="acaoId" value="@acao.Id" /><input name="evidencia" class="form-control form-control-sm d-inline-block w-auto" placeholder="Evidência" /><button class="btn btn-sm btn-outline-primary mt-1">Concluir</button></form> }</td></tr> }</tbody></table></div><form asp-action="AdicionarAcao" method="post" class="row g-2 border-top pt-3"><input type="hidden" name="NaoConformidadeId" value="@Model.Id" /><div class="col-md-5"><input name="Descricao" class="form-control" placeholder="Descrição da ação" required /></div><div class="col-md-3"><input name="Responsavel" class="form-control" placeholder="Responsável" required /></div><div class="col-md-2"><input name="Prazo" type="date" class="form-control" required /></div><div class="col-md-2"><button class="btn btn-outline-primary">Adicionar ação</button></div><input type="hidden" name="Obrigatoria" value="true" /></form><form asp-action="AvaliarEficacia" method="post" class="mt-4"><input type="hidden" name="id" value="@Model.Id" /><p class="mb-2"><strong>Avaliação de eficácia</strong></p><button name="eficaz" value="true" class="btn btn-primary">Eficaz — enviar para aprovação</button><button name="eficaz" value="false" class="btn btn-outline-danger">Ineficaz — retornar à investigação</button></form></section> }
-@if (Model.Status == StatusNaoConformidade.AguardandoAprovacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Aprovação técnica</h2><p>RT: @(Model.AprovadaRt ? "Aprovada" : "Pendente") · GQ: @(Model.AprovadaGq ? "Aprovada" : "Pendente")</p><div class="d-flex gap-2 flex-wrap"><form asp-action="Aprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="RT" /><button class="btn btn-outline-primary">Aprovar como RT</button></form><form asp-action="Aprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="GQ" /><button class="btn btn-outline-primary">Aprovar como GQ</button></form><form asp-action="Reprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="RT" /><button class="btn btn-outline-danger">Reprovar como RT</button></form><form asp-action="Reprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="GQ" /><button class="btn btn-outline-danger">Reprovar como GQ</button></form>@if ((Model.AprovadaRt && Model.AprovadaGq) || Model.DecisaoCq == StatusDecisaoCq.Favoravel) { <form asp-action="Encerrar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary">Encerrar NC</button></form> }</div></section> }
-@if (Model.Status == StatusNaoConformidade.Encerrada) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Reabertura</h2><p class="text-muted">A reabertura retorna a NC para investigação e exige uma nova rodada de aprovações.</p><form asp-action="Reabrir" method="post"><input type="hidden" name="Id" value="@Model.Id" /><label class="form-label" for="Justificativa">Justificativa</label><textarea class="form-control" id="Justificativa" name="Justificativa" rows="3" minlength="10" maxlength="2000" required></textarea><button class="btn btn-outline-danger mt-3">Reabrir NC</button></form></section> }
-@if (Model.ReabertaEm.HasValue) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Última reabertura</h2><p class="mb-1">@Model.JustificativaReabertura</p><p class="mb-0 text-muted">Por @Model.UsuarioReabertura em @Model.ReabertaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"). Status anterior: @Model.StatusAnteriorReabertura.</p></section> }
-@if (Model.Status == StatusNaoConformidade.EmInvestigacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Laboratório externo</h2><form asp-action="SolicitarLaboratorio" method="post" class="row g-2"><input type="hidden" name="Id" value="@Model.Id" /><div class="col-md-6"><input name="Laboratorio" class="form-control" placeholder="Laboratório responsável" required /></div><div class="col-md-4"><input name="DataEnvioAmostra" type="date" class="form-control" required /></div><div class="col-md-2"><button class="btn btn-outline-primary">Solicitar</button></div></form></section> }
-@if (Model.Status == StatusNaoConformidade.AguardandoLaboratorioExterno) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Resultado do laboratório</h2><p>Envie o laudo como anexo crítico e depois registre o resultado.</p><form asp-action="RegistrarResultadoLaboratorio" method="post" class="row g-2"><input type="hidden" name="Id" value="@Model.Id" /><div class="col-md-3"><input name="DataRecebimento" type="date" class="form-control" required /></div><div class="col-md-4"><input name="IdentificacaoLaudo" class="form-control" placeholder="Identificação do laudo" required /></div><div class="col-md-5"><input name="Resultado" class="form-control" placeholder="Resultado" required /></div><div class="col-12"><button class="btn btn-primary">Registrar resultado</button></div></form></section> }
-@if (Model.Status == StatusNaoConformidade.AguardandoDecisaoCq) { <section class="card shadow-sm border-warning p-4 mt-4"><h2 class="h5">Divergência técnica — decisão do CQ</h2><p>RT: @(Model.AprovadaRt ? "Aprovado" : "Reprovado") · GQ: @(Model.AprovadaGq ? "Aprovado" : "Reprovado")</p><form asp-action="DecidirDivergencia" method="post"><input type="hidden" name="id" value="@Model.Id" /><textarea name="justificativa" class="form-control" minlength="10" required placeholder="Fundamentação da decisão do CQ"></textarea><button name="favoravel" value="true" class="btn btn-primary mt-3">Decisão favorável</button><button name="favoravel" value="false" class="btn btn-outline-danger mt-3">Retornar para tratamento</button></form></section> }
-@if (Model.DecididaPeloCqEm.HasValue) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Decisão do CQ</h2><p class="mb-1">@Model.DecisaoCq — @Model.JustificativaDecisaoCq</p><p class="mb-0 text-muted">Por @Model.UsuarioDecisaoCq em @Model.DecididaPeloCqEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p></section> }
+@using SGQ.Web.Security
+@{
+    ViewData["Title"] = Model.Codigo;
+    var hoje = DateOnly.FromDateTime(DateTime.Today);
+    var usuario = User.Identity?.Name ?? string.Empty;
+    var ehAdmin = User.IsInRole(Roles.Administrador);
+    var ehGq = User.IsInRole(Roles.GarantiaQualidade);
+    var ehRt = User.IsInRole(Roles.ResponsavelTecnico);
+    var ehCq = User.IsInRole(Roles.ControleQualidade);
+    var ehAuditor = User.IsInRole(Roles.Auditor);
+    var podeEncerrar = ehAdmin || ehGq;
+    var podeReabrir = ehGq || ehRt || ehAuditor;
+    var podeProrrogar = ehGq || ehRt;
+    var podeDecidirCq = ehCq || ehAdmin;
+    var encerrada = Model.Status == StatusNaoConformidade.Encerrada;
+    var acoes = Model.Acoes.OrderBy(a => a.Prazo).ThenBy(a => a.Id).ToList();
+    var obrigatoriasPendentes = acoes.Count(a => a.Obrigatoria && a.DataConclusao is null);
+    var acoesEmAtraso = acoes.Count(a => a.DataConclusao is null && a.Prazo < hoje);
+    var planoPronto = acoes.Count > 0 && obrigatoriasPendentes == 0;
+    var cqFavoravel = Model.DecisaoCq == StatusDecisaoCq.Favoravel;
+    var ambosAprovaram = Model.AprovadaRt && Model.AprovadaGq;
+    var prontoParaEncerrar = Model.Status == StatusNaoConformidade.AguardandoAprovacao && (ambosAprovaram || cqFavoravel);
+    var anexos = ViewBag.Anexos as IEnumerable<Anexo> ?? Enumerable.Empty<Anexo>();
+    var temLaboratorio = !string.IsNullOrWhiteSpace(Model.LaboratorioExterno);
+    var laudoAtivo = Model.LaudoLaboratorioAnexoId.HasValue && anexos.Any(a => a.Id == Model.LaudoLaboratorioAnexoId && a.Critico && a.Ativo && a.NaoConformidadeId == Model.Id);
+    var rodadaReprovada = Model.Status == StatusNaoConformidade.EmTratamento && (Model.ReprovadaRt || Model.ReprovadaGq);
+
+    // Etapas do fluxo; "Aguardando decisão do CQ" é um desvio da etapa Aprovação.
+    var etapas = new[] { "Abertura", "Investigação", "Tratamento", "Eficácia", "Aprovação", "Encerramento" };
+    var etapaAtual = Model.Status switch
+    {
+        StatusNaoConformidade.EmInvestigacao => 1,
+        StatusNaoConformidade.AguardandoLaboratorioExterno => 1,
+        StatusNaoConformidade.EmTratamento => planoPronto ? 3 : 2,
+        StatusNaoConformidade.AguardandoAprovacao => 4,
+        StatusNaoConformidade.AguardandoDecisaoCq => 4,
+        _ => etapas.Length
+    };
+
+    // Pareceres de RT e GQ
+    bool Mesmo(string? outro) => outro is not null && string.Equals(outro, usuario, StringComparison.OrdinalIgnoreCase);
+    var votoAberto = Model.Status == StatusNaoConformidade.AguardandoAprovacao && !cqFavoravel;
+    var pareceres = new[]
+    {
+        new { Sigla = "RT", Nome = "Responsável Técnico (RT)", Aprovou = Model.AprovadaRt, Reprovou = Model.ReprovadaRt, Autor = Model.UsuarioParecerRt, TemPerfil = ehRt, Bloqueado = Mesmo(Model.UsuarioParecerGq), Outro = "GQ" },
+        new { Sigla = "GQ", Nome = "Garantia da Qualidade (GQ)", Aprovou = Model.AprovadaGq, Reprovou = Model.ReprovadaGq, Autor = Model.UsuarioParecerGq, TemPerfil = ehGq, Bloqueado = Mesmo(Model.UsuarioParecerRt), Outro = "RT" }
+    };
+    var mostrarPareceres = Model.Status is StatusNaoConformidade.AguardandoAprovacao or StatusNaoConformidade.AguardandoDecisaoCq or StatusNaoConformidade.Encerrada || rodadaReprovada;
+
+    // Painel "Próxima ação"
+    string tom = ""; string titulo; string texto; string? ancora = null; string? rotuloAncora = null;
+    switch (Model.Status)
+    {
+        case StatusNaoConformidade.EmInvestigacao:
+            titulo = "Registrar a investigação";
+            texto = Model.Eficaz == false
+                ? "A última avaliação de eficácia concluiu que as ações foram ineficazes. Revise a investigação e a causa raiz e salve para voltar ao tratamento."
+                : Model.ReabertaEm.HasValue && Model.Eficaz is null
+                    ? "A não conformidade foi reaberta. Revise a investigação, as ações e a eficácia antes das novas aprovações."
+                    : "Preencha contenção, investigação, causa provável, causa raiz e método de análise. Se precisar de análise externa, solicite um laboratório.";
+            ancora = "#nc-acao"; rotuloAncora = "Ir para a investigação"; break;
+        case StatusNaoConformidade.AguardandoLaboratorioExterno:
+            titulo = "Aguardando o resultado do laboratório";
+            texto = Model.LaudoLaboratorioAnexoId.HasValue
+                ? "O laudo já foi anexado. Registre agora o resultado do laboratório."
+                : "Envie o laudo no formulário do bloco abaixo e depois registre o resultado do laboratório.";
+            ancora = "#nc-acao"; rotuloAncora = "Registrar resultado"; break;
+        case StatusNaoConformidade.EmTratamento:
+            if (acoes.Count == 0) { titulo = "Cadastrar as ações do plano"; texto = "Inclua ao menos uma ação com responsável e prazo. Depois conclua cada ação com a evidência."; }
+            else if (obrigatoriasPendentes > 0) { titulo = obrigatoriasPendentes == 1 ? "Concluir 1 ação obrigatória" : $"Concluir {obrigatoriasPendentes} ações obrigatórias"; texto = "Conclua as ações obrigatórias informando a evidência. A eficácia só pode ser avaliada depois disso."; if (acoesEmAtraso > 0) tom = "alerta"; }
+            else { titulo = "Avaliar a eficácia das ações"; texto = "Todas as ações obrigatórias foram concluídas. Informe se as ações foram eficazes: eficaz segue para aprovação; ineficaz volta à investigação."; }
+            if (rodadaReprovada) texto = "A aprovação foi reprovada. " + texto;
+            ancora = "#nc-acao"; rotuloAncora = "Ir para o plano de ação"; break;
+        case StatusNaoConformidade.AguardandoAprovacao:
+            if (cqFavoravel)
+            {
+                titulo = "Encerrar a não conformidade";
+                texto = podeEncerrar ? "O CQ decidiu favoravelmente à divergência. A GQ pode encerrar o processo agora." : "O CQ decidiu favoravelmente à divergência. Aguarda a GQ encerrar o processo. Somente a GQ ou o Administrador encerram.";
+                if (!podeEncerrar) tom = "espera"; else { ancora = "#nc-encerrar"; rotuloAncora = "Ir para o encerramento"; }
+            }
+            else if (ambosAprovaram)
+            {
+                titulo = "Encerrar a não conformidade";
+                texto = podeEncerrar ? "RT e GQ aprovaram. A GQ pode encerrar o processo agora." : "RT e GQ aprovaram. Aguarda a GQ encerrar o processo. Somente a GQ ou o Administrador encerram.";
+                if (!podeEncerrar) tom = "espera"; else { ancora = "#nc-encerrar"; rotuloAncora = "Ir para o encerramento"; }
+            }
+            else
+            {
+                var faltam = new List<string>();
+                if (!Model.AprovadaRt && !Model.ReprovadaRt) faltam.Add("RT");
+                if (!Model.AprovadaGq && !Model.ReprovadaGq) faltam.Add("GQ");
+                var possoVotar = pareceres.Any(p => p.TemPerfil && !p.Bloqueado && !p.Aprovou && !p.Reprovou);
+                titulo = "Aprovação técnica: " + (faltam.Count == 2 ? "faltam os pareceres de RT e GQ" : $"falta o parecer da {(faltam.FirstOrDefault() == "RT" ? "RT" : "GQ")}");
+                if (possoVotar) { texto = "Dê o seu parecer no cartão de aprovação. RT e GQ precisam ser pessoas (contas) diferentes."; ancora = "#nc-pareceres"; rotuloAncora = "Dar o meu parecer"; }
+                else { tom = "espera"; texto = ehAdmin ? "Quem aprova são o RT e a GQ, em contas distintas. O Administrador não vota." : "Aguardando o parecer de " + string.Join(" e ", faltam) + ". Somente RT e GQ votam, em contas distintas."; }
+            }
+            break;
+        case StatusNaoConformidade.AguardandoDecisaoCq:
+            titulo = "Decisão do CQ sobre a divergência";
+            tom = podeDecidirCq ? "alerta" : "espera";
+            texto = podeDecidirCq ? "RT e GQ divergiram. Registre a decisão com uma justificativa de pelo menos 10 caracteres." : "RT e GQ divergiram. Aguarda a decisão do CQ (ou do Administrador).";
+            if (podeDecidirCq) { ancora = "#nc-acao"; rotuloAncora = "Registrar decisão"; }
+            break;
+        default:
+            titulo = "Não conformidade encerrada"; tom = "concluido";
+            texto = podeReabrir ? "O processo foi concluído. Se surgir nova evidência, GQ, RT ou Auditor podem reabri-lo com justificativa." : "O processo foi concluído. Somente GQ, RT ou Auditor podem reabri-lo.";
+            if (podeReabrir) { ancora = "#nc-acao"; rotuloAncora = "Ir para a reabertura"; }
+            break;
+    }
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/modulos/nao-conformidades.css" asp-append-version="true" />
+}
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+@if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Não conformidade</p>
+        <h1><span class="font-monospace">@Model.Codigo</span> @Html.StatusBadge(Model.Status) @if (Model.Classificacao.HasValue) { @Html.StatusBadge(Model.Classificacao) }</h1>
+        <dl class="meta-row">
+            <div class="meta-item"><dt class="meta-label">Prazo</dt><dd class="meta-value m-0">@if (Model.DataAlvo is null && Model.Classificacao == ClassificacaoOcorrencia.Critica && !encerrada) { <span class="status-badge" data-tom="neutro" title="NC crítica sem data-alvo definida">Sem prazo fixo</span> } else { @Html.PrazoChipHtml(Model.DataAlvo, encerrada) }</dd></div>
+            <div class="meta-item"><dt class="meta-label">Origem</dt><dd class="meta-value m-0">@Model.Origem.Rotulo()</dd></div>
+            <div class="meta-item"><dt class="meta-label">Aberta por</dt><dd class="meta-value m-0">@Model.UsuarioAbertura</dd></div>
+            <div class="meta-item"><dt class="meta-label">Abertura</dt><dd class="meta-value m-0">@Model.DataAbertura.ToString("dd/MM/yyyy")</dd></div>
+            @if (Model.ReclamacaoCliente is not null) { <div class="meta-item"><dt class="meta-label">Reclamação vinculada</dt><dd class="meta-value m-0"><a asp-controller="Reclamacoes" asp-action="Details" asp-route-id="@Model.ReclamacaoClienteId">@Model.ReclamacaoCliente.Codigo</a></dd></div> }
+        </dl>
+    </div>
+    <div class="page-header-actions"><a class="btn btn-outline-secondary" asp-action="Index">Voltar para a lista</a></div>
+</header>
+
+<div class="nc-stack">
+    <section class="nc-stepper-panel" aria-label="Andamento do processo">
+        <partial name="_Stepper" model="new StepperModel(etapas, etapaAtual)" />
+        @if (Model.Status == StatusNaoConformidade.AguardandoDecisaoCq)
+        {
+            <p class="nc-stepper-note" role="note">Desvio na etapa Aprovação: RT e GQ divergiram e o CQ precisa decidir antes de o processo seguir.</p>
+        }
+        @if (Model.Status == StatusNaoConformidade.AguardandoLaboratorioExterno)
+        {
+            <p class="nc-stepper-note is-info" role="note">A investigação está pausada até o laboratório externo (@Model.LaboratorioExterno) devolver o resultado.</p>
+        }
+    </section>
+
+    <section class="next-action" data-tom="@(tom == "" ? null : tom)" aria-labelledby="nc-proxima">
+        <div>
+            <p class="eyebrow mb-1">Próxima ação</p>
+            <h2 id="nc-proxima">@titulo</h2>
+            <p>@texto</p>
+        </div>
+        @if (ancora is not null) { <div class="next-action-actions"><a class="btn btn-primary" href="@ancora">@rotuloAncora</a></div> }
+    </section>
+
+    @* ===== Bloco ativo conforme a situação ===== *@
+    @if (Model.Status == StatusNaoConformidade.EmInvestigacao)
+    {
+        <section class="panel nc-block" id="nc-acao" aria-labelledby="t-inv">
+            <h2 id="t-inv">Investigação</h2>
+            <p class="nc-help">Todos os campos são obrigatórios. Ao salvar, a não conformidade passa para o tratamento.</p>
+            <form asp-action="RegistrarInvestigacao" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="form-grid">
+                    <div><label class="form-label required" for="contencao">Contenção</label><textarea id="contencao" name="contencao" class="form-control" rows="2" required>@Model.Contencao</textarea><div class="form-text">Ação imediata para limitar o efeito do desvio.</div></div>
+                    <div><label class="form-label required" for="investigacao">Investigação</label><textarea id="investigacao" name="investigacao" class="form-control" rows="4" required>@Model.Investigacao</textarea></div>
+                    <div class="span-6"><label class="form-label required" for="causaProvavel">Causa provável</label><input id="causaProvavel" name="causaProvavel" value="@Model.CausaProvavel" class="form-control" required /></div>
+                    <div class="span-6"><label class="form-label required" for="causaRaiz">Causa raiz</label><input id="causaRaiz" name="causaRaiz" value="@Model.CausaRaiz" class="form-control" required /></div>
+                    <div><label class="form-label required" for="metodoAnalise">Método de análise</label><input id="metodoAnalise" name="metodoAnalise" value="@Model.MetodoAnalise" class="form-control" placeholder="Ex.: 5 Porquês, Ishikawa" required /></div>
+                </div>
+                <div class="form-actions mt-3"><button class="btn btn-primary">Salvar investigação</button></div>
+            </form>
+
+            <details class="nc-more nc-sep">
+                <summary>Precisa de análise em laboratório externo? (opcional)</summary>
+                <p class="nc-help">A solicitação pausa a investigação até o laudo e o resultado serem registrados.</p>
+                <form asp-action="SolicitarLaboratorio" method="post">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <div class="form-grid">
+                        <div class="span-6"><label class="form-label required" for="Laboratorio">Laboratório responsável</label><input id="Laboratorio" name="Laboratorio" class="form-control" maxlength="200" required /></div>
+                        <div class="span-4"><label class="form-label required" for="DataEnvioAmostra">Data de envio da amostra</label><input id="DataEnvioAmostra" name="DataEnvioAmostra" type="date" class="form-control" required /></div>
+                    </div>
+                    <div class="form-actions mt-3"><button class="btn btn-outline-primary" data-confirm="Solicitar análise ao laboratório externo? A investigação ficará pausada até o resultado.">Solicitar laboratório</button></div>
+                </form>
+            </details>
+        </section>
+    }
+
+    @if (Model.Status == StatusNaoConformidade.AguardandoLaboratorioExterno)
+    {
+        <section class="panel nc-block" id="nc-acao" aria-labelledby="t-lab">
+            <h2 id="t-lab">Resultado do laboratório</h2>
+            <p class="nc-help">Laboratório: <strong>@Model.LaboratorioExterno</strong>, amostra enviada em @(Model.DataEnvioAmostraLaboratorio?.ToString("dd/MM/yyyy") ?? "data não informada"). @(Model.LaudoLaboratorioAnexoId.HasValue ? "Laudo anexado." : "O laudo ainda não foi enviado: use o formulário abaixo.")</p>
+            <form asp-controller="Anexos" asp-action="Enviar" method="post" enctype="multipart/form-data" class="nc-add-acao mb-3">
+                <h3>1. Enviar o laudo</h3>
+                <input type="hidden" name="processo" value="NaoConformidades" /><input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="critico" value="true" /><input type="hidden" name="laudoLaboratorio" value="true" />
+                <div class="form-grid">
+                    <div class="span-6"><label class="form-label required" for="laudo-arquivo">Arquivo do laudo</label><input id="laudo-arquivo" type="file" name="arquivo" class="form-control" required /></div>
+                    <div class="span-6"><label class="form-label" for="laudo-descricao">Descrição (opcional)</label><input id="laudo-descricao" name="descricao" class="form-control" maxlength="1000" /></div>
+                </div>
+                <div class="form-actions mt-3"><button class="btn btn-outline-primary">@(Model.LaudoLaboratorioAnexoId.HasValue ? "Substituir laudo" : "Enviar laudo")</button></div>
+            </form>
+            <form asp-action="RegistrarResultadoLaboratorio" method="post">
+                <h3 class="h6">2. Registrar o resultado</h3>
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <div class="form-grid">
+                    <div class="span-4"><label class="form-label required" for="DataRecebimento">Data de recebimento</label><input id="DataRecebimento" name="DataRecebimento" type="date" class="form-control" required /></div>
+                    <div class="span-8"><label class="form-label required" for="IdentificacaoLaudo">Identificação do laudo</label><input id="IdentificacaoLaudo" name="IdentificacaoLaudo" class="form-control" maxlength="200" required /></div>
+                    <div><label class="form-label required" for="Resultado">Resultado</label><textarea id="Resultado" name="Resultado" class="form-control" rows="3" maxlength="4000" required></textarea></div>
+                </div>
+                <div class="form-actions mt-3"><button class="btn btn-primary">Registrar resultado</button></div>
+            </form>
+        </section>
+    }
+
+    @if (Model.Status == StatusNaoConformidade.EmTratamento)
+    {
+        <section class="panel nc-block" id="nc-acao" aria-labelledby="t-plano">
+            <h2 id="t-plano">Plano de ação</h2>
+            <p class="nc-help">Ações obrigatórias precisam ser concluídas, com evidência, antes da avaliação de eficácia. @(acoes.Count > 0 ? $"{acoes.Count(a => a.DataConclusao is not null)} de {acoes.Count} concluída(s)." : "")</p>
+            @if (acoes.Count == 0)
+            {
+                <p class="empty-state mb-3 py-3">Nenhuma ação cadastrada ainda. Use o formulário abaixo para incluir a primeira.</p>
+            }
+            else
+            {
+                <div class="table-wrap mb-3">
+                    <table class="table-modern table-cards">
+                        <caption class="visually-hidden">Ações do plano de ação</caption>
+                        <thead><tr><th scope="col">Ação</th><th scope="col">Responsável</th><th scope="col">Prazo</th><th scope="col">Tipo</th><th scope="col">Situação e evidência</th><th scope="col"><span class="visually-hidden">Concluir</span></th></tr></thead>
+                        <tbody>
+                        @foreach (var acao in acoes)
+                        {
+                            var atrasada = acao.DataConclusao is null && acao.Prazo < hoje;
+                            <tr class="@(atrasada ? "nc-acao-atrasada" : "")">
+                                <td data-label="Ação"><span class="nc-acao-desc">@acao.Descricao</span></td>
+                                <td data-label="Responsável">@acao.Responsavel</td>
+                                <td data-label="Prazo">@Html.PrazoChipHtml(acao.Prazo, acao.DataConclusao is not null)</td>
+                                <td data-label="Tipo">@(acao.Obrigatoria ? "Obrigatória" : "Opcional")</td>
+                                <td data-label="Situação">
+                                    @if (acao.DataConclusao is not null) { <span><span class="status-badge" data-tom="sucesso">Concluída em @acao.DataConclusao.Value.ToString("dd/MM/yyyy")</span>@if (!string.IsNullOrWhiteSpace(acao.Evidencia)) { <span class="nc-evidencia d-block mt-1">Evidência: @acao.Evidencia</span> }</span> }
+                                    else { <span class="status-badge" data-tom="@(atrasada ? "perigo" : "alerta")">@(atrasada ? "Em atraso" : "Pendente")</span> }
+                                </td>
+                                <td class="col-actions">
+                                    @if (acao.DataConclusao is null)
+                                    {
+                                        <form asp-action="ConcluirAcao" method="post" class="nc-concluir">
+                                            <input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="acaoId" value="@acao.Id" />
+                                            <input name="evidencia" class="form-control form-control-sm" placeholder="Evidência (descreva o que foi feito)" aria-label="Evidência da ação @acao.Id" maxlength="2000" />
+                                            <button class="btn btn-sm btn-outline-primary" data-confirm="Concluir esta ação? A conclusão é registrada com a data de hoje.">Concluir</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <form asp-action="AdicionarAcao" method="post" class="nc-add-acao">
+                <h3>Adicionar ação</h3>
+                <input type="hidden" name="NaoConformidadeId" value="@Model.Id" />
+                <div class="form-grid">
+                    <div class="span-6"><label class="form-label required" for="acao-descricao">O que será feito</label><input id="acao-descricao" name="Descricao" class="form-control" maxlength="2000" required /></div>
+                    <div class="span-3"><label class="form-label required" for="acao-responsavel">Responsável</label><input id="acao-responsavel" name="Responsavel" class="form-control" maxlength="256" required /></div>
+                    <div class="span-3"><label class="form-label required" for="acao-prazo">Prazo</label><input id="acao-prazo" name="Prazo" type="date" class="form-control" value="@hoje.AddDays(15).ToString("yyyy-MM-dd")" required /></div>
+                    <div class="span-3"><label class="form-label" for="acao-obrigatoria">Tipo</label><select id="acao-obrigatoria" name="Obrigatoria" class="form-select"><option value="true" selected="selected">Obrigatória</option><option value="false">Opcional</option></select></div>
+                </div>
+                <div class="form-actions mt-3"><button class="btn btn-outline-primary">Adicionar ação</button></div>
+            </form>
+
+            <div class="nc-sep">
+                <h3 class="h6 mb-1">Avaliação de eficácia</h3>
+                @if (planoPronto)
+                {
+                    <p class="nc-help mb-3">As ações resolveram a causa raiz? Eficaz envia a NC para aprovação; ineficaz devolve a NC para a investigação.</p>
+                    <form asp-action="AvaliarEficacia" method="post" class="nc-actions-row">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button name="eficaz" value="true" class="btn btn-primary" data-confirm="Registrar as ações como eficazes e enviar para aprovação de RT e GQ?">Eficaz: enviar para aprovação</button>
+                        <button name="eficaz" value="false" class="btn nc-btn-danger" data-confirm="Registrar as ações como ineficazes? A não conformidade voltará para a investigação.">Ineficaz: voltar à investigação</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="nc-help mb-0">@(acoes.Count == 0 ? "Cadastre ao menos uma ação para poder avaliar a eficácia." : $"Disponível quando todas as ações obrigatórias estiverem concluídas (faltam {obrigatoriasPendentes}).")</p>
+                }
+            </div>
+        </section>
+    }
+
+    @if (mostrarPareceres)
+    {
+        <section class="panel nc-block" id="nc-pareceres" aria-labelledby="t-apr">
+            <h2 id="t-apr">@(rodadaReprovada ? "Última rodada de aprovação (reprovada)" : Model.Status == StatusNaoConformidade.AguardandoDecisaoCq ? "Divergência entre RT e GQ" : "Aprovação técnica")</h2>
+            <p class="nc-help">@(Model.Status == StatusNaoConformidade.AguardandoAprovacao ? "O parecer de RT e o de GQ são independentes e precisam vir de contas distintas. O Administrador não vota." : rodadaReprovada ? "Uma reprovação devolveu a não conformidade ao tratamento. Uma nova rodada começa quando a eficácia for avaliada de novo." : "Pareceres registrados nesta rodada.")</p>
+            <div class="nc-votes">
+                @foreach (var p in pareceres)
+                {
+                    var estado = p.Aprovou ? "aprovado" : p.Reprovou ? "reprovado" : "pendente";
+                    var tomVoto = p.Aprovou ? "sucesso" : p.Reprovou ? "perigo" : "neutro";
+                    var rotuloVoto = p.Aprovou ? "Aprovado" : p.Reprovou ? "Reprovado" : "Pendente";
+                    <article class="nc-vote" data-estado="@estado" aria-label="Parecer da @p.Sigla">
+                        <h3>@p.Nome</h3>
+                        <div><span class="status-badge" data-tom="@tomVoto">@rotuloVoto</span></div>
+                        <div class="nc-vote-who">@(p.Autor is null ? "Ainda sem parecer." : $"Emitido por {p.Autor}")</div>
+                        @if (votoAberto && !p.Aprovou && !p.Reprovou)
+                        {
+                            if (p.TemPerfil && !p.Bloqueado)
+                            {
+                                <div class="nc-vote-actions">
+                                    <form asp-action="Aprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="@p.Sigla" /><button class="btn btn-primary" data-confirm="Aprovar a não conformidade como @p.Sigla? O parecer fica registrado em seu nome.">Aprovar como @p.Sigla</button></form>
+                                    <form asp-action="Reprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="@p.Sigla" /><button class="btn nc-btn-danger" data-confirm="Reprovar como @p.Sigla? A não conformidade pode voltar ao tratamento ou seguir para decisão do CQ.">Reprovar como @p.Sigla</button></form>
+                                </div>
+                            }
+                            else if (p.TemPerfil && p.Bloqueado)
+                            {
+                                <p class="nc-vote-note">Sua conta já deu o parecer da @p.Outro. RT e GQ precisam ser contas diferentes, então você não pode votar também pela @p.Sigla.</p>
+                            }
+                            else
+                            {
+                                <p class="nc-vote-note">@(ehAdmin ? "O voto é de RT e GQ em contas distintas. O Administrador não vota." : $"Somente quem tem o perfil {p.Sigla} dá este parecer.")</p>
+                            }
+                        }
+                    </article>
+                }
+            </div>
+
+            @if (Model.Status == StatusNaoConformidade.AguardandoDecisaoCq)
+            {
+                <div class="nc-sep" id="nc-acao">
+                    <h3 class="h6">Decisão do CQ</h3>
+                    @if (podeDecidirCq)
+                    {
+                        <p class="nc-help">Favorável: a NC volta para a aprovação e a GQ pode encerrá-la. Desfavorável: a NC volta para o tratamento.</p>
+                        <form asp-action="DecidirDivergencia" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <label class="form-label required" for="justificativa-cq">Justificativa da decisão</label>
+                            <textarea id="justificativa-cq" name="justificativa" class="form-control" rows="3" minlength="10" maxlength="2000" required placeholder="Fundamente a decisão (mínimo de 10 caracteres)"></textarea>
+                            <div class="nc-actions-row mt-3">
+                                <button name="favoravel" value="true" class="btn btn-primary" data-confirm="Registrar decisão favorável? A NC volta para a aprovação e poderá ser encerrada pela GQ.">Decisão favorável</button>
+                                <button name="favoravel" value="false" class="btn nc-btn-danger" data-confirm="Registrar decisão desfavorável? A NC voltará para o tratamento.">Decisão desfavorável: voltar ao tratamento</button>
+                            </div>
+                        </form>
+                    }
+                    else { <p class="nc-vote-note mb-0">Somente o CQ (ou o Administrador) decide a divergência.</p> }
+                </div>
+            }
+
+            @if (Model.Status == StatusNaoConformidade.AguardandoAprovacao && cqFavoravel)
+            {
+                <p class="nc-vote-note mt-3 mb-0">O CQ já decidiu a divergência, então os pareceres de RT e GQ estão travados.</p>
+            }
+            @if (prontoParaEncerrar)
+            {
+                <div class="nc-sep" id="nc-encerrar">
+                    <h3 class="h6">Encerramento</h3>
+                    @if (temLaboratorio && !laudoAtivo) { <p class="nc-stepper-note">Esta NC usou laboratório externo e não tem laudo crítico ativo anexado. Anexe o laudo antes de encerrar, ou o encerramento será recusado.</p> }
+                    @if (podeEncerrar)
+                    {
+                        <p class="nc-help">@(cqFavoravel ? "O CQ decidiu favoravelmente." : "RT e GQ aprovaram.") Ao encerrar, o processo é concluído; só poderá ser reaberto com justificativa.</p>
+                        <form asp-action="Encerrar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary" data-confirm="Encerrar esta não conformidade? Ela só poderá ser reaberta com justificativa.">Encerrar processo</button></form>
+                    }
+                    else { <p class="nc-vote-note mb-0">Somente a GQ ou o Administrador encerram o processo.</p> }
+                </div>
+            }
+        </section>
+    }
+
+    @if (Model.DecididaPeloCqEm.HasValue)
+    {
+        <section class="panel nc-block" aria-labelledby="t-cq">
+            <h2 id="t-cq">Decisão do CQ</h2>
+            <p class="nc-help">@(Model.DecisaoCq is null ? "" : Model.DecisaoCq.Value.Rotulo()) · por @Model.UsuarioDecisaoCq em @Model.DecididaPeloCqEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+            <blockquote class="nc-quote">@Model.JustificativaDecisaoCq</blockquote>
+        </section>
+    }
+
+    @if (encerrada)
+    {
+        <section class="panel nc-block" id="nc-acao" aria-labelledby="t-reab">
+            <h2 id="t-reab">Reabertura</h2>
+            <p class="nc-help">Encerrada em @(Model.EncerradaEm?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "data não registrada")@(Model.UsuarioEncerramento is null ? "" : $" por {Model.UsuarioEncerramento}"). A reabertura devolve a NC para a investigação e exige uma nova rodada de aprovações.</p>
+            @if (podeReabrir)
+            {
+                <form asp-action="Reabrir" method="post">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <label class="form-label required" for="Justificativa">Justificativa (mínimo de 10 caracteres)</label>
+                    <textarea class="form-control" id="Justificativa" name="Justificativa" rows="3" minlength="10" maxlength="2000" required></textarea>
+                    <div class="form-actions mt-3"><button class="btn nc-btn-danger" data-confirm="Reabrir esta não conformidade? Ela voltará para a investigação e as aprovações serão zeradas.">Reabrir não conformidade</button></div>
+                </form>
+            }
+            else { <p class="nc-vote-note mb-0">Somente GQ, RT ou Auditor reabrem uma não conformidade encerrada.</p> }
+        </section>
+    }
+
+    @* ===== Resumos somente leitura ===== *@
+    <section class="panel nc-summary" aria-labelledby="t-ocorrencia">
+        <header class="panel-heading"><div><p class="eyebrow mb-1">Resumo</p><h2 id="t-ocorrencia">Ocorrência</h2></div></header>
+        <dl class="dl-grid">
+            <div><dt>Origem</dt><dd>@Model.Origem.Rotulo()</dd></div>
+            <div><dt>Área</dt><dd>@Model.Area</dd></div>
+            <div><dt>Produto</dt><dd>@(Model.Produto?.Nome ?? "Não informado")</dd></div>
+            <div><dt>Classificação</dt><dd>@Html.StatusBadge(Model.Classificacao)</dd></div>
+            <div class="dl-wide"><dt>Descrição</dt><dd class="nc-text">@(string.IsNullOrWhiteSpace(Model.Descricao) ? "Sem descrição" : Model.Descricao)</dd></div>
+        </dl>
+    </section>
+
+    @if (Model.Status != StatusNaoConformidade.EmInvestigacao && !string.IsNullOrWhiteSpace(Model.Investigacao))
+    {
+        <section class="panel nc-summary" aria-labelledby="t-inv-resumo">
+            <header class="panel-heading"><div><p class="eyebrow mb-1">Resumo</p><h2 id="t-inv-resumo">Investigação</h2></div></header>
+            <dl class="dl-grid">
+                <div class="dl-wide"><dt>Contenção</dt><dd class="nc-text">@Model.Contencao</dd></div>
+                <div class="dl-wide"><dt>Investigação</dt><dd class="nc-text">@Model.Investigacao</dd></div>
+                <div><dt>Causa provável</dt><dd>@Model.CausaProvavel</dd></div>
+                <div><dt>Causa raiz</dt><dd>@Model.CausaRaiz</dd></div>
+                <div><dt>Método de análise</dt><dd>@Model.MetodoAnalise</dd></div>
+                @if (Model.Eficaz.HasValue) { <div><dt>Eficácia das ações</dt><dd>@(Model.Eficaz == true ? "Eficaz" : "Ineficaz")</dd></div> }
+            </dl>
+        </section>
+    }
+
+    @if (temLaboratorio && Model.Status != StatusNaoConformidade.AguardandoLaboratorioExterno)
+    {
+        <section class="panel nc-summary" aria-labelledby="t-lab-resumo">
+            <header class="panel-heading"><div><p class="eyebrow mb-1">Resumo</p><h2 id="t-lab-resumo">Laboratório externo</h2></div></header>
+            <dl class="dl-grid">
+                <div><dt>Laboratório</dt><dd>@Model.LaboratorioExterno</dd></div>
+                <div><dt>Envio da amostra</dt><dd>@(Model.DataEnvioAmostraLaboratorio?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+                <div><dt>Recebimento do resultado</dt><dd>@(Model.DataRecebimentoResultadoLaboratorio?.ToString("dd/MM/yyyy") ?? "Aguardando")</dd></div>
+                <div><dt>Identificação do laudo</dt><dd>@(Model.IdentificacaoLaudoLaboratorio ?? "—")</dd></div>
+                <div class="dl-wide"><dt>Resultado</dt><dd class="nc-text">@(Model.ResultadoLaboratorio ?? "—")</dd></div>
+            </dl>
+        </section>
+    }
+
+    @if (Model.Status != StatusNaoConformidade.EmTratamento && acoes.Count > 0)
+    {
+        <section class="panel nc-summary" aria-labelledby="t-plano-resumo">
+            <header class="panel-heading"><div><p class="eyebrow mb-1">Resumo</p><h2 id="t-plano-resumo">Plano de ação</h2></div><span class="text-muted small">@acoes.Count ação(ões)</span></header>
+            <div class="table-wrap">
+                <table class="table-modern table-cards">
+                    <caption class="visually-hidden">Ações do plano de ação</caption>
+                    <thead><tr><th scope="col">Ação</th><th scope="col">Responsável</th><th scope="col">Prazo</th><th scope="col">Tipo</th><th scope="col">Situação e evidência</th></tr></thead>
+                    <tbody>
+                    @foreach (var acao in acoes)
+                    {
+                        <tr>
+                            <td data-label="Ação"><span class="nc-acao-desc">@acao.Descricao</span></td>
+                            <td data-label="Responsável">@acao.Responsavel</td>
+                            <td data-label="Prazo">@Html.PrazoChipHtml(acao.Prazo, true)</td>
+                            <td data-label="Tipo">@(acao.Obrigatoria ? "Obrigatória" : "Opcional")</td>
+                            <td data-label="Situação">@if (acao.DataConclusao is not null) { <span><span class="status-badge" data-tom="sucesso">Concluída em @acao.DataConclusao.Value.ToString("dd/MM/yyyy")</span>@if (!string.IsNullOrWhiteSpace(acao.Evidencia)) { <span class="nc-evidencia d-block mt-1">Evidência: @acao.Evidencia</span> }</span> } else { <span class="status-badge" data-tom="alerta">Pendente</span> }</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+
+    @if (Model.ReabertaEm.HasValue)
+    {
+        <section class="panel nc-summary" aria-labelledby="t-ultima-reab">
+            <header class="panel-heading"><div><p class="eyebrow mb-1">Rastreabilidade</p><h2 id="t-ultima-reab">Última reabertura</h2></div></header>
+            <blockquote class="nc-quote">@Model.JustificativaReabertura</blockquote>
+            <p class="text-muted small mt-2 mb-0">Por @Model.UsuarioReabertura em @Model.ReabertaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")@(Model.StatusAnteriorReabertura.HasValue ? $". Situação anterior: {Model.StatusAnteriorReabertura.Value.Rotulo()}." : ".")</p>
+        </section>
+    }
+</div>
+
 <partial name="_Anexos" model='("NaoConformidades", Model.Id)' />
-<partial name="_ProrrogacaoPrazo" model='("Prorrogar", Model.Id, Model.DataAlvo)' />
+
+@if (podeProrrogar && !encerrada && Model.DataAlvo.HasValue)
+{
+    <section class="panel mt-4" aria-labelledby="t-prorroga">
+        <header class="panel-heading"><div><p class="eyebrow mb-1">Prazo</p><h2 id="t-prorroga">Prorrogar prazo</h2></div><span class="text-muted small">Prazo atual: @Model.DataAlvo.Value.ToString("dd/MM/yyyy")</span></header>
+        <details class="nc-more">
+            <summary>Registrar prorrogação</summary>
+            <form asp-action="Prorrogar" method="post">
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <div class="form-grid">
+                    <div class="span-4"><label class="form-label required" for="NovaData">Nova data (posterior ao prazo atual)</label><input id="NovaData" name="NovaData" type="date" class="form-control" required /></div>
+                    <div class="span-8"><label class="form-label required" for="Motivo">Motivo (mínimo de 10 caracteres)</label><input id="Motivo" name="Motivo" class="form-control" minlength="10" maxlength="2000" required /></div>
+                    <div class="span-8"><label class="form-label" for="RegistroComunicacaoCliente">Registro da comunicação ao cliente</label><input id="RegistroComunicacaoCliente" name="RegistroComunicacaoCliente" class="form-control" maxlength="1000" /></div>
+                    <div class="span-4 d-flex align-items-end"><div class="form-check"><input name="ClienteComunicado" value="true" type="checkbox" class="form-check-input" id="clienteComunicado-@Model.Id" /><label class="form-check-label" for="clienteComunicado-@Model.Id">Cliente comunicado</label></div></div>
+                </div>
+                <div class="form-actions mt-3"><button class="btn btn-outline-primary" data-confirm="Registrar a prorrogação do prazo? Ela fica gravada no histórico.">Registrar prorrogação</button></div>
+            </form>
+        </details>
+    </section>
+}
+
 <partial name="_HistoricoAuditoria" model='(IEnumerable<SGQ.Web.Models.HistoricoAuditoria>)ViewBag.HistoricoAuditoria' />
