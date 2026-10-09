@@ -51,6 +51,7 @@ builder.Services
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddRoles<IdentityRole>()
+    .AddErrorDescriber<PortugueseIdentityErrorDescriber>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Toda rota exige usuário autenticado COM perfil reconhecido. Uma conta recém-cadastrada fica sem acesso

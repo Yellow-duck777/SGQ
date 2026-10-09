@@ -1,81 +1,143 @@
 @model SGQ.Web.ViewModels.DashboardViewModel
+@using System.Globalization
+@using SGQ.Web.Security
 @{
     ViewData["Title"] = "Visão geral";
+    var hoje = CultureInfo.GetCultureInfo("pt-BR").TextInfo.ToTitleCase(DateTime.Today.ToString("dddd, d 'de' MMMM", CultureInfo.GetCultureInfo("pt-BR")));
+    var admin = User.IsInRole(Roles.Administrador);
+    var gq = User.IsInRole(Roles.GarantiaQualidade);
+    var operacional = admin || gq || User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.ControleQualidade);
+    var somenteAuditor = !operacional;
+
+    var orientacao = admin ? "Você vê todas as pendências do sistema."
+        : somenteAuditor ? "Como Auditor, você acompanha todos os processos em modo de consulta."
+        : "Estas são as pendências que dependem do seu perfil.";
+
+    string Plural(int n, string singular, string plural) => n == 1 ? singular : plural;
 }
 
-<section class="dashboard-intro">
+<header class="dash-hero">
     <div>
-        <p class="eyebrow">Centro de controle</p>
-        <h1>Bom trabalho, <span>Administrador.</span></h1>
-        <p>Acompanhe o cenário da qualidade e avance nos processos que exigem atenção.</p>
+        <p class="eyebrow">@hoje</p>
+        <h1>Olá, <span>@Model.NomeUsuario</span></h1>
+        <p class="dash-roles">
+            @if (Model.Perfis.Count > 0) { foreach (var perfil in Model.Perfis) { <span class="status-badge" data-tom="neutro">@perfil</span> } }
+            <span>@orientacao</span>
+        </p>
     </div>
-    <a class="btn btn-primary btn-action" asp-controller="Reclamacoes" asp-action="Create"><span aria-hidden="true">＋</span> Nova reclamação</a>
+    @if (operacional)
+    {
+        <div class="dash-actions" aria-label="Atalhos">
+            <a class="btn btn-primary" asp-controller="Reclamacoes" asp-action="Create">Nova reclamação</a>
+            @if (admin || gq) { <a class="btn btn-outline-primary" asp-controller="NaoConformidades" asp-action="Create">Nova não conformidade</a> }
+            <a class="btn btn-outline-primary" asp-controller="Recalls" asp-action="Create">Novo recall</a>
+        </div>
+    }
+</header>
+
+<section class="panel attention-panel dash-section" aria-labelledby="atencao-titulo">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">Para agora</p>
+            <h2 id="atencao-titulo">Precisa da sua atenção</h2>
+        </div>
+        @if (Model.Atencao.Count > 0) { <span class="text-muted small">@Model.Atencao.Count @Plural(Model.Atencao.Count, "assunto", "assuntos")</span> }
+    </div>
+    @if (Model.Atencao.Count == 0)
+    {
+        <div class="attention-clear">
+            <span class="attention-clear-icon" aria-hidden="true">✓</span>
+            <div>
+                <h3>Nada pendente para você agora</h3>
+                <p>Não há processos esperando a sua ação nem prazos vencidos. Acompanhe o andamento geral logo abaixo.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <ul class="attention-list">
+            @foreach (var item in Model.Atencao)
+            {
+                <li class="attention-item" data-critico="@(item.Critico ? "true" : "false")">
+                    <span class="attention-sigla" aria-hidden="true">@item.Sigla</span>
+                    <div class="attention-text">
+                        <a asp-controller="@item.Controller" asp-action="Index" asp-route-status="@item.Status">@item.Titulo</a>
+                        <p>@item.Descricao</p>
+                    </div>
+                    <span class="attention-count" aria-label="@item.Contagem @Plural(item.Contagem, "processo", "processos")">@item.Contagem</span>
+                    @if (item.MenorPrazo is not null) { @Html.PrazoChipHtml(item.MenorPrazo) } else { <span class="status-badge" data-tom="neutro">Sem prazo</span> }
+                    <a class="btn btn-outline-primary" asp-controller="@item.Controller" asp-action="Index" asp-route-status="@item.Status">Abrir lista<span class="visually-hidden">: @item.Titulo</span></a>
+                </li>
+            }
+        </ul>
+    }
 </section>
 
-<section class="metric-grid" aria-label="Indicadores operacionais">
-    <article class="metric-card metric-card-accent">
-        <div class="metric-top"><span class="metric-code">RC</span><span class="metric-state">Em acompanhamento</span></div>
-        <strong>@Model.ReclamacoesAbertas</strong><p>Reclamações abertas</p><a asp-controller="Reclamacoes" asp-action="Index">Ver processos <span>→</span></a>
-    </article>
-    <article class="metric-card">
-        <div class="metric-top"><span class="metric-code">NC</span><span class="metric-state">Tratamento</span></div>
-        <strong>@Model.NaoConformidadesAbertas</strong><p>Não conformidades abertas</p><a asp-controller="NaoConformidades" asp-action="Index">Acompanhar NCs <span>→</span></a>
-    </article>
-    <article class="metric-card">
-        <div class="metric-top"><span class="metric-code">CL</span><span class="metric-state is-neutral">Base atual</span></div>
-        <strong>@Model.ClientesAtivos</strong><p>Clientes cadastrados</p><a asp-controller="Clientes" asp-action="Index">Gerenciar clientes <span>→</span></a>
-    </article>
-    <article class="metric-card">
-        <div class="metric-top"><span class="metric-code">PD</span><span class="metric-state is-neutral">@Model.LotesCadastrados lotes</span></div>
-        <strong>@Model.ProdutosCadastrados</strong><p>Produtos cadastrados</p><a asp-controller="Produtos" asp-action="Index">Consultar produtos <span>→</span></a>
-    </article>
+<section class="dash-section" aria-labelledby="resumo-titulo">
+    <h2 class="dash-section-title" id="resumo-titulo">Processos em aberto</h2>
+    <div class="summary-grid">
+        @{
+            var cartoes = new[]
+            {
+                (Sigla: "RC", Nome: "Reclamações", Resumo: Model.ResumoReclamacoes, Controller: "Reclamacoes", Legenda: "em aberto"),
+                (Sigla: "NC", Nome: "Não conformidades", Resumo: Model.ResumoNaoConformidades, Controller: "NaoConformidades", Legenda: "em aberto"),
+                (Sigla: "RE", Nome: "Recalls", Resumo: Model.ResumoRecalls, Controller: "Recalls", Legenda: "ativos")
+            };
+        }
+        @foreach (var cartao in cartoes)
+        {
+            <article class="summary-card">
+                <div class="summary-card-head"><span class="attention-sigla" aria-hidden="true">@cartao.Sigla</span><h3>@cartao.Nome</h3></div>
+                <p class="summary-number"><strong>@cartao.Resumo.Abertos</strong><span>@cartao.Legenda</span></p>
+                <div class="summary-flags">
+                    @if (cartao.Resumo.Vencidos > 0) { <span class="status-badge" data-tom="perigo">@cartao.Resumo.Vencidos @Plural(cartao.Resumo.Vencidos, "vencido", "vencidos")</span> }
+                    else { <span class="status-badge" data-tom="sucesso">Nenhum vencido</span> }
+                    @if (cartao.Resumo.VencendoEmBreve > 0) { <span class="status-badge" data-tom="alerta">@cartao.Resumo.VencendoEmBreve @Plural(cartao.Resumo.VencendoEmBreve, "vence", "vencem") em até 2 dias úteis</span> }
+                </div>
+                <a asp-controller="@cartao.Controller" asp-action="Index">Ver @cartao.Nome.ToLowerInvariant() →</a>
+            </article>
+        }
+    </div>
 </section>
 
-<div class="dashboard-grid">
-    <section class="panel recent-panel" aria-labelledby="recent-title">
-        <div class="panel-heading">
-            <div><p class="eyebrow">Movimentação recente</p><h2 id="recent-title">Últimas reclamações</h2></div>
-            <a asp-controller="Reclamacoes" asp-action="Index">Ver todas</a>
+<section class="panel dash-section" aria-labelledby="recentes-titulo">
+    <div class="panel-heading">
+        <div><p class="eyebrow">Movimentação</p><h2 id="recentes-titulo">Últimos processos abertos</h2></div>
+    </div>
+    @if (Model.Movimentos.Count == 0)
+    {
+        <div class="empty-state">
+            <span aria-hidden="true">–</span>
+            <h3>Nenhum processo registrado ainda</h3>
+            <p>Quando uma reclamação, não conformidade ou recall for aberto, ele aparecerá aqui.</p>
+            @if (operacional) { <a class="btn btn-primary" asp-controller="Reclamacoes" asp-action="Create">Registrar a primeira reclamação</a> }
         </div>
-        @if (Model.ReclamacoesRecentes.Count == 0)
-        {
-            <div class="empty-state"><span>RC</span><h3>Nenhuma reclamação registrada</h3><p>Quando um processo for aberto, ele aparecerá aqui para acompanhamento.</p><a class="btn btn-primary" asp-controller="Reclamacoes" asp-action="Create">Registrar a primeira</a></div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table app-table">
-                    <thead><tr><th>Processo</th><th>Cliente / Produto</th><th>Status</th><th>Abertura</th><th><span class="visually-hidden">Ação</span></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.ReclamacoesRecentes)
-                    {
-                        <tr>
-                            <td><a class="process-code" asp-controller="Reclamacoes" asp-action="Details" asp-route-id="@item.Id">@item.Codigo</a></td>
-                            <td><strong>@item.Cliente</strong><small>@item.Produto</small></td>
-                            <td><span class="status-pill">@item.Status</span></td>
-                            <td>@item.CriadaEm.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                            <td><a class="table-action" asp-controller="Reclamacoes" asp-action="Details" asp-route-id="@item.Id" aria-label="Abrir @item.Codigo">→</a></td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </section>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="table-modern table-cards">
+                <thead><tr><th scope="col">Processo</th><th scope="col">Assunto</th><th scope="col">Situação</th><th scope="col">Prazo</th><th scope="col">Abertura</th></tr></thead>
+                <tbody>
+                @foreach (var item in Model.Movimentos)
+                {
+                    var destino = Url.Action("Details", item.Controller, new { id = item.Id });
+                    <tr data-href="@destino">
+                        <td data-label="Processo" class="col-code"><a asp-controller="@item.Controller" asp-action="Details" asp-route-id="@item.Id">@item.Codigo</a></td>
+                        <td data-label="Assunto"><span class="movement-title">@item.Titulo</span><span class="cell-sub">@item.Subtitulo</span></td>
+                        <td data-label="Situação">@Html.StatusBadge(item.Status)</td>
+                        <td data-label="Prazo">@Html.PrazoChipHtml(item.DataAlvo, item.Encerrado)</td>
+                        <td data-label="Abertura">@item.CriadaEm.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
 
-    <aside class="panel quick-panel" aria-labelledby="quick-title">
-        <div class="panel-heading"><div><p class="eyebrow">Atalhos</p><h2 id="quick-title">Acesso rápido</h2></div></div>
-        <div class="quick-links">
-            <a asp-controller="Reclamacoes" asp-action="Create"><span class="quick-icon">RC</span><span><strong>Nova reclamação</strong><small>Registrar ocorrência</small></span><b>→</b></a>
-            <a asp-controller="NaoConformidades" asp-action="Index"><span class="quick-icon">NC</span><span><strong>Não conformidades</strong><small>Acompanhar tratativas</small></span><b>→</b></a>
-            <a asp-controller="Recalls" asp-action="Index"><span class="quick-icon">RE</span><span><strong>Recalls</strong><small>Avaliação de risco</small></span><b>→</b></a>
-        </div>
-        @if (Model.ProcessosVencidos > 0 || Model.ProcessosProximosDoVencimento > 0)
-        {
-            <div class="roadmap-note">
-                @if (Model.ProcessosVencidos > 0) { <span class="text-danger">⚠ @Model.ProcessosVencidos processo(s) vencido(s)</span> }
-                @if (Model.ProcessosProximosDoVencimento > 0) { <span>⏰ @Model.ProcessosProximosDoVencimento vencendo em 2 dias úteis</span> }
-            </div>
-        }
-    </aside>
-</div>
+<p class="dash-foot">
+    Cadastros: <a asp-controller="Clientes" asp-action="Index">@Model.ClientesAtivos @Plural(Model.ClientesAtivos, "cliente", "clientes")</a> ·
+    <a asp-controller="Produtos" asp-action="Index">@Model.ProdutosCadastrados @Plural(Model.ProdutosCadastrados, "produto", "produtos")</a> ·
+    <a asp-controller="Lotes" asp-action="Index">@Model.LotesCadastrados @Plural(Model.LotesCadastrados, "lote", "lotes")</a>
+</p>

@@ -1,0 +1,35 @@
+@page
+@model SGQ.Web.Areas.Identity.Pages.Account.Manage.IndexModel
+@{
+    ViewData["Title"] = "Minha conta";
+}
+
+<header class="page-header">
+    <div class="page-header-main">
+        <h1>Minha conta</h1>
+        <p class="page-header-lead">Seus dados de acesso ao SGQ.</p>
+    </div>
+</header>
+
+<div class="account-page">
+    <section class="account-card" aria-labelledby="dados-titulo">
+        <h2 id="dados-titulo">Dados de acesso</h2>
+        <dl class="dl-grid mt-3">
+            <div><dt>Nome</dt><dd>@Model.Nome</dd></div>
+            <div><dt>E-mail</dt><dd>@Model.Email</dd></div>
+            <div class="dl-wide">
+                <dt>Perfis</dt>
+                <dd>
+                    @if (Model.Perfis.Count == 0) { <span class="status-badge" data-tom="alerta">Sem perfil</span> }
+                    else { foreach (var perfil in Model.Perfis) { <span class="status-badge" data-tom="neutro">@perfil</span> } }
+                </dd>
+            </div>
+        </dl>
+        <p class="account-help mt-3">O perfil define o que você pode fazer no sistema e só é alterado por um Administrador.</p>
+    </section>
+    <section class="account-card" aria-labelledby="senha-titulo">
+        <h2 id="senha-titulo">Senha</h2>
+        <p class="account-help">Use uma senha que você não repita em outros sistemas.</p>
+        <p class="mt-3 mb-0"><a class="btn btn-outline-primary" asp-page="./ChangePassword">Alterar senha</a></p>
+    </section>
+</div>

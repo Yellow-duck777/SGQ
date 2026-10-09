@@ -1,0 +1,47 @@
+@page
+@model SGQ.Web.Areas.Identity.Pages.Account.AccessDeniedModel
+@{
+    ViewData["Title"] = Model.SemPerfil ? "Conta sem perfil de acesso" : "Acesso não permitido";
+}
+
+@if (Model.SemPerfil)
+{
+    <div class="account-state-icon" data-tom="alerta" aria-hidden="true">!</div>
+    <div class="login-form-heading">
+        <p class="eyebrow">Aguardando liberação</p>
+        <h2 id="conta-titulo">Sua conta ainda não tem perfil de acesso</h2>
+        <p>Peça a um Administrador para atribuir o seu perfil. Enquanto isso, não é possível abrir os processos do sistema.</p>
+    </div>
+    <div class="account-alert" role="note">
+        <strong>Já foi liberado?</strong>
+        Depois que o Administrador atribuir o perfil, saia e entre novamente para que ele passe a valer.
+    </div>
+    <form class="account-actions" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Account/Login", new { area = "Identity" })" method="post">
+        <button type="submit" class="btn-account">Sair e entrar de novo</button>
+    </form>
+}
+else if (!Model.Autenticado)
+{
+    <div class="account-state-icon" data-tom="alerta" aria-hidden="true">!</div>
+    <div class="login-form-heading">
+        <p class="eyebrow">Acesso restrito</p>
+        <h2 id="conta-titulo">É preciso entrar para continuar</h2>
+        <p>Esta página só está disponível para usuários autenticados.</p>
+    </div>
+    <div class="account-actions">
+        <a class="btn-account" asp-page="./Login">Entrar no sistema</a>
+    </div>
+}
+else
+{
+    <div class="account-state-icon" data-tom="perigo" aria-hidden="true">!</div>
+    <div class="login-form-heading">
+        <p class="eyebrow">Acesso não permitido</p>
+        <h2 id="conta-titulo">Você não tem permissão para esta ação</h2>
+        <p>O seu perfil não permite abrir esta página ou executar esta ação. Se acredita que deveria ter acesso, fale com um Administrador.</p>
+    </div>
+    <div class="account-actions">
+        <a class="btn-account" href="~/" data-history-back>Voltar</a>
+        <a class="btn-account btn-account-secondary" asp-area="" asp-controller="Home" asp-action="Index">Ir para a visão geral</a>
+    </div>
+}
