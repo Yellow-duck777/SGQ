@@ -3,33 +3,79 @@
 @{
     var anexos = ViewBag.Anexos as IEnumerable<Anexo> ?? [];
     var podeGerenciar = User.IsInRole("GQ") || User.IsInRole("Administrador");
+    var campo = $"arquivo-{Model.Processo}-{Model.Id}";
 }
-<section class="card shadow-sm border-0 p-4 mt-4">
-    <h2 class="h5">Anexos e evidências</h2>
-    <form asp-controller="Anexos" asp-action="Enviar" method="post" enctype="multipart/form-data" class="row g-2">
+<section class="panel mt-4" aria-labelledby="titulo-anexos">
+    <header class="panel-heading">
+        <div>
+            <p class="eyebrow mb-1">Evidências</p>
+            <h2 id="titulo-anexos">Anexos</h2>
+        </div>
+        <span class="text-muted small">@anexos.Count() arquivo(s)</span>
+    </header>
+
+    <form asp-controller="Anexos" asp-action="Enviar" method="post" enctype="multipart/form-data" class="upload-form">
         <input type="hidden" name="processo" value="@Model.Processo" /><input type="hidden" name="id" value="@Model.Id" />
-        <div class="col-md-4"><input type="file" name="arquivo" class="form-control" required /></div>
-        <div class="col-md-4"><input type="text" name="descricao" class="form-control" placeholder="Descrição opcional" /></div>
-        <div class="col-md-2 form-check pt-2"><input type="checkbox" name="critico" value="true" class="form-check-input" id="critico" /><label class="form-check-label" for="critico">Crítico</label></div>
-        <div class="col-md-2"><button class="btn btn-outline-primary">Enviar</button></div>
+        <div class="file-picker">
+            <input type="file" name="arquivo" id="@campo" class="file-picker-input" required data-file-picker />
+            <label for="@campo" class="btn btn-outline-primary file-picker-button">Escolher arquivo</label>
+            <span class="file-picker-name" data-file-picker-name>Nenhum arquivo selecionado · máximo de 25 MB</span>
+        </div>
+        <input type="text" name="descricao" class="form-control" placeholder="Descrição (opcional)" aria-label="Descrição do anexo" maxlength="1000" />
+        <label class="check-inline"><input type="checkbox" name="critico" value="true" class="form-check-input" /> Evidência crítica</label>
+        <button class="btn btn-primary">Enviar anexo</button>
     </form>
-    <ul class="list-group list-group-flush mt-3">
-    @foreach (var anexo in anexos)
+
+    @if (!anexos.Any())
     {
-        var processosRelacionados = new[] { anexo.ReclamacaoCliente?.Codigo, anexo.NaoConformidade?.Codigo, anexo.Recall?.Codigo }
-            .Concat(anexo.Vinculos.SelectMany(vinculo => new[] { vinculo.ReclamacaoCliente?.Codigo, vinculo.NaoConformidade?.Codigo, vinculo.Recall?.Codigo }))
-            .Where(codigo => !string.IsNullOrWhiteSpace(codigo)).Distinct();
-        <li class="list-group-item">
-            <div class="d-flex justify-content-between gap-3 flex-wrap"><span><strong>@anexo.NomeOriginal</strong> @if(anexo.Critico){<span class="badge text-bg-warning">Crítico</span>} @if(!anexo.Ativo){<span class="badge text-bg-secondary">Anulado</span>}</span><span>@if(anexo.Ativo){<a asp-controller="Anexos" asp-action="Baixar" asp-route-id="@anexo.Id">Baixar</a>}</span></div>
-            <small class="d-block text-muted mt-1">Processos relacionados: @string.Join(", ", processosRelacionados)</small>
-            @if (anexo.Ativo && podeGerenciar)
-            {
-                <div class="d-flex gap-2 flex-wrap mt-2">
-                    <form asp-controller="Anexos" asp-action="Vincular" method="post" class="d-flex gap-2"><input type="hidden" name="id" value="@anexo.Id" /><input type="hidden" name="processo" value="@Model.Processo" /><input type="hidden" name="processoId" value="@Model.Id" /><input name="codigoDestino" class="form-control form-control-sm" required placeholder="Código do processo, ex.: NC-2026-000001" /><button class="btn btn-sm btn-outline-primary">Vincular</button></form>
-                    <form asp-controller="Anexos" asp-action="Anular" method="post" class="d-flex gap-2"><input type="hidden" name="id" value="@anexo.Id" /><input type="hidden" name="processo" value="@Model.Processo" /><input type="hidden" name="processoId" value="@Model.Id" /><input name="justificativa" class="form-control form-control-sm" required placeholder="Justificativa da anulação" /><button class="btn btn-sm btn-outline-danger">Anular</button></form>
-                </div>
-            }
-        </li>
+        <p class="empty-state mb-0">Nenhum anexo enviado ainda.</p>
     }
-    </ul>
+    else
+    {
+        <ul class="file-list">
+        @foreach (var anexo in anexos)
+        {
+            var processosRelacionados = new[] { anexo.ReclamacaoCliente?.Codigo, anexo.NaoConformidade?.Codigo, anexo.Recall?.Codigo }
+                .Concat(anexo.Vinculos.SelectMany(vinculo => new[] { vinculo.ReclamacaoCliente?.Codigo, vinculo.NaoConformidade?.Codigo, vinculo.Recall?.Codigo }))
+                .Where(codigo => !string.IsNullOrWhiteSpace(codigo)).Distinct();
+            <li class="file-item @(anexo.Ativo ? "" : "is-void")">
+                <div class="file-item-main">
+                    <span class="file-icon" aria-hidden="true">@System.IO.Path.GetExtension(anexo.NomeOriginal).TrimStart('.').ToUpperInvariant()</span>
+                    <div>
+                        <strong class="file-name">@anexo.NomeOriginal</strong>
+                        <div class="file-meta">
+                            @(anexo.TamanhoBytes >= 1048576 ? $"{anexo.TamanhoBytes / 1048576d:0.0} MB" : $"{Math.Max(1, anexo.TamanhoBytes / 1024)} KB")
+                            · enviado por @anexo.Usuario em @anexo.EnviadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            @if (!string.IsNullOrWhiteSpace(anexo.Descricao)) { <span> · @anexo.Descricao</span> }
+                        </div>
+                        <div class="file-meta">Processos: @string.Join(", ", processosRelacionados)</div>
+                    </div>
+                </div>
+                <div class="file-item-actions">
+                    @if (anexo.Critico) { <span class="status-badge" data-tom="alerta">Crítico</span> }
+                    @if (!anexo.Ativo) { <span class="status-badge" data-tom="neutro">Anulado</span> }
+                    @if (anexo.Ativo) { <a class="btn btn-sm btn-outline-primary" asp-controller="Anexos" asp-action="Baixar" asp-route-id="@anexo.Id">Baixar</a> }
+                </div>
+                @if (anexo.Ativo && podeGerenciar)
+                {
+                    <details class="file-manage">
+                        <summary>Gerenciar anexo</summary>
+                        <div class="file-manage-forms">
+                            <form asp-controller="Anexos" asp-action="Vincular" method="post">
+                                <input type="hidden" name="id" value="@anexo.Id" /><input type="hidden" name="processo" value="@Model.Processo" /><input type="hidden" name="processoId" value="@Model.Id" />
+                                <label class="form-label small" for="vincular-@anexo.Id">Vincular a outro processo</label>
+                                <div class="input-action"><input id="vincular-@anexo.Id" name="codigoDestino" class="form-control form-control-sm" required placeholder="Ex.: NC-2026-000001" /><button class="btn btn-sm btn-outline-primary">Vincular</button></div>
+                            </form>
+                            <form asp-controller="Anexos" asp-action="Anular" method="post">
+                                <input type="hidden" name="id" value="@anexo.Id" /><input type="hidden" name="processo" value="@Model.Processo" /><input type="hidden" name="processoId" value="@Model.Id" />
+                                <label class="form-label small" for="anular-@anexo.Id">Anular anexo (exige justificativa)</label>
+                                <div class="input-action"><input id="anular-@anexo.Id" name="justificativa" class="form-control form-control-sm" required minlength="10" maxlength="1000" placeholder="Motivo da anulação" /><button class="btn btn-sm btn-outline-danger">Anular</button></div>
+                            </form>
+                        </div>
+                    </details>
+                }
+            </li>
+        }
+        </ul>
+    }
 </section>

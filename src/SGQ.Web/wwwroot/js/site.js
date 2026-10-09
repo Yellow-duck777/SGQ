@@ -25,4 +25,11 @@
       button.setAttribute("aria-label", show ? "Ocultar senha" : "Mostrar senha");
     });
   });
+
+  document.querySelectorAll("[data-file-picker]").forEach((input) => {
+    const nome = input.closest(".file-picker")?.querySelector("[data-file-picker-name]");
+    input.addEventListener("change", () => {
+      if (nome) nome.textContent = input.files && input.files.length ? input.files[0].name : "Nenhum arquivo selecionado · máximo de 25 MB";
+    });
+  });
 })();

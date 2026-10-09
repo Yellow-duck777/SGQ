@@ -1,8 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SGQ.Domain.Enums;
 
 public enum ClassificacaoOcorrencia
 {
-    Critica,
+    [Display(Name = "Crítica")] Critica,
     Maior,
     Menor
 }
