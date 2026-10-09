@@ -1,10 +1,44 @@
 @using Microsoft.AspNetCore.Identity
 @using SGQ.Web.Models
+@using SGQ.Web.Security
 @inject SignInManager<ApplicationUser> SignInManager
+@inject IWebHostEnvironment Ambiente
 @{
-    var signedIn = SignInManager.IsSignedIn(User);
+    var autenticado = SignInManager.IsSignedIn(User);
+    var temPerfil = autenticado && Roles.Todos.Any(User.IsInRole);
+    // Conta autenticada sem perfil não vê o menu do sistema: usa o visual simples de acesso.
+    var comMenu = temPerfil;
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var pagina = ViewData["Title"]?.ToString();
+    var usuario = User.Identity?.Name;
+    var nome = UsuarioApresentacao.NomeExibicao(usuario);
+    var perfis = UsuarioApresentacao.PerfisDoUsuario(User);
+    var podeRelatorios = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.Auditor);
+
+    string? Ativo(string nomeController) => controller == nomeController ? "active" : null;
+    string? Atual(string nomeController) => controller == nomeController ? "page" : null;
+
+    var secao = controller switch
+    {
+        "Reclamacoes" => "Reclamações",
+        "NaoConformidades" => "Não conformidades",
+        "Recalls" => "Recalls",
+        "Relatorios" => "Relatórios",
+        "Clientes" => "Clientes",
+        "Produtos" => "Produtos",
+        "Lotes" => "Lotes",
+        "DiasNaoUteis" => "Calendário",
+        "Usuarios" => "Usuários",
+        _ => currentPage?.StartsWith("/Account/Manage") == true ? "Minha conta" : null
+    };
+    var secaoUrl = controller is not null and not "Home" ? Url.Action("Index", controller) : null;
+    var mostrarPagina = secao is not null && !string.IsNullOrEmpty(pagina) && !string.Equals(pagina, secao, StringComparison.OrdinalIgnoreCase)
+        && !string.Equals(action, "Index", StringComparison.OrdinalIgnoreCase);
+    var sucesso = TempData["Success"] as string;
+    var erro = TempData["Error"] as string;
+    var aviso = TempData["Warning"] as string;
 }
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -16,11 +50,10 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SGQ.Web.styles.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="@(signedIn ? "app-body" : "auth-body")">
-@if (signedIn)
+<body class="@(comMenu ? "app-body" : "auth-body")">
+@if (comMenu)
 {
     <a class="skip-link" href="#conteudo-principal">Ir para o conteúdo</a>
     <div class="app-frame">
@@ -29,46 +62,84 @@
                 <span class="brand-symbol" aria-hidden="true">S</span>
                 <span><strong>SGQ.</strong><small>Gestão da Qualidade</small></span>
             </div>
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav" aria-label="Menu">
                 <p class="sidebar-label">Operação</p>
-                <a class="sidebar-link @(controller == "Home" ? "active" : null)" asp-controller="Home" asp-action="Index"><span class="nav-symbol" aria-hidden="true">01</span><span>Visão geral</span></a>
-                <a class="sidebar-link @(controller == "Reclamacoes" ? "active" : null)" asp-controller="Reclamacoes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RC</span><span>Reclamações</span></a>
-                <a class="sidebar-link @(controller == "NaoConformidades" ? "active" : null)" asp-controller="NaoConformidades" asp-action="Index"><span class="nav-symbol" aria-hidden="true">NC</span><span>Não conformidades</span></a>
-                <a class="sidebar-link @(controller == "Recalls" ? "active" : null)" asp-controller="Recalls" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RE</span><span>Recall</span></a>
-                @if (User.IsInRole("Administrador") || User.IsInRole("GQ") || User.IsInRole("Auditor"))
+                <a class="sidebar-link @Ativo("Home")" aria-current="@Atual("Home")" asp-controller="Home" asp-action="Index"><span class="nav-symbol" aria-hidden="true">01</span><span>Visão geral</span></a>
+                <a class="sidebar-link @Ativo("Reclamacoes")" aria-current="@Atual("Reclamacoes")" asp-controller="Reclamacoes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RC</span><span>Reclamações</span></a>
+                <a class="sidebar-link @Ativo("NaoConformidades")" aria-current="@Atual("NaoConformidades")" asp-controller="NaoConformidades" asp-action="Index"><span class="nav-symbol" aria-hidden="true">NC</span><span>Não conformidades</span></a>
+                <a class="sidebar-link @Ativo("Recalls")" aria-current="@Atual("Recalls")" asp-controller="Recalls" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RE</span><span>Recalls</span></a>
+                @if (podeRelatorios)
                 {
-                    <a class="sidebar-link @(controller == "Relatorios" ? "active" : null)" asp-controller="Relatorios" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RL</span><span>Relatórios</span></a>
+                    <a class="sidebar-link @Ativo("Relatorios")" aria-current="@Atual("Relatorios")" asp-controller="Relatorios" asp-action="Index"><span class="nav-symbol" aria-hidden="true">RL</span><span>Relatórios</span></a>
                 }
                 <p class="sidebar-label">Cadastros</p>
-                <a class="sidebar-link @(controller == "Clientes" ? "active" : null)" asp-controller="Clientes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">CL</span><span>Clientes</span></a>
-                <a class="sidebar-link @(controller == "Produtos" ? "active" : null)" asp-controller="Produtos" asp-action="Index"><span class="nav-symbol" aria-hidden="true">PR</span><span>Produtos</span></a>
-                <a class="sidebar-link @(controller == "Lotes" ? "active" : null)" asp-controller="Lotes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">LT</span><span>Lotes</span></a>
-                <a class="sidebar-link @(controller == "DiasNaoUteis" ? "active" : null)" asp-controller="DiasNaoUteis" asp-action="Index"><span class="nav-symbol" aria-hidden="true">CA</span><span>Calendário</span></a>
-                @if (User.IsInRole("Administrador"))
+                <a class="sidebar-link @Ativo("Clientes")" aria-current="@Atual("Clientes")" asp-controller="Clientes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">CL</span><span>Clientes</span></a>
+                <a class="sidebar-link @Ativo("Produtos")" aria-current="@Atual("Produtos")" asp-controller="Produtos" asp-action="Index"><span class="nav-symbol" aria-hidden="true">PR</span><span>Produtos</span></a>
+                <a class="sidebar-link @Ativo("Lotes")" aria-current="@Atual("Lotes")" asp-controller="Lotes" asp-action="Index"><span class="nav-symbol" aria-hidden="true">LT</span><span>Lotes</span></a>
+                <a class="sidebar-link @Ativo("DiasNaoUteis")" aria-current="@Atual("DiasNaoUteis")" asp-controller="DiasNaoUteis" asp-action="Index"><span class="nav-symbol" aria-hidden="true">CA</span><span>Calendário</span></a>
+                @if (User.IsInRole(Roles.Administrador))
                 {
                     <p class="sidebar-label">Administração</p>
-                    <a class="sidebar-link @(controller == "Usuarios" ? "active" : null)" asp-controller="Usuarios" asp-action="Index"><span class="nav-symbol" aria-hidden="true">US</span><span>Usuários</span></a>
+                    <a class="sidebar-link @Ativo("Usuarios")" aria-current="@Atual("Usuarios")" asp-controller="Usuarios" asp-action="Index"><span class="nav-symbol" aria-hidden="true">US</span><span>Usuários</span></a>
                 }
             </nav>
             <div class="sidebar-footer">
-                <a class="user-panel @(currentPage?.StartsWith("/Account/Manage") == true ? "active" : null)" asp-area="Identity" asp-page="/Account/Manage/Index">
-                    <span class="user-avatar" aria-hidden="true">@((User.Identity?.Name ?? "U")[0].ToString().ToUpperInvariant())</span>
-                    <span><strong>Administrador</strong><small>@User.Identity?.Name</small></span>
-                </a>
-                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Account/Login", new { area = "Identity" })">
-                    <button class="sidebar-logout" type="submit">Sair do sistema <span aria-hidden="true">↗</span></button>
-                </form>
+                <button class="sidebar-close" type="button" data-sidebar-close>Fechar menu</button>
+                <a class="sidebar-help" asp-controller="Home" asp-action="Privacy">Privacidade</a>
             </div>
         </aside>
         <div class="sidebar-scrim" data-sidebar-close></div>
         <div class="app-workspace">
             <header class="app-topbar">
                 <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="app-sidebar" aria-expanded="false"><span aria-hidden="true">☰</span><span class="visually-hidden">Abrir menu</span></button>
-                <div><p class="topbar-context">Ambiente de desenvolvimento</p><strong>@(ViewData["Title"] ?? "SGQ")</strong></div>
-                <div class="topbar-status"><span></span>Sistema operacional</div>
+                <nav class="breadcrumb-trail" aria-label="Você está em">
+                    <ol>
+                        @if (secao is null)
+                        {
+                            <li aria-current="page">@(string.IsNullOrEmpty(pagina) ? "SGQ" : pagina)</li>
+                        }
+                        else if (!mostrarPagina)
+                        {
+                            <li><a asp-controller="Home" asp-action="Index">Início</a></li>
+                            <li aria-current="page">@secao</li>
+                        }
+                        else
+                        {
+                            <li><a asp-controller="Home" asp-action="Index">Início</a></li>
+                            @if (secaoUrl is not null) { <li><a href="@secaoUrl">@secao</a></li> } else { <li>@secao</li> }
+                            <li aria-current="page">@pagina</li>
+                        }
+                    </ol>
+                </nav>
+                @if (Ambiente.IsDevelopment())
+                {
+                    <span class="env-tag" title="Esta instalação é de desenvolvimento; os dados são fictícios.">Desenvolvimento</span>
+                }
+                <div class="user-menu">
+                    <button class="user-menu-button" type="button" data-user-menu-toggle aria-expanded="false" aria-controls="user-menu" aria-haspopup="true">
+                        <span class="user-avatar" aria-hidden="true">@nome[0]</span>
+                        <span class="user-menu-name"><strong>@nome</strong><small>@(perfis.Count > 0 ? string.Join(" · ", perfis) : "Sem perfil")</small></span>
+                        <span class="user-menu-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="user-menu-panel" id="user-menu" data-user-menu hidden>
+                        <div class="user-menu-id">
+                            <strong>@nome</strong>
+                            <span>@usuario</span>
+                            @if (perfis.Count > 0)
+                            {
+                                <span class="user-menu-roles">@foreach (var perfil in perfis) { <span class="status-badge" data-tom="neutro">@perfil</span> }</span>
+                            }
+                        </div>
+                        <a class="user-menu-item" asp-area="Identity" asp-page="/Account/Manage/Index">Minha conta</a>
+                        <a class="user-menu-item" asp-area="Identity" asp-page="/Account/Manage/ChangePassword">Alterar senha</a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Account/Login", new { area = "Identity" })" method="post">
+                            <button class="user-menu-item user-menu-exit" type="submit">Sair do sistema</button>
+                        </form>
+                    </div>
+                </div>
             </header>
             <main id="conteudo-principal" class="app-content" role="main">@RenderBody()</main>
-            <footer class="app-footer"><span>SGQ · Sistema de Gestão da Qualidade</span><span>Ambiente local</span></footer>
+            <footer class="app-footer"><span>SGQ · Sistema de Gestão da Qualidade</span><a asp-controller="Home" asp-action="Privacy">Privacidade</a></footer>
         </div>
     </div>
 }
@@ -76,6 +147,11 @@ else
 {
     <main role="main">@RenderBody()</main>
 }
+<div class="aviso-region" data-aviso-region aria-live="polite" aria-atomic="false">
+    @if (!string.IsNullOrEmpty(sucesso)) { <div class="aviso" data-tipo="sucesso" role="status"><p class="aviso-text">@sucesso</p><button type="button" class="aviso-close" data-aviso-close aria-label="Fechar aviso">×</button></div> }
+    @if (!string.IsNullOrEmpty(aviso)) { <div class="aviso" data-tipo="alerta" role="status"><p class="aviso-text">@aviso</p><button type="button" class="aviso-close" data-aviso-close aria-label="Fechar aviso">×</button></div> }
+    @if (!string.IsNullOrEmpty(erro)) { <div class="aviso" data-tipo="erro" role="alert"><p class="aviso-text">@erro</p><button type="button" class="aviso-close" data-aviso-close aria-label="Fechar aviso">×</button></div> }
+</div>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>

@@ -47,11 +47,26 @@ Estilos específicos de um módulo ficam em `wwwroot/css/modulos/<modulo>.css`, 
 
 ## Comportamentos globais (`site.js`)
 
-| Atributo | Efeito |
+| Atributo ou recurso | Efeito |
 | --- | --- |
-| `data-confirm="Pergunta"` em `form` ou `button` | Pede confirmação antes de enviar |
-| Formulários `POST` | O botão de envio é desabilitado após o primeiro clique para evitar duplicidade |
+| `data-confirm="Pergunta"` em `form` ou `button` | Abre um diálogo acessível (foco preso, Esc cancela) com "Cancelar" e "Confirmar"; só envia se confirmar. Use `data-confirm-neutral` para um botão de confirmação sem destaque de perigo |
+| Formulários `POST` | Ao enviar, os botões ficam desabilitados e o clicado mostra "Enviando…"; se a validação barrar o envio nada muda. Use `data-no-lock` no formulário para desligar |
+| `TempData["Success"]`, `["Warning"]`, `["Error"]` | O layout exibe avisos no topo (`aviso`): sucesso some em cerca de 6 s, alerta e erro permanecem. Não é preciso renderizar alertas nas views; alertas iguais no corpo da página são removidos |
+| `window.sgqAviso(texto, tipo)` | Mostra um aviso por script (`sucesso`, `alerta`, `erro`, `info`) |
+| `<tr data-href="/url">` | Linha clicável; mantenha também um link real na linha para teclado. Cliques em links, botões e campos da linha não navegam |
+| `data-history-back` em um link | Volta à página anterior quando houver, senão segue o `href` |
 | `data-file-picker` | Seletor de arquivo em português (ver `_Anexos`) |
+
+## Estrutura da página (layout)
+
+- A barra superior mostra a trilha de navegação (Início / Seção / Página, derivada do controller e de `ViewData["Title"]`) e o menu do usuário (nome, perfis em português, Minha conta, Alterar senha, Sair).
+- O menu lateral só mostra o que o perfil pode usar: Relatórios para Administrador, GQ e Auditor; Usuários só para Administrador. Em telas até 900 px ele vira gaveta (botão de menu, fundo escurecido, Esc fecha, foco preso).
+- Contas autenticadas sem perfil não recebem o menu: veem o visual de acesso e a página de acesso negado orienta a procurar um Administrador.
+- Páginas de conta (Identity) ficam em `Areas/Identity/Pages/Account`, usam o layout `_AuthLayout` (mesmo visual do login) e os componentes `account-alert`, `account-state-icon`, `btn-account`, `account-help`. As mensagens de validação do Identity vêm de `PortugueseIdentityErrorDescriber`.
+
+## Visão geral (dashboard)
+
+Saudação com o nome (derivado do e-mail, pois a conta não guarda nome), bloco "Precisa da sua atenção" por perfil, cartões de Reclamações, Não conformidades e Recalls em aberto e os últimos processos abertos. As regras por perfil estão em `HomeController.MontarAtencaoAsync` e são cobertas por `HomeControllerTests`.
 
 ## Como verificar uma tela
 

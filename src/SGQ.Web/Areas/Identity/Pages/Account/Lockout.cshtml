@@ -1,0 +1,20 @@
+@page
+@model SGQ.Web.Areas.Identity.Pages.Account.LockoutModel
+@{
+    ViewData["Title"] = "Conta bloqueada";
+}
+
+<div class="account-state-icon" data-tom="perigo" aria-hidden="true">!</div>
+<div class="login-form-heading">
+    <p class="eyebrow">Proteção da conta</p>
+    <h2 id="conta-titulo">Conta temporariamente bloqueada por tentativas inválidas</h2>
+    <p>Por segurança, o acesso foi pausado após várias tentativas com senha incorreta. Tente novamente em cerca de @Model.Minutos minutos.</p>
+</div>
+<div class="account-alert" role="note">
+    <strong>Precisa entrar agora?</strong>
+    Se esqueceu a senha, peça a redefinição. Em caso de dúvida, fale com um Administrador do sistema.
+</div>
+<div class="account-actions">
+    <a class="btn-account" asp-page="./ForgotPassword">Recuperar senha</a>
+    <a class="btn-account btn-account-secondary" asp-page="./Login">Voltar para o acesso</a>
+</div>
