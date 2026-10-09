@@ -1,27 +1,111 @@
 @model SGQ.Web.ViewModels.ReclamacaoCreateViewModel
-@{ ViewData["Title"] = "Nova reclamação"; }
-<div class="page-heading mb-4"><p class="eyebrow mb-1">Processos de qualidade</p><h1>Nova Reclamação de Cliente</h1><p class="text-muted mb-0">O registro será criado como rascunho.</p></div>
-<form method="post" class="card shadow-sm border-0 p-4 form-card">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-    <div class="row g-3">
-        <div class="col-md-4"><label asp-for="DataRecebimento" class="form-label"></label><input asp-for="DataRecebimento" class="form-control" /><span asp-validation-for="DataRecebimento" class="text-danger"></span></div>
-        <div class="col-md-4"><label asp-for="DataAlvo" class="form-label">Data-alvo</label><input asp-for="DataAlvo" class="form-control" /><div class="form-text">Preencha quando houver prazo definido para a tratativa.</div><span asp-validation-for="DataAlvo" class="text-danger"></span></div>
-        <div class="col-md-4"><label asp-for="CanalRecebimento" class="form-label"></label><select asp-for="CanalRecebimento" class="form-select"><option value="">Selecione</option><option>SAC</option><option>E-mail</option><option>Telefone</option><option>WhatsApp</option><option>Representante comercial</option><option>Visita presencial</option><option>Formulário web</option><option>Redes sociais</option><option>Carta / Correio</option><option>Outro</option></select><span asp-validation-for="CanalRecebimento" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ClienteId" class="form-label">Cliente</label><select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select" id="ClienteId"><option value="">Selecione</option></select><span asp-validation-for="ClienteId" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ContatoCliente" class="form-label"></label><input asp-for="ContatoCliente" class="form-control" id="ContatoCliente" /><span asp-validation-for="ContatoCliente" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select" id="ProdutoId"><option value="">Selecione</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="LoteIds" class="form-label">Lotes envolvidos</label><select asp-for="LoteIds" class="form-select" id="LoteIds" multiple size="4"></select><div class="form-text">Opcional; selecione apenas lotes do produto informado.</div><span asp-validation-for="LoteIds" class="text-danger"></span></div>
-        <div class="col-12"><label asp-for="Descricao" class="form-label"></label><textarea asp-for="Descricao" class="form-control" rows="4"></textarea><span asp-validation-for="Descricao" class="text-danger"></span></div>
-        <div class="col-md-4"><label asp-for="DataFabricacao" class="form-label"></label><input asp-for="DataFabricacao" class="form-control" /></div>
-        <div class="col-md-4"><label asp-for="DataValidade" class="form-label"></label><input asp-for="DataValidade" class="form-control" /></div>
-        <div class="col-md-4"><label asp-for="QuantidadeEnvolvida" class="form-label"></label><input asp-for="QuantidadeEnvolvida" class="form-control" /></div>
-        <div class="col-md-6"><label asp-for="LocalAquisicao" class="form-label"></label><input asp-for="LocalAquisicao" class="form-control" /></div>
-        <div class="col-md-3 d-flex align-items-end"><div class="form-check mb-2"><input asp-for="ProdutoDisponivel" class="form-check-input" /><label asp-for="ProdutoDisponivel" class="form-check-label"></label></div></div>
-        <div class="col-md-3"><label asp-for="QuantidadeDisponivel" class="form-label"></label><input asp-for="QuantidadeDisponivel" class="form-control" /></div>
-        <div class="col-md-4"><label asp-for="VolumeDisponivel" class="form-label"></label><input asp-for="VolumeDisponivel" class="form-control" /></div>
+@{
+    ViewData["Title"] = "Nova reclamação";
+    var canais = new[] { "SAC", "E-mail", "Telefone", "WhatsApp", "Representante comercial", "Visita presencial", "Formulário web", "Redes sociais", "Carta / Correio", "Outro" };
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/modulos/reclamacoes.css" asp-append-version="true" />
+}
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Reclamações de cliente</p>
+        <h1>Nova reclamação</h1>
+        <p class="page-header-lead">Registre o que o cliente relatou. Ao salvar, a reclamação segue para validação da Garantia da Qualidade. Campos com <span class="text-danger d-inline" aria-hidden="true">*</span> são obrigatórios.</p>
     </div>
-    <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Criar rascunho</button><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div>
+</header>
+
+<form method="post" class="rc-form" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+
+    <section class="form-section" aria-labelledby="sec-recebimento">
+        <header><h2 id="sec-recebimento">Dados do recebimento</h2><p class="help">Quando e por qual canal a reclamação chegou à empresa.</p></header>
+        <div class="form-grid">
+            <div class="span-4">
+                <label asp-for="DataRecebimento" class="form-label required"></label>
+                <input asp-for="DataRecebimento" class="form-control" aria-describedby="ajuda-recebimento" />
+                <div class="form-text" id="ajuda-recebimento">Dia em que o cliente entrou em contato.</div>
+                <span asp-validation-for="DataRecebimento" class="field-error"></span>
+            </div>
+            <div class="span-4">
+                <label asp-for="CanalRecebimento" class="form-label required"></label>
+                <select asp-for="CanalRecebimento" class="form-select">
+                    <option value="">Selecione o canal</option>
+                    @foreach (var canal in canais) { <option value="@canal" selected="@(Model.CanalRecebimento == canal)">@canal</option> }
+                </select>
+                <span asp-validation-for="CanalRecebimento" class="field-error"></span>
+            </div>
+            <div class="span-4">
+                @* DataAlvo do ViewModel é ignorada pelo controller: o prazo é calculado a partir da data de recebimento. O campo foi retirado da tela para não induzir a erro. *@
+                <p class="rc-note">O prazo de tratativa é calculado automaticamente a partir da data de recebimento.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section" aria-labelledby="sec-cliente">
+        <header><h2 id="sec-cliente">Cliente e produto</h2><p class="help">Quem reclamou e qual produto está envolvido.</p></header>
+        <div class="form-grid">
+            <div class="span-6">
+                <label asp-for="ClienteId" class="form-label required">Cliente</label>
+                <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select" id="ClienteId" data-val-required="Selecione um cliente."><option value="">Selecione o cliente</option></select>
+                <span asp-validation-for="ClienteId" class="field-error"></span>
+            </div>
+            <div class="span-6">
+                <label asp-for="ContatoCliente" class="form-label required"></label>
+                <input asp-for="ContatoCliente" class="form-control" id="ContatoCliente" autocomplete="off" aria-describedby="ajuda-contato" />
+                <div class="form-text" id="ajuda-contato">Preenchido com o contato cadastrado; ajuste se a pessoa for outra.</div>
+                <span asp-validation-for="ContatoCliente" class="field-error"></span>
+            </div>
+            <div class="span-6">
+                <label asp-for="ProdutoId" class="form-label required">Produto</label>
+                <select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select" id="ProdutoId" data-val-required="Selecione um produto."><option value="">Selecione o produto</option></select>
+                <span asp-validation-for="ProdutoId" class="field-error"></span>
+            </div>
+            <div class="span-6">
+                <span class="form-label" id="rotulo-lotes">Lotes envolvidos</span>
+                <div class="rc-lotes" role="group" aria-labelledby="rotulo-lotes" aria-describedby="ajuda-lotes">
+                    <div class="rc-lotes-tools">
+                        <input type="search" class="form-control" id="BuscaLote" placeholder="Buscar lote" aria-label="Buscar lote na lista" autocomplete="off" />
+                        <span class="rc-lotes-count" id="ContagemLotes" aria-live="polite">0 selecionado(s)</span>
+                    </div>
+                    <ul class="rc-lotes-list" id="ListaLotes"></ul>
+                </div>
+                <div class="form-text" id="ajuda-lotes">Opcional. Escolha o produto para ver os lotes dele; marque todos os lotes citados.</div>
+                <span asp-validation-for="LoteIds" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section" aria-labelledby="sec-descricao">
+        <header><h2 id="sec-descricao">Descrição da ocorrência</h2><p class="help">Conte o que aconteceu com as palavras do cliente, sem interpretar a causa.</p></header>
+        <div class="form-grid">
+            <div>
+                <label asp-for="Descricao" class="form-label required"></label>
+                <textarea asp-for="Descricao" class="form-control" rows="5" maxlength="4000" placeholder="O que o cliente relatou, quando percebeu o problema e como o produto foi usado"></textarea>
+                <span asp-validation-for="Descricao" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section" aria-labelledby="sec-amostra">
+        <header><h2 id="sec-amostra">Amostra e disponibilidade do produto</h2><p class="help">Tudo opcional. Ajuda a Qualidade a decidir se é possível analisar o produto reclamado.</p></header>
+        <div class="form-grid">
+            <div class="span-4"><label asp-for="DataFabricacao" class="form-label"></label><input asp-for="DataFabricacao" class="form-control" /><span asp-validation-for="DataFabricacao" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="DataValidade" class="form-label"></label><input asp-for="DataValidade" class="form-control" /><span asp-validation-for="DataValidade" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="QuantidadeEnvolvida" class="form-label"></label><input asp-for="QuantidadeEnvolvida" class="form-control" inputmode="decimal" /><span asp-validation-for="QuantidadeEnvolvida" class="field-error"></span></div>
+            <div class="span-12"><label asp-for="LocalAquisicao" class="form-label"></label><input asp-for="LocalAquisicao" class="form-control" maxlength="200" placeholder="Loja, distribuidor ou outro ponto de compra" /><span asp-validation-for="LocalAquisicao" class="field-error"></span></div>
+            <div class="span-12 rc-check-field"><label for="ProdutoDisponivel"><input asp-for="ProdutoDisponivel" class="form-check-input" /> O produto reclamado está disponível para análise</label></div>
+            <div class="span-4"><label asp-for="QuantidadeDisponivel" class="form-label"></label><input asp-for="QuantidadeDisponivel" class="form-control" inputmode="decimal" /><span asp-validation-for="QuantidadeDisponivel" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="VolumeDisponivel" class="form-label"></label><input asp-for="VolumeDisponivel" class="form-control" maxlength="100" placeholder="Ex.: 2 frascos de 100 mL" /><span asp-validation-for="VolumeDisponivel" class="field-error"></span></div>
+        </div>
+    </section>
+
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Registrar reclamação</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+    </div>
 </form>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -30,19 +114,67 @@
         const selectedLoteIds = new Set(@Html.Raw(
             System.Text.Json.JsonSerializer.Serialize(Model.LoteIds ?? new List<int>())));
 
+        const lista = document.getElementById('ListaLotes');
+        const busca = document.getElementById('BuscaLote');
+        const contagem = document.getElementById('ContagemLotes');
+
+        function atualizarContagem() {
+            const n = lista.querySelectorAll('input:checked').length;
+            contagem.textContent = n + ' selecionado(s)';
+        }
+
+        function filtrarLotes() {
+            const termo = busca.value.trim().toLowerCase();
+            let visiveis = 0;
+            lista.querySelectorAll('li[data-lote]').forEach(li => {
+                const mostra = li.dataset.lote.toLowerCase().includes(termo);
+                li.hidden = !mostra;
+                if (mostra) visiveis++;
+            });
+            const vazio = lista.querySelector('.rc-lotes-empty');
+            if (vazio && lista.querySelector('li[data-lote]')) vazio.hidden = visiveis > 0;
+        }
+
         function atualizarLotes() {
             const produtoId = parseInt(document.getElementById('ProdutoId').value);
-            const select = document.getElementById('LoteIds');
-            select.innerHTML = '';
-            if (!produtoId) return;
+            lista.innerHTML = '';
+            busca.value = '';
+            busca.disabled = !produtoId;
+            if (!produtoId) {
+                lista.innerHTML = '<li class="rc-lotes-empty">Selecione um produto para ver os lotes disponíveis.</li>';
+                atualizarContagem();
+                return;
+            }
             const lotesDoProduto = todosLotes.filter(l => l.ProdutoId === produtoId);
+            if (!lotesDoProduto.length) {
+                lista.innerHTML = '<li class="rc-lotes-empty">Nenhum lote cadastrado para este produto.</li>';
+                atualizarContagem();
+                return;
+            }
             lotesDoProduto.forEach(lote => {
-                const opt = document.createElement('option');
-                opt.value = lote.Id;
-                opt.textContent = lote.Nome;
-                opt.selected = selectedLoteIds.has(lote.Id);
-                select.appendChild(opt);
+                const li = document.createElement('li');
+                li.dataset.lote = lote.Nome;
+                const rotulo = document.createElement('label');
+                const caixa = document.createElement('input');
+                caixa.type = 'checkbox';
+                caixa.name = 'LoteIds';
+                caixa.value = lote.Id;
+                caixa.className = 'form-check-input';
+                caixa.checked = selectedLoteIds.has(lote.Id);
+                caixa.addEventListener('change', () => {
+                    if (caixa.checked) selectedLoteIds.add(lote.Id); else selectedLoteIds.delete(lote.Id);
+                    atualizarContagem();
+                });
+                rotulo.append(caixa, document.createTextNode(lote.Nome));
+                li.appendChild(rotulo);
+                lista.appendChild(li);
             });
+            const vazio = document.createElement('li');
+            vazio.className = 'rc-lotes-empty';
+            vazio.hidden = true;
+            vazio.textContent = 'Nenhum lote encontrado para a busca.';
+            lista.appendChild(vazio);
+            atualizarContagem();
         }
 
         document.getElementById('ClienteId').addEventListener('change', function () {
@@ -55,7 +187,15 @@
             this.dataset.editado = '1';
         });
 
+        busca.addEventListener('input', filtrarLotes);
         document.getElementById('ProdutoId').addEventListener('change', atualizarLotes);
         atualizarLotes();
+
+        function focarPrimeiroErro() {
+            const campo = document.querySelector('.input-validation-error');
+            if (campo) { campo.scrollIntoView({ block: 'center' }); campo.focus({ preventScroll: true }); }
+        }
+        focarPrimeiroErro();
+        document.querySelector('form.rc-form').addEventListener('submit', () => setTimeout(focarPrimeiroErro, 0));
     </script>
 }

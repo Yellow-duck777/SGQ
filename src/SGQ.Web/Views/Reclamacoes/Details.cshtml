@@ -1,238 +1,401 @@
 @model SGQ.Domain.Entities.ReclamacaoCliente
-@{ ViewData["Title"] = Model.Codigo; }
-
+@using SGQ.Web.Security
 @{
-    string StatusLabel(StatusReclamacao s) => s switch
+    ViewData["Title"] = Model.Codigo;
+
+    var gq = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.GarantiaQualidade);
+    var podeProrrogar = User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.ResponsavelTecnico);
+    var status = Model.Status;
+    var emValidacao = status is StatusReclamacao.Rascunho or StatusReclamacao.InformacoesPendentes or StatusReclamacao.AguardandoValidacaoGq;
+    var encerrada = status == StatusReclamacao.Encerrada;
+    var anexos = ViewBag.Anexos as IEnumerable<Anexo> ?? [];
+    var laudo = Model.LaudoLaboratorioAnexoId.HasValue ? anexos.FirstOrDefault(a => a.Id == Model.LaudoLaboratorioAnexoId && a.Ativo) : null;
+    var temLaboratorio = !string.IsNullOrWhiteSpace(Model.LaboratorioExterno);
+
+    var etapas = new[] { "Abertura", "Validação da GQ", "Investigação", "Conclusão", "Encerramento" };
+    var etapaAtual = status switch
     {
-        StatusReclamacao.Rascunho              => "Rascunho",
-        StatusReclamacao.InformacoesPendentes  => "Informações Pendentes",
-        StatusReclamacao.AguardandoValidacaoGq => "Aguardando Validação GQ",
-        StatusReclamacao.EmInvestigacao        => "Em Investigação",
-        StatusReclamacao.AguardandoLaboratorioExterno => "Aguardando Laboratório",
-        StatusReclamacao.AguardandoConclusao   => "Aguardando Conclusão",
-        StatusReclamacao.Encerrada             => "Encerrada",
-        _ => s.ToString()
+        StatusReclamacao.Rascunho or StatusReclamacao.InformacoesPendentes => 0,
+        StatusReclamacao.AguardandoValidacaoGq => 1,
+        StatusReclamacao.EmInvestigacao or StatusReclamacao.AguardandoLaboratorioExterno => 2,
+        StatusReclamacao.AguardandoConclusao => 4,
+        _ => etapas.Length
     };
-    string StatusClass(StatusReclamacao s) => s switch
-    {
-        StatusReclamacao.Rascunho              => "text-bg-secondary",
-        StatusReclamacao.InformacoesPendentes  => "text-bg-warning",
-        StatusReclamacao.AguardandoValidacaoGq => "text-bg-warning",
-        StatusReclamacao.EmInvestigacao        => "text-bg-primary",
-        StatusReclamacao.AguardandoLaboratorioExterno => "text-bg-info",
-        StatusReclamacao.AguardandoConclusao   => "text-bg-warning",
-        StatusReclamacao.Encerrada             => "text-bg-success",
-        _ => "text-bg-secondary"
-    };
-    string ClassifLabel(ClassificacaoOcorrencia? c) => c switch
-    {
-        ClassificacaoOcorrencia.Critica => "Crítica",
-        ClassificacaoOcorrencia.Maior   => "Maior",
-        ClassificacaoOcorrencia.Menor   => "Menor",
-        _ => ""
-    };
-    string ClassifClass(ClassificacaoOcorrencia? c) => c switch
-    {
-        ClassificacaoOcorrencia.Critica => "text-bg-danger",
-        ClassificacaoOcorrencia.Maior   => "text-bg-warning",
-        ClassificacaoOcorrencia.Menor   => "text-bg-info",
-        _ => ""
-    };
+    var opcoesClassificacao = Html.GetEnumSelectList<ClassificacaoOcorrencia>();
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/modulos/reclamacoes.css" asp-append-version="true" />
 }
 
-@if (TempData["Success"] is string success) { <div class="alert alert-success" role="alert">@success</div> }
-@if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
-
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4">
-    <div>
-        <p class="eyebrow mb-1">Reclamação de Cliente</p>
-        <h1>@Model.Codigo</h1>
-        <span class="badge @StatusClass(Model.Status)">@StatusLabel(Model.Status)</span>
-        @if (Model.Classificacao.HasValue)
-        {
-            <span class="badge @ClassifClass(Model.Classificacao) ms-1">@ClassifLabel(Model.Classificacao)</span>
-        }
-    </div>
-    <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+<div aria-live="polite">
+    @if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+    @if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-8 d-flex flex-column gap-4">
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Reclamação de cliente</p>
+        <h1>
+            <span>@Model.Codigo</span>
+            @Html.StatusBadge(status)
+            @if (Model.Classificacao.HasValue) { <span title="Classificação">@Html.StatusBadge(Model.Classificacao)</span> }
+        </h1>
+        <p class="page-header-lead">@Model.Cliente.Nome · @Model.Produto.Nome</p>
+        <dl class="meta-row">
+            <div class="meta-item"><dt class="meta-label">Prazo</dt><dd class="meta-value">@Html.PrazoChipHtml(Model.DataAlvo, encerrada)</dd></div>
+            <div class="meta-item"><dt class="meta-label">Recebida em</dt><dd class="meta-value">@Model.DataRecebimento.ToString("dd/MM/yyyy")</dd></div>
+            <div class="meta-item"><dt class="meta-label">Aberta por</dt><dd class="meta-value">@Model.UsuarioAbertura</dd></div>
+        </dl>
+    </div>
+    <div class="page-header-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+    </div>
+</header>
 
-        <div class="card shadow-sm border-0 p-4">
-            <h2 class="h5 mb-3">Ocorrência</h2>
-            <dl class="row mb-0">
-                <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8">@Model.Cliente.Nome</dd>
-                <dt class="col-sm-4">Contato</dt><dd class="col-sm-8">@Model.ContatoCliente</dd>
-                <dt class="col-sm-4">Produto</dt><dd class="col-sm-8">@Model.Produto.Nome</dd>
-                <dt class="col-sm-4">Lotes</dt><dd class="col-sm-8">@(Model.Lotes.Any() ? string.Join(", ", Model.Lotes.Select(l => l.Lote.Numero)) : "—")</dd>
-                <dt class="col-sm-4">Descrição</dt><dd class="col-sm-8">@Model.Descricao</dd>
-            </dl>
-        </div>
+<section class="panel rc-stepper-panel" aria-label="Andamento da reclamação">
+    <partial name="_Stepper" model="new StepperModel(etapas, etapaAtual)" />
+    @if (status == StatusReclamacao.AguardandoLaboratorioExterno)
+    {
+        <p class="rc-stepper-note">A investigação está pausada: a amostra foi enviada ao laboratório externo @Model.LaboratorioExterno.</p>
+    }
+</section>
 
-        @if (Model.DataFabricacao.HasValue || Model.DataValidade.HasValue || Model.QuantidadeEnvolvida.HasValue || Model.LocalAquisicao != null || Model.ProdutoDisponivel)
+@* Próxima ação: o que fazer agora e quem faz *@
+@switch (status)
+{
+    case StatusReclamacao.Rascunho:
+    case StatusReclamacao.InformacoesPendentes:
+    case StatusReclamacao.AguardandoValidacaoGq:
+        if (gq)
         {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Dados da amostra</h2>
-                <dl class="row mb-0">
-                    @if (Model.DataFabricacao.HasValue) { <dt class="col-sm-4">Fabricação</dt><dd class="col-sm-8">@Model.DataFabricacao.Value.ToString("dd/MM/yyyy")</dd> }
-                    @if (Model.DataValidade.HasValue) { <dt class="col-sm-4">Validade</dt><dd class="col-sm-8">@Model.DataValidade.Value.ToString("dd/MM/yyyy")</dd> }
-                    @if (Model.QuantidadeEnvolvida.HasValue) { <dt class="col-sm-4">Qtd. envolvida</dt><dd class="col-sm-8">@Model.QuantidadeEnvolvida</dd> }
-                    @if (Model.LocalAquisicao != null) { <dt class="col-sm-4">Local de aquisição</dt><dd class="col-sm-8">@Model.LocalAquisicao</dd> }
-                    <dt class="col-sm-4">Produto disponível</dt>
-                    <dd class="col-sm-8">
-                        @if (Model.ProdutoDisponivel) { <span>Sim@(Model.QuantidadeDisponivel.HasValue ? $" — {Model.QuantidadeDisponivel}" : "")@(Model.VolumeDisponivel != null ? $" ({Model.VolumeDisponivel})" : "")</span> }
-                        else { <span>Não</span> }
-                    </dd>
-                </dl>
-            </div>
-        }
-
-        <div class="card shadow-sm border-0 p-4">
-            <h2 class="h5 mb-3">Investigação</h2>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <p class="text-muted small mb-1">Classificação</p>
-                    @if (Model.Classificacao.HasValue)
-                    {
-                        <span class="badge @ClassifClass(Model.Classificacao) fs-6">@ClassifLabel(Model.Classificacao)</span>
-                        <form method="post" asp-action="Classificar" asp-route-id="@Model.Id" class="d-inline ms-2">
-                            @Html.AntiForgeryToken()
-                            <select name="classificacao" class="form-select form-select-sm d-inline-block w-auto">
-                                <option value="Critica">Crítica</option><option value="Maior">Maior</option><option value="Menor">Menor</option>
-                            </select>
-                            <button class="btn btn-sm btn-outline-secondary ms-1" type="submit">Alterar</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <form method="post" asp-action="Classificar" asp-route-id="@Model.Id" class="d-flex gap-2 align-items-center">
-                            @Html.AntiForgeryToken()
-                            <select name="classificacao" class="form-select form-select-sm w-auto" required>
-                                <option value="">Selecione</option><option value="Critica">Crítica</option><option value="Maior">Maior</option><option value="Menor">Menor</option>
-                            </select>
-                            <button class="btn btn-sm btn-primary" type="submit">Definir</button>
-                        </form>
-                    }
+            <section class="next-action" aria-labelledby="proxima-acao">
+                <div>
+                    <h2 id="proxima-acao">Próxima ação: validar e classificar</h2>
+                    <p>Confira os dados e classifique a ocorrência. Ao validar, o sistema cria a Não Conformidade vinculada e inicia a investigação.</p>
                 </div>
-                <div class="col-md-6">
-                    <p class="text-muted small mb-1">Não Conformidade</p>
-                    @if (Model.NaoConformidade is not null)
-                    {
-                        <a asp-controller="NaoConformidades" asp-action="Details" asp-route-id="@Model.NaoConformidade.Id" class="fw-semibold">@Model.NaoConformidade.Codigo</a>
-                    }
-                    else
-                    {
-                        <span class="text-muted">Nenhuma NC aberta</span>
-                        <a asp-controller="NaoConformidades" asp-action="Create" asp-route-reclamacaoId="@Model.Id" class="btn btn-sm btn-outline-primary ms-2">Abrir NC</a>
-                    }
-                </div>
-            </div>
-        </div>
-
-        @if (Model.Status is StatusReclamacao.Rascunho or StatusReclamacao.InformacoesPendentes or StatusReclamacao.AguardandoValidacaoGq)
-        {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Validação da GQ</h2>
-                <p class="text-muted">A validação classifica a reclamação e cria automaticamente a NC vinculada.</p>
-                <form asp-action="Validar" method="post" class="d-flex flex-wrap gap-2 align-items-end">
+                <form asp-action="Validar" method="post" class="rc-inline-form" data-confirm="Validar esta reclamação como @Model.Codigo e criar a Não Conformidade vinculada? Esta ação não pode ser desfeita.">
                     <input type="hidden" name="id" value="@Model.Id" />
-                    <div><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao" asp-items="Html.GetEnumSelectList<ClassificacaoOcorrencia>()"></select></div>
+                    <div>
+                        <label class="form-label" for="classificacao">Classificação</label>
+                        <select class="form-select" id="classificacao" name="classificacao" asp-items="opcoesClassificacao" required><option value="">Selecione a classificação</option></select>
+                    </div>
                     <button class="btn btn-primary" type="submit">Validar e criar NC</button>
                 </form>
+            </section>
+        }
+        else
+        {
+            <section class="next-action" data-tom="espera" aria-labelledby="proxima-acao">
+                <div>
+                    <h2 id="proxima-acao">Aguardando validação da GQ</h2>
+                    <p>A Garantia da Qualidade vai conferir os dados e classificar a ocorrência. Você não precisa fazer nada agora.</p>
+                </div>
+            </section>
+        }
+        break;
+    case StatusReclamacao.EmInvestigacao:
+        <section class="next-action" aria-labelledby="proxima-acao">
+            <div>
+                <h2 id="proxima-acao">Próxima ação: concluir a investigação</h2>
+                <p>Registre a investigação, o resultado e a resposta ao cliente. Se precisar de análise externa, envie a amostra a um laboratório.</p>
             </div>
+            <div class="next-action-actions">
+                <a class="btn btn-primary" href="#conclusao">Registrar conclusão</a>
+                <a class="btn btn-outline-secondary" href="#laboratorio">Enviar a laboratório externo</a>
+            </div>
+        </section>
+        break;
+    case StatusReclamacao.AguardandoLaboratorioExterno:
+        <section class="next-action" data-tom="alerta" aria-labelledby="proxima-acao">
+            <div>
+                <h2 id="proxima-acao">Próxima ação: registrar o laudo do laboratório</h2>
+                <p>Quando o laudo chegar, anexe o arquivo e registre o resultado. A investigação volta a andar depois disso.</p>
+            </div>
+            <div class="next-action-actions"><a class="btn btn-primary" href="#laboratorio">Ir para o laudo</a></div>
+        </section>
+        break;
+    case StatusReclamacao.AguardandoConclusao:
+        if (gq)
+        {
+            <section class="next-action" aria-labelledby="proxima-acao">
+                <div>
+                    <h2 id="proxima-acao">Próxima ação: encerrar a reclamação</h2>
+                    <p>A conclusão já foi registrada (veja o resumo abaixo). Se estiver tudo certo, a GQ pode encerrar o processo.</p>
+                </div>
+                <form asp-action="Encerrar" method="post" data-confirm="Encerrar a reclamação @Model.Codigo? Depois disso só a GQ pode reabri-la, com justificativa.">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button class="btn btn-primary" type="submit">Encerrar processo</button>
+                </form>
+            </section>
+        }
+        else
+        {
+            <section class="next-action" data-tom="espera" aria-labelledby="proxima-acao">
+                <div>
+                    <h2 id="proxima-acao">Aguardando encerramento pela GQ</h2>
+                    <p>A conclusão já foi registrada. Somente a Garantia da Qualidade pode encerrar o processo.</p>
+                </div>
+            </section>
+        }
+        break;
+    case StatusReclamacao.Encerrada:
+        <section class="next-action" data-tom="concluido" aria-labelledby="proxima-acao">
+            <div>
+                <h2 id="proxima-acao">Reclamação encerrada</h2>
+                <p>Encerrada@(Model.EncerradaEm.HasValue ? $" em {Model.EncerradaEm.Value.ToLocalTime():dd/MM/yyyy}" : "")@(string.IsNullOrWhiteSpace(Model.UsuarioEncerramento) ? "" : $" por {Model.UsuarioEncerramento}"). @(gq ? "Se surgir um fato novo, é possível reabrir." : "")</p>
+            </div>
+            @if (gq) { <div class="next-action-actions"><a class="btn btn-outline-secondary" href="#reabertura">Reabrir reclamação</a></div> }
+        </section>
+        break;
+}
+
+<div class="rc-layout">
+    <div class="rc-main">
+
+        @if (Model.NaoConformidade is not null)
+        {
+            <section class="rc-nc" aria-label="Não conformidade vinculada">
+                <div>
+                    <p>Não conformidade vinculada</p>
+                    <strong>@Model.NaoConformidade.Codigo</strong>
+                </div>
+                <a class="btn btn-outline-primary" asp-controller="NaoConformidades" asp-action="Details" asp-route-id="@Model.NaoConformidade.Id">Abrir a NC</a>
+            </section>
+        }
+        else if (!emValidacao && !encerrada && gq)
+        {
+            <section class="rc-nc" aria-label="Não conformidade vinculada">
+                <div><p>Não conformidade vinculada</p><strong>Nenhuma NC aberta</strong></div>
+                <a class="btn btn-outline-primary" asp-controller="NaoConformidades" asp-action="Create" asp-route-reclamacaoId="@Model.Id">Abrir NC</a>
+            </section>
         }
 
-        @if (Model.Status == StatusReclamacao.EmInvestigacao)
+        <section class="panel rc-panel" aria-labelledby="titulo-ocorrencia">
+            <h2 id="titulo-ocorrencia">Ocorrência</h2>
+            <dl class="dl-grid">
+                <div><dt>Cliente</dt><dd>@Model.Cliente.Nome</dd></div>
+                <div><dt>Contato</dt><dd>@Model.ContatoCliente</dd></div>
+                <div><dt>Produto</dt><dd>@Model.Produto.Nome</dd></div>
+                <div><dt>Lotes</dt><dd>@if (Model.Lotes.Any()) { foreach (var l in Model.Lotes) { <span class="rc-lote-pill">@l.Lote.Numero</span> } } else { <span class="text-muted">Nenhum lote informado</span> }</dd></div>
+                <div class="dl-wide"><dt>Descrição</dt><dd><p class="rc-text">@Model.Descricao</p></dd></div>
+            </dl>
+        </section>
+
+        @if (Model.DataFabricacao.HasValue || Model.DataValidade.HasValue || Model.QuantidadeEnvolvida.HasValue || !string.IsNullOrWhiteSpace(Model.LocalAquisicao) || Model.ProdutoDisponivel)
         {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Conclusão da investigação</h2>
+            <section class="panel rc-panel" aria-labelledby="titulo-amostra">
+                <h2 id="titulo-amostra">Amostra e disponibilidade do produto</h2>
+                <dl class="dl-grid">
+                    @if (Model.DataFabricacao.HasValue) { <div><dt>Fabricação</dt><dd>@Model.DataFabricacao.Value.ToString("dd/MM/yyyy")</dd></div> }
+                    @if (Model.DataValidade.HasValue) { <div><dt>Validade</dt><dd>@Model.DataValidade.Value.ToString("dd/MM/yyyy")</dd></div> }
+                    @if (Model.QuantidadeEnvolvida.HasValue) { <div><dt>Quantidade envolvida</dt><dd>@Model.QuantidadeEnvolvida</dd></div> }
+                    @if (!string.IsNullOrWhiteSpace(Model.LocalAquisicao)) { <div><dt>Local de aquisição</dt><dd>@Model.LocalAquisicao</dd></div> }
+                    <div>
+                        <dt>Produto disponível para análise</dt>
+                        <dd>
+                            @if (Model.ProdutoDisponivel) { <span>Sim@(Model.QuantidadeDisponivel.HasValue ? $" · {Model.QuantidadeDisponivel}" : "")@(!string.IsNullOrWhiteSpace(Model.VolumeDisponivel) ? $" ({Model.VolumeDisponivel})" : "")</span> }
+                            else { <span>Não</span> }
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+        }
+
+        @* Resumo somente leitura do que já foi preenchido *@
+        @if (temLaboratorio)
+        {
+            <section class="panel rc-panel" aria-labelledby="titulo-lab-resumo">
+                <h2 id="titulo-lab-resumo">Laboratório externo</h2>
+                <dl class="dl-grid">
+                    <div><dt>Laboratório</dt><dd>@Model.LaboratorioExterno</dd></div>
+                    <div><dt>Amostra enviada em</dt><dd>@(Model.DataEnvioAmostraLaboratorio?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+                    @if (status != StatusReclamacao.AguardandoLaboratorioExterno)
+                    {
+                        <div><dt>Resultado recebido em</dt><dd>@(Model.DataRecebimentoResultadoLaboratorio?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+                        <div><dt>Identificação do laudo</dt><dd>@(Model.IdentificacaoLaudoLaboratorio ?? "—")</dd></div>
+                        <div class="dl-wide"><dt>Resultado do laboratório</dt><dd><p class="rc-text">@(Model.ResultadoLaboratorio ?? "—")</p></dd></div>
+                    }
+                    <div class="dl-wide"><dt>Laudo anexado</dt><dd>@if (laudo is not null) { <a asp-controller="Anexos" asp-action="Baixar" asp-route-id="@laudo.Id">@laudo.NomeOriginal</a> } else { <span class="text-muted">Nenhum laudo anexado</span> }</dd></div>
+                </dl>
+            </section>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Investigacao))
+        {
+            <section class="panel rc-panel" aria-labelledby="titulo-conclusao-resumo">
+                <h2 id="titulo-conclusao-resumo">@(status == StatusReclamacao.EmInvestigacao ? "Última conclusão registrada" : "Conclusão da investigação")</h2>
+                <dl class="dl-grid">
+                    <div><dt>Resultado</dt><dd>@Html.StatusBadge(Model.Resultado)</dd></div>
+                    <div><dt>Resposta ao cliente em</dt><dd>@(Model.DataRespostaCliente?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+                    <div class="dl-wide"><dt>Investigação</dt><dd><p class="rc-text">@Model.Investigacao</p></dd></div>
+                    <div class="dl-wide"><dt>Tratamento aplicado</dt><dd><p class="rc-text">@Model.TratamentoAplicado</p></dd></div>
+                    <div class="dl-wide"><dt>Resposta ao cliente</dt><dd><p class="rc-text">@Model.RespostaCliente</p></dd></div>
+                </dl>
+            </section>
+        }
+
+        @* Formulários: só aparecem quando aplicáveis à situação atual *@
+        @if (status == StatusReclamacao.EmInvestigacao)
+        {
+            <section class="panel rc-panel" id="conclusao" aria-labelledby="titulo-conclusao">
+                <h2 id="titulo-conclusao">Conclusão da investigação</h2>
+                <p class="rc-help">Preencha tudo que foi apurado. Depois de registrar, a GQ poderá encerrar a reclamação.</p>
                 <form asp-action="Concluir" method="post">
                     <input type="hidden" name="Id" value="@Model.Id" />
-                    <div class="row g-3">
-                        <div class="col-12"><label class="form-label" for="Investigacao">Investigação</label><textarea class="form-control" name="Investigacao" id="Investigacao" rows="3" required></textarea></div>
-                        <div class="col-md-4"><label class="form-label" for="Resultado">Resultado</label><select class="form-select" name="Resultado" id="Resultado" asp-items="Html.GetEnumSelectList<ResultadoReclamacao>()"></select></div>
-                        <div class="col-md-8"><label class="form-label" for="TratamentoAplicado">Tratamento aplicado</label><input class="form-control" name="TratamentoAplicado" id="TratamentoAplicado" required /></div>
-                        <div class="col-md-4"><label class="form-label" for="DataRespostaCliente">Data da resposta</label><input class="form-control" type="date" name="DataRespostaCliente" id="DataRespostaCliente" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
-                        <div class="col-md-8"><label class="form-label" for="RespostaCliente">Resposta ao cliente</label><input class="form-control" name="RespostaCliente" id="RespostaCliente" required /></div>
+                    <div class="form-grid">
+                        <div><label class="form-label required" for="Investigacao">O que foi investigado</label><textarea class="form-control" name="Investigacao" id="Investigacao" rows="4" maxlength="4000" required></textarea></div>
+                        <div class="span-4"><label class="form-label required" for="Resultado">Resultado</label><select class="form-select" name="Resultado" id="Resultado" asp-items="Html.GetEnumSelectList<ResultadoReclamacao>()" required></select></div>
+                        <div class="span-8"><label class="form-label required" for="TratamentoAplicado">Tratamento aplicado</label><input class="form-control" name="TratamentoAplicado" id="TratamentoAplicado" maxlength="4000" required /></div>
+                        <div class="span-4"><label class="form-label required" for="DataRespostaCliente">Data da resposta ao cliente</label><input class="form-control" type="date" name="DataRespostaCliente" id="DataRespostaCliente" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+                        <div class="span-8"><label class="form-label required" for="RespostaCliente">Resposta ao cliente</label><input class="form-control" name="RespostaCliente" id="RespostaCliente" maxlength="4000" required /></div>
                     </div>
-                    <button class="btn btn-primary mt-3" type="submit">Registrar conclusão</button>
+                    <div class="form-actions mt-3"><button class="btn btn-primary" type="submit">Registrar conclusão</button></div>
                 </form>
-            </div>
+            </section>
+
+            <section class="panel rc-panel" id="laboratorio" aria-labelledby="titulo-lab">
+                <details class="rc-details">
+                    <summary id="titulo-lab">Precisa de análise externa? Solicitar laboratório</summary>
+                    <p class="rc-help">A reclamação passa para "Aguardando laboratório externo" até o laudo ser anexado e o resultado registrado.</p>
+                    <form asp-action="SolicitarLaboratorio" method="post" data-confirm="Enviar esta reclamação para laboratório externo? A investigação fica pausada até o resultado.">
+                        <input type="hidden" name="Id" value="@Model.Id" />
+                        <div class="form-grid">
+                            <div class="span-8"><label class="form-label required" for="Laboratorio">Laboratório responsável</label><input name="Laboratorio" id="Laboratorio" class="form-control" maxlength="200" required /></div>
+                            <div class="span-4"><label class="form-label required" for="DataEnvioAmostra">Amostra enviada em</label><input name="DataEnvioAmostra" id="DataEnvioAmostra" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+                        </div>
+                        <div class="form-actions mt-3"><button class="btn btn-outline-primary" type="submit">Solicitar laboratório</button></div>
+                    </form>
+                </details>
+            </section>
         }
 
-        @if (Model.Status == StatusReclamacao.AguardandoConclusao)
+        @if (status == StatusReclamacao.AguardandoLaboratorioExterno)
         {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Encerramento pela GQ</h2>
-                <p><strong>Resultado:</strong> @Model.Resultado<br /><strong>Tratamento:</strong> @Model.TratamentoAplicado<br /><strong>Resposta ao cliente:</strong> @Model.RespostaCliente</p>
-                <form asp-action="Encerrar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary" type="submit">Encerrar reclamação</button></form>
-            </div>
+            <section class="panel rc-panel" id="laboratorio" aria-labelledby="titulo-lab-resultado">
+                <h2 id="titulo-lab-resultado">Resultado do laboratório</h2>
+                <p class="rc-help">Siga as duas etapas na ordem: anexe o laudo e depois registre o resultado.</p>
+                <div class="rc-steps-inner">
+                    <div class="rc-substep" data-feito="@(laudo is not null ? "true" : "false")">
+                        <h3>1. Anexar o laudo (evidência crítica)</h3>
+                        @if (laudo is not null)
+                        {
+                            <p class="mb-2">Laudo anexado: <a asp-controller="Anexos" asp-action="Baixar" asp-route-id="@laudo.Id">@laudo.NomeOriginal</a>. Para trocar, envie outro arquivo.</p>
+                        }
+                        <form asp-controller="Anexos" asp-action="Enviar" method="post" enctype="multipart/form-data" class="rc-upload">
+                            <input type="hidden" name="processo" value="Reclamacoes" /><input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="laudoLaboratorio" value="true" /><input type="hidden" name="critico" value="true" />
+                            <div class="file-picker">
+                                <input type="file" name="arquivo" id="arquivo-laudo" class="file-picker-input" required data-file-picker />
+                                <label for="arquivo-laudo" class="btn btn-outline-primary file-picker-button">Escolher arquivo do laudo</label>
+                                <span class="file-picker-name" data-file-picker-name>Nenhum arquivo selecionado · máximo de 25 MB</span>
+                            </div>
+                            <div><button class="btn btn-primary" type="submit">Enviar laudo</button></div>
+                        </form>
+                    </div>
+                    <div class="rc-substep">
+                        <h3>2. Registrar o resultado</h3>
+                        @if (laudo is null) { <p class="rc-help">Disponível depois que o laudo for anexado.</p> }
+                        <form asp-action="RegistrarResultadoLaboratorio" method="post">
+                            <fieldset class="rc-fieldset" disabled="@(laudo is null)">
+                                <input type="hidden" name="Id" value="@Model.Id" />
+                                <div class="form-grid">
+                                    <div class="span-4"><label class="form-label required" for="DataRecebimento">Resultado recebido em</label><input name="DataRecebimento" id="DataRecebimento" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+                                    <div class="span-8"><label class="form-label required" for="IdentificacaoLaudo">Identificação do laudo</label><input name="IdentificacaoLaudo" id="IdentificacaoLaudo" class="form-control" maxlength="200" required /></div>
+                                    <div><label class="form-label required" for="ResultadoLab">Resultado</label><textarea name="Resultado" id="ResultadoLab" class="form-control" rows="3" maxlength="4000" required></textarea></div>
+                                </div>
+                                <div class="form-actions mt-3"><button class="btn btn-primary" type="submit">Registrar resultado</button></div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </section>
         }
 
-        @if (Model.Status == StatusReclamacao.Encerrada)
+        @if (encerrada && gq)
         {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Reabertura</h2>
-                <p class="text-muted">A reabertura retorna a reclamação para investigação e mantém a NC vinculada.</p>
-                <form asp-action="Reabrir" method="post">
+            <section class="panel rc-panel rc-danger-zone" id="reabertura" aria-labelledby="titulo-reabertura">
+                <h2 id="titulo-reabertura">Reabrir reclamação</h2>
+                <p class="rc-help">A reabertura devolve a reclamação para investigação e mantém a NC vinculada. Será preciso registrar uma nova conclusão e encerrar de novo.</p>
+                <form asp-action="Reabrir" method="post" data-confirm="Reabrir a reclamação @Model.Codigo? Ela volta para investigação.">
                     <input type="hidden" name="Id" value="@Model.Id" />
-                    <label class="form-label" for="Justificativa">Justificativa</label>
+                    <label class="form-label required" for="Justificativa">Justificativa (mínimo de 10 caracteres)</label>
                     <textarea class="form-control" id="Justificativa" name="Justificativa" rows="3" minlength="10" maxlength="2000" required></textarea>
-                    <button class="btn btn-outline-danger mt-3" type="submit">Reabrir reclamação</button>
+                    <div class="form-actions mt-3"><button class="btn btn-outline-danger" type="submit">Reabrir reclamação</button></div>
                 </form>
-            </div>
-        }
-
-        @if (Model.Status == StatusReclamacao.EmInvestigacao)
-        {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Laboratório externo</h2>
-                <form asp-action="SolicitarLaboratorio" method="post" class="row g-2">
-                    <input type="hidden" name="Id" value="@Model.Id" />
-                    <div class="col-md-6"><input name="Laboratorio" class="form-control" placeholder="Laboratório responsável" required /></div>
-                    <div class="col-md-4"><input name="DataEnvioAmostra" type="date" class="form-control" required /></div>
-                    <div class="col-md-2"><button class="btn btn-outline-primary">Solicitar</button></div>
-                </form>
-            </div>
-        }
-
-        @if (Model.Status == StatusReclamacao.AguardandoLaboratorioExterno)
-        {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Resultado do laboratório</h2>
-                <p>Envie o laudo como anexo crítico e depois registre o resultado.</p>
-                <form asp-action="RegistrarResultadoLaboratorio" method="post" class="row g-2">
-                    <input type="hidden" name="Id" value="@Model.Id" />
-                    <div class="col-md-3"><input name="DataRecebimento" type="date" class="form-control" required /></div>
-                    <div class="col-md-4"><input name="IdentificacaoLaudo" class="form-control" placeholder="Identificação do laudo" required /></div>
-                    <div class="col-md-5"><input name="Resultado" class="form-control" placeholder="Resultado" required /></div>
-                    <div class="col-12"><button class="btn btn-primary">Registrar resultado</button></div>
-                </form>
-            </div>
+            </section>
         }
 
         @if (Model.ReabertaEm.HasValue)
         {
-            <div class="card shadow-sm border-0 p-4">
-                <h2 class="h5 mb-3">Última reabertura</h2>
-                <p class="mb-1">@Model.JustificativaReabertura</p>
-                <p class="mb-0 text-muted">Por @Model.UsuarioReabertura em @Model.ReabertaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"). Status anterior: @Model.StatusAnteriorReabertura.</p>
-            </div>
+            <section class="panel rc-panel" aria-labelledby="titulo-reaberta">
+                <h2 id="titulo-reaberta">Última reabertura</h2>
+                <p class="rc-text">@Model.JustificativaReabertura</p>
+                <p class="text-muted small mb-0 mt-2">Por @Model.UsuarioReabertura em @Model.ReabertaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")@(Model.StatusAnteriorReabertura.HasValue ? $". Situação anterior: {Model.StatusAnteriorReabertura.Rotulo()}" : "").</p>
+            </section>
+        }
+
+        @if (podeProrrogar && !encerrada && Model.DataAlvo.HasValue)
+        {
+            <section class="panel rc-panel" aria-labelledby="titulo-prorrogar">
+                <details class="rc-details">
+                    <summary id="titulo-prorrogar">Prorrogar prazo (GQ ou RT)</summary>
+                    <p class="rc-help">Prazo atual: <strong>@Model.DataAlvo.Value.ToString("dd/MM/yyyy")</strong>. A nova data deve ser posterior e o motivo fica registrado no histórico.</p>
+                    <form asp-action="Prorrogar" method="post" data-confirm="Prorrogar o prazo desta reclamação? O motivo ficará registrado no histórico.">
+                        <input type="hidden" name="Id" value="@Model.Id" />
+                        <div class="form-grid">
+                            <div class="span-4"><label class="form-label required" for="NovaData">Nova data</label><input name="NovaData" id="NovaData" type="date" class="form-control" min="@Model.DataAlvo.Value.AddDays(1).ToString("yyyy-MM-dd")" required /></div>
+                            <div class="span-8"><label class="form-label required" for="Motivo">Motivo (mínimo de 10 caracteres)</label><input name="Motivo" id="Motivo" class="form-control" minlength="10" maxlength="2000" required /></div>
+                            <div class="span-8"><label class="form-label" for="RegistroComunicacaoCliente">Como o cliente foi avisado</label><input name="RegistroComunicacaoCliente" id="RegistroComunicacaoCliente" class="form-control" maxlength="1000" placeholder="Ex.: e-mail enviado em 10/10" /></div>
+                            <div class="span-4 rc-check-field"><label for="clienteComunicado"><input name="ClienteComunicado" value="true" type="checkbox" class="form-check-input" id="clienteComunicado" /> Cliente comunicado</label></div>
+                        </div>
+                        <div class="form-actions mt-3"><button class="btn btn-outline-primary" type="submit">Registrar prorrogação</button></div>
+                    </form>
+                </details>
+            </section>
         }
     </div>
 
-    <div class="col-lg-4 d-flex flex-column gap-4">
-        <div class="card shadow-sm border-0 p-4">
-            <h2 class="h5 mb-3">Registro</h2>
-            <p class="mb-2"><strong>Recebimento:</strong><br />@Model.DataRecebimento.ToString("dd/MM/yyyy")</p>
-            @if (Model.DataAlvo.HasValue) { <p class="mb-2"><strong>Data-alvo:</strong><br />@Model.DataAlvo.Value.ToString("dd/MM/yyyy")</p> }
-            <p class="mb-2"><strong>Canal:</strong><br />@Model.CanalRecebimento</p>
-            <p class="mb-0"><strong>Criado por:</strong><br />@Model.UsuarioAbertura</p>
-        </div>
-    </div>
+    <aside class="rc-side" aria-label="Registro">
+        <section class="panel rc-panel">
+            <h2>Registro</h2>
+            <dl class="dl-grid">
+                <div>
+                    <dt>Classificação</dt>
+                    <dd>
+                        @Html.StatusBadge(Model.Classificacao)
+                        @if (gq && !encerrada && !emValidacao)
+                        {
+                            <details class="rc-side-change">
+                                <summary>Alterar classificação</summary>
+                                <form asp-action="Classificar" asp-route-id="@Model.Id" method="post" class="rc-inline-form">
+                                    <div>
+                                        <label class="visually-hidden" for="classificacao-alterar">Nova classificação</label>
+                                        <select class="form-select" id="classificacao-alterar" name="classificacao">
+                                            @foreach (var opcao in opcoesClassificacao) { <option value="@opcao.Value" selected="@(Model.Classificacao.HasValue && opcao.Value == Model.Classificacao.Value.ToString())">@opcao.Text</option> }
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-outline-primary" type="submit">Alterar</button>
+                                </form>
+                            </details>
+                        }
+                    </dd>
+                </div>
+                <div><dt>Recebimento</dt><dd>@Model.DataRecebimento.ToString("dd/MM/yyyy")</dd></div>
+                <div><dt>Prazo</dt><dd>@Html.PrazoChipHtml(Model.DataAlvo, encerrada)</dd></div>
+                <div><dt>Canal de recebimento</dt><dd>@Model.CanalRecebimento</dd></div>
+                <div><dt>Criada por</dt><dd>@Model.UsuarioAbertura<span class="cell-sub text-muted small d-block">em @Model.CriadaEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span></dd></div>
+                @if (Model.ValidadaEm.HasValue)
+                {
+                    <div><dt>Validada por</dt><dd>@Model.UsuarioValidacao<span class="text-muted small d-block">em @Model.ValidadaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span></dd></div>
+                }
+                @if (Model.EncerradaEm.HasValue)
+                {
+                    <div><dt>Encerrada por</dt><dd>@Model.UsuarioEncerramento<span class="text-muted small d-block">em @Model.EncerradaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span></dd></div>
+                }
+            </dl>
+        </section>
+    </aside>
 </div>
 
 <partial name="_Anexos" model='("Reclamacoes", Model.Id)' />
-<partial name="_ProrrogacaoPrazo" model='("Prorrogar", Model.Id, Model.DataAlvo)' />
 <partial name="_HistoricoAuditoria" model='(IEnumerable<SGQ.Web.Models.HistoricoAuditoria>)ViewBag.HistoricoAuditoria' />
