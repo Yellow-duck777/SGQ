@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
+using SGQ.Web.Presentation;
 using SGQ.Web.Security;
 using SGQ.Web.Services;
 
@@ -26,7 +27,11 @@ if (builder.Environment.IsDevelopment())
 
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
-    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    // Aceita "150.5" (campos number do navegador) e "150,5" (digitação em pt-BR) sem depender da cultura do servidor.
+    options.ModelBinderProviders.Insert(0, new DecimalFlexivelBinderProvider());
+});
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPrazoService, PrazoService>();

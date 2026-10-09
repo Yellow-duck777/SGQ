@@ -288,7 +288,8 @@ h1, h2, h3, strong, .btn { letter-spacing: -.015em; }
 .file-picker-input:focus-visible + .file-picker-button { outline: 3px solid rgba(26,103,59,.35); outline-offset: 2px; }
 .file-picker-button { flex: 0 0 auto; margin: 0; cursor: pointer; }
 .file-picker-name { min-width: 0; overflow: hidden; color: var(--muted); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
-.check-inline { display: inline-flex; align-items: center; gap: .45rem; margin: 0; font-size: .84rem; font-weight: 600; white-space: nowrap; }
+.check-inline { display: inline-flex; align-items: flex-start; gap: .45rem; margin: 0; font-size: .84rem; font-weight: 600; }
+.check-inline > input { margin-top: .2rem; flex: 0 0 auto; }
 .file-list { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none; }
 .file-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem 1rem; align-items: center; padding: .85rem 1rem; background: #fff; border: 1px solid var(--line); border-radius: .7rem; }
 .file-item.is-void { background: #f6f7f6; opacity: .75; }
