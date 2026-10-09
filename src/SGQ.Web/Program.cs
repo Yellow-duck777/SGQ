@@ -31,6 +31,9 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
     // Aceita "150.5" (campos number do navegador) e "150,5" (digitação em pt-BR) sem depender da cultura do servidor.
     options.ModelBinderProviders.Insert(0, new DecimalFlexivelBinderProvider());
+    // Mensagens de validação e de model binding em português, inclusive os "obrigatórios implícitos".
+    options.ModelMetadataDetailsProviders.Add(new ValidacaoEmPortuguesProvider());
+    ValidacaoEmPortuguesProvider.ConfigurarMensagensDeBinding(options);
 });
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
