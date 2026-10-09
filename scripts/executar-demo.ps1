@@ -134,9 +134,9 @@ $cadeia = "Host=$Servidor;Port=$Porta;Database=$Banco;Username=$Usuario"
 if ($senhaPg) { $cadeia += ";Password=$senhaPg" }
 $env:ASPNETCORE_ENVIRONMENT = "Development"
 $env:ConnectionStrings__DefaultConnection = $cadeia
-# Neutraliza o administrador de desenvolvimento dos seus User Secrets (SeedAdmin), para o banco de demonstração conter só as contas listadas abaixo.
-$env:SeedAdmin__Email = ""
-$env:SeedAdmin__Password = ""
+# Neutraliza o administrador de desenvolvimento dos seus User Secrets (SeedAdmin). Valor em branco (um espaço), pois no PowerShell atribuir "" apaga a variável e o segredo voltaria a valer, para o banco de demonstração conter só as contas listadas abaixo.
+$env:SeedAdmin__Email = " "
+$env:SeedAdmin__Password = " "
 $env:DevelopmentTestUsers__Enabled = "true"
 $env:DevelopmentTestUsers__ExpectedDatabase = $Banco
 $contas = @(

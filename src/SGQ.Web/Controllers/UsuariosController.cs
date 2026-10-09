@@ -44,11 +44,35 @@ public class UsuariosController(UserManager<ApplicationUser> userManager) : Cont
             return RedirectToAction(nameof(Index));
         }
 
-        if (remover.Length > 0) await userManager.RemoveFromRolesAsync(user, remover);
-        if (adicionar.Length > 0) await userManager.AddToRolesAsync(user, adicionar);
+        if (remover.Length > 0)
+        {
+            var remocao = await userManager.RemoveFromRolesAsync(user, remover);
+            if (!remocao.Succeeded) return FalhaAoAtualizarPerfis(user, remocao);
+        }
+        if (adicionar.Length > 0)
+        {
+            var inclusao = await userManager.AddToRolesAsync(user, adicionar);
+            if (!inclusao.Succeeded) return FalhaAoAtualizarPerfis(user, inclusao);
+        }
+
+        // Verificação final contra corrida: dois Administradores removendo o perfil um do outro ao mesmo tempo
+        // passariam juntos pela checagem acima. Se o sistema ficou sem Administrador, devolve o perfil a esta conta.
+        if (remover.Contains(Roles.Administrador) && (await userManager.GetUsersInRoleAsync(Roles.Administrador)).Count == 0)
+        {
+            await userManager.AddToRoleAsync(user, Roles.Administrador);
+            TempData["Error"] = $"O perfil Administrador de {user.Email} foi mantido: o sistema não pode ficar sem Administrador.";
+            return RedirectToAction(nameof(Index));
+        }
+
         TempData["Success"] = desejados.Length == 0
             ? $"Perfis de {user.Email} removidos. A conta ficará bloqueada até que um perfil seja atribuído."
             : $"Perfis de {user.Email} atualizados.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private IActionResult FalhaAoAtualizarPerfis(ApplicationUser user, IdentityResult resultado)
+    {
+        TempData["Error"] = $"Não foi possível atualizar os perfis de {user.Email}: {string.Join("; ", resultado.Errors.Select(erro => erro.Description))}";
         return RedirectToAction(nameof(Index));
     }
 }

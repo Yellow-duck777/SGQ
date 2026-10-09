@@ -92,10 +92,10 @@
         <div class="form-grid">
             <div class="span-4"><label asp-for="DataFabricacao" class="form-label"></label><input asp-for="DataFabricacao" class="form-control" /><span asp-validation-for="DataFabricacao" class="field-error"></span></div>
             <div class="span-4"><label asp-for="DataValidade" class="form-label"></label><input asp-for="DataValidade" class="form-control" /><span asp-validation-for="DataValidade" class="field-error"></span></div>
-            <div class="span-4"><label asp-for="QuantidadeEnvolvida" class="form-label"></label><input asp-for="QuantidadeEnvolvida" class="form-control" inputmode="decimal" /><span asp-validation-for="QuantidadeEnvolvida" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="QuantidadeEnvolvida" class="form-label"></label><input asp-for="QuantidadeEnvolvida" class="form-control" type="number" step="any" min="0" /><span asp-validation-for="QuantidadeEnvolvida" class="field-error"></span></div>
             <div class="span-12"><label asp-for="LocalAquisicao" class="form-label"></label><input asp-for="LocalAquisicao" class="form-control" maxlength="200" placeholder="Loja, distribuidor ou outro ponto de compra" /><span asp-validation-for="LocalAquisicao" class="field-error"></span></div>
             <div class="span-12 rc-check-field"><label for="ProdutoDisponivel"><input asp-for="ProdutoDisponivel" class="form-check-input" /> O produto reclamado está disponível para análise</label></div>
-            <div class="span-4"><label asp-for="QuantidadeDisponivel" class="form-label"></label><input asp-for="QuantidadeDisponivel" class="form-control" inputmode="decimal" /><span asp-validation-for="QuantidadeDisponivel" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="QuantidadeDisponivel" class="form-label"></label><input asp-for="QuantidadeDisponivel" class="form-control" type="number" step="any" min="0" /><span asp-validation-for="QuantidadeDisponivel" class="field-error"></span></div>
             <div class="span-4"><label asp-for="VolumeDisponivel" class="form-label"></label><input asp-for="VolumeDisponivel" class="form-control" maxlength="100" placeholder="Ex.: 2 frascos de 100 mL" /><span asp-validation-for="VolumeDisponivel" class="field-error"></span></div>
         </div>
     </section>

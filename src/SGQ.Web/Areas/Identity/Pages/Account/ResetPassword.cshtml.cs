@@ -45,13 +45,20 @@ public class ResetPasswordModel(UserManager<ApplicationUser> userManager, IOptio
         if (!ModelState.IsValid) return Page();
 
         var usuario = await userManager.FindByEmailAsync(Input.Email);
-        // Conta inexistente recebe a mesma resposta de sucesso: não revela quais e-mails existem.
-        if (usuario is null) return RedirectToPage("./ResetPasswordConfirmation");
+        // Conta inexistente e link inválido recebem exatamente a mesma resposta: não revela quais e-mails existem.
+        if (usuario is null)
+        {
+            ModelState.AddModelError(string.Empty, "O link de redefinição é inválido ou expirou. Solicite um novo.");
+            return Page();
+        }
 
         var resultado = await userManager.ResetPasswordAsync(usuario, Input.Code, Input.Password);
         if (resultado.Succeeded) return RedirectToPage("./ResetPasswordConfirmation");
 
-        foreach (var erro in resultado.Errors) ModelState.AddModelError(string.Empty, erro.Description);
+        // Erro de token também vira a mensagem genérica; erros de política de senha são mostrados porque só quem tem o token os vê.
+        var tokenInvalido = resultado.Errors.Any(erro => erro.Code == nameof(IdentityErrorDescriber.InvalidToken));
+        if (tokenInvalido) ModelState.AddModelError(string.Empty, "O link de redefinição é inválido ou expirou. Solicite um novo.");
+        else foreach (var erro in resultado.Errors) ModelState.AddModelError(string.Empty, erro.Description);
         return Page();
     }
 

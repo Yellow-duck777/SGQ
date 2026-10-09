@@ -36,7 +36,7 @@ public class RegisterModel(
         {
             logger.LogInformation("Nova conta criada; aguarda atribuição de perfil por um Administrador.");
             await signInManager.SignInAsync(usuario, isPersistent: false);
-            return LocalRedirect(ReturnUrl);
+            return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl : "~/");
         }
 
         foreach (var erro in resultado.Errors) ModelState.AddModelError(string.Empty, erro.Description);

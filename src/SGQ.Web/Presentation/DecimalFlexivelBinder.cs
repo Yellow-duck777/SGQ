@@ -8,7 +8,8 @@ namespace SGQ.Web.Presentation;
 /// Lê números decimais enviados com ponto ou vírgula como separador decimal, independentemente da cultura do servidor.
 /// Campos <c>type="number"</c> enviam sempre com ponto ("150.5"); em um servidor pt-BR o binder padrão interpretaria o ponto
 /// como separador de milhar e gravaria 1505. Quem digita em campo de texto pode usar vírgula ("150,5") ou o formato
-/// brasileiro completo ("1.234,5").
+/// brasileiro completo ("1.234,5"). Atenção: um único ponto é sempre decimal ("1.500" = 1,5); por isso os campos de
+/// quantidade usam <c>type="number"</c>, que nunca envia separador de milhar.
 /// </summary>
 public sealed class DecimalFlexivelBinder : IModelBinder
 {
@@ -22,8 +23,9 @@ public sealed class DecimalFlexivelBinder : IModelBinder
         var texto = valor.FirstValue?.Trim();
         if (string.IsNullOrEmpty(texto))
         {
-            // Vazio: nulo para decimal?, e erro de obrigatório (tratado pelas anotações) para decimal.
+            // Vazio: nulo para decimal?; para decimal não nulo é erro (nunca grava 0 em silêncio).
             if (bindingContext.ModelMetadata.IsReferenceOrNullableType) bindingContext.Result = ModelBindingResult.Success(null);
+            else bindingContext.ModelState.TryAddModelError(bindingContext.ModelName, "Informe um número (ex.: 150,5).");
             return Task.CompletedTask;
         }
 
@@ -45,7 +47,8 @@ public sealed class DecimalFlexivelBinder : IModelBinder
                 : texto.Replace(",", "");
         }
         else if (temVirgula) normalizado = texto.Replace(',', '.');
-        else normalizado = texto; // somente ponto (formato do navegador) ou inteiro
+        else if (texto.Count(c => c == '.') > 1) normalizado = texto.Replace(".", ""); // 1.234.567: pontos só podem ser milhar
+        else normalizado = texto; // um único ponto (formato do navegador, campo number) ou inteiro
 
         return decimal.TryParse(normalizado, NumberStyles.Number, CultureInfo.InvariantCulture, out numero);
     }

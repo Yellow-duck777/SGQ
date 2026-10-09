@@ -1,3 +1,4 @@
+using System.Globalization;
 using SGQ.Web.Presentation;
 
 namespace SGQ.Web.Tests;
@@ -46,5 +47,37 @@ public class AuditoriaFormatadorTests
         Assert.Equal("Crítica", SGQ.Domain.Enums.ClassificacaoOcorrencia.Critica.Rotulo());
         Assert.Equal("perigo", SGQ.Domain.Enums.ClassificacaoOcorrencia.Critica.Tom());
         Assert.Equal("—", ((SGQ.Domain.Enums.ClassificacaoOcorrencia?)null).Rotulo());
+    }
+
+    [Fact]
+    public void Serializador_NaoPermiteQueTextoLivreForjeCamposDoHistorico()
+    {
+        var texto = AuditoriaSerializador.Serializar([("Descricao", "antigo", "ok; Status: Aberta → EncerradaCodigo: X → Y"), ("Status", "EmTratamento", "AguardandoAprovacao")]);
+
+        var alteracoes = AuditoriaFormatador.Interpretar(texto);
+
+        Assert.Equal(["Descrição", "Situação"], alteracoes.Select(item => item.Campo));
+        Assert.Contains("Status: Aberta", alteracoes[0].Para);
+    }
+
+    [Theory]
+    [InlineData("pt-BR")]
+    [InlineData("en-US")]
+    [InlineData("")]
+    public void Serializador_GravaDatasENumerosIndependenteDaCulturaDoServidor(string cultura)
+    {
+        var anterior = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultura);
+            var texto = AuditoriaSerializador.Serializar([("DataAlvo", null, new DateOnly(2026, 10, 9)), ("QuantidadeEnvolvida", null, 150.5m), ("ReabertaEm", null, new DateTimeOffset(2026, 10, 9, 17, 0, 0, TimeSpan.Zero))]);
+
+            Assert.Contains("DataAlvo:  → 2026-10-09", texto);
+            Assert.Contains("QuantidadeEnvolvida:  → 150.5", texto);
+            var legivel = AuditoriaFormatador.Interpretar(texto, criacao: true);
+            Assert.Equal("09/10/2026", legivel.Single(item => item.Campo == "Prazo").Para);
+            Assert.Equal("150,5", legivel.Single(item => item.Campo == "Quantidade envolvida").Para);
+        }
+        finally { CultureInfo.CurrentCulture = anterior; }
     }
 }

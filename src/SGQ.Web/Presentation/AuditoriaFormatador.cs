@@ -54,8 +54,12 @@ public static partial class AuditoriaFormatador
     public static IReadOnlyList<AlteracaoLegivel> Interpretar(string? alteracoes, bool criacao = false)
     {
         if (string.IsNullOrWhiteSpace(alteracoes)) return [];
+        var estruturado = alteracoes[0] == AuditoriaSerializador.Marcador;
+        var trechos = estruturado
+            ? alteracoes[1..].Split(AuditoriaSerializador.SeparadorDeCampos)
+            : SeparadorDeCampos().Split(alteracoes); // formato legado: campos separados por "; "
         var lista = new List<AlteracaoLegivel>();
-        foreach (var trecho in SeparadorDeCampos().Split(alteracoes))
+        foreach (var trecho in trechos)
         {
             var doisPontos = trecho.IndexOf(": ", StringComparison.Ordinal);
             if (doisPontos <= 0) continue;
@@ -72,7 +76,7 @@ public static partial class AuditoriaFormatador
             if (criacao && string.IsNullOrEmpty(depois)) continue;
             if (criacao && depois is "False" or "0") continue;
 
-            lista.Add(new AlteracaoLegivel(NomeDoCampo(campo), criacao ? null : Formatar(antes), Formatar(depois)));
+            lista.Add(new AlteracaoLegivel(NomeDoCampo(campo), criacao ? null : Formatar(antes, estruturado), Formatar(depois, estruturado)));
         }
         return lista;
     }
@@ -86,15 +90,31 @@ public static partial class AuditoriaFormatador
         _ => acao
     };
 
-    private static string? Formatar(string valor)
+    private static string? Formatar(string valor, bool estruturado)
     {
         if (string.IsNullOrEmpty(valor)) return null;
         if (valor is "True") return "Sim";
         if (valor is "False") return "Não";
-        if (DateTimeOffset.TryParse(valor, CultureInfo.GetCultureInfo("pt-BR"), DateTimeStyles.None, out var data) && valor.Contains(':') && valor.Contains('/'))
-            return data.ToLocalTime().ToString("dd/MM/yyyy HH:mm", CultureInfo.GetCultureInfo("pt-BR"));
+        var ptBr = CultureInfo.GetCultureInfo("pt-BR");
+        if (estruturado)
+        {
+            // Formato novo: datas em ISO 8601 e números com ponto, independentes da cultura do servidor que gravou.
+            if (DataIso().IsMatch(valor)) return DateOnly.ParseExact(valor, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("dd/MM/yyyy", ptBr);
+            if (DataHoraIso().IsMatch(valor) && DateTimeOffset.TryParse(valor, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dataHora))
+                return dataHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm", ptBr);
+            if (valor.Contains('.') && decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var numero))
+                return numero.ToString("0.####", ptBr);
+        }
+        else if (DateTimeOffset.TryParse(valor, ptBr, DateTimeStyles.None, out var data) && valor.Contains(':') && valor.Contains('/'))
+            return data.ToLocalTime().ToString("dd/MM/yyyy HH:mm", ptBr);
         return EnumRotulos.RotuloPorNome(valor);
     }
+
+    [GeneratedRegex(@"^\d{4}-\d{2}-\d{2}$")]
+    private static partial Regex DataIso();
+
+    [GeneratedRegex(@"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}")]
+    private static partial Regex DataHoraIso();
 
     private static string SepararPalavras(string texto) =>
         char.ToUpperInvariant(texto[0]) + SeparadorDeMaiusculas().Replace(texto[1..], " $1").ToLowerInvariant();

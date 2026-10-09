@@ -127,13 +127,3 @@ else
     <p class="rc-result-info" aria-live="polite">Exibindo @itens.Count reclamação(ões).</p>
 }
 
-@section Scripts {
-    <script>
-        document.querySelectorAll('.rc-table tbody tr[data-href]').forEach(function (linha) {
-            linha.addEventListener('click', function (e) {
-                if (e.target.closest('a, button, input, select')) return;
-                window.location.href = linha.dataset.href;
-            });
-        });
-    </script>
-}

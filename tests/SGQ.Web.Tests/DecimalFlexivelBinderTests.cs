@@ -13,6 +13,7 @@ public class DecimalFlexivelBinderTests
     [InlineData("1000", 1000)]
     [InlineData("0,25", 0.25)]
     [InlineData("12", 12)]
+    [InlineData("1.234.567", 1234567)]
     public void TentarConverter_AceitaPontoOuVirgulaIndependenteDaCultura(string texto, double esperado)
     {
         var culturaAnterior = CultureInfo.CurrentCulture;
