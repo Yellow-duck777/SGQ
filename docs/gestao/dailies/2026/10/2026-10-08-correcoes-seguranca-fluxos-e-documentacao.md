@@ -19,7 +19,7 @@ A integração da linha de governança com a linha funcional deixou a documenta�
 
 ## Critérios de aceite
 
-- [x] Conta autenticada sem perfil recebe 403 em todas as rotas de negócio (política de fallback; sem teste automatizado, pois exige teste de integração com PostgreSQL, ver DEM-2026-117).
+- [x] Conta autenticada sem perfil recebe 403 em todas as rotas de negócio (política padrão e de fallback), com teste de integração em PostgreSQL real (ver Errata).
 - [x] `AvancarStatus` não existe mais; `Classificar` só aceita GQ e Administrador, somente com a reclamação em andamento (nem rascunho nem encerrada), e rejeita valores de enum inválidos; `Validar` valida a classificação.
 - [x] A auditoria não grava entidades do Identity; a migration `LimpaAuditoriaIdentity` remove os registros antigos.
 - [x] NC e Recall: reabertura e novas rodadas de aprovação zeram decisão do CQ, reprovações e aprovações.
@@ -31,6 +31,10 @@ A integração da linha de governança com a linha funcional deixou a documenta�
 - [x] `App_Data/` consta no `.gitignore`.
 - [x] Cada correção tem teste automatizado.
 - [x] Matriz de rastreabilidade, README, banco, segurança, ADRs e backlog refletem o código; `markdownlint-cli2` e a verificação de links sem erro.
+
+## Errata
+
+A correção do acesso por perfil entregue no PR #3 definia só a política de fallback. Um `[Authorize]` simples (usado pelos controllers) ignora o fallback e usa a política padrão, então contas sem perfil continuaram acessando os módulos. O defeito foi encontrado pelo novo teste de integração (`AutenticadoSemPerfil_RecebeAcessoNegado`) e corrigido definindo a mesma política como padrão e como fallback em `Program.cs`. A revisão e os testes unitários de controller não o detectaram; por isso a verificação contra o pipeline real passou a fazer parte da demanda.
 
 ## Escopo
 
@@ -56,11 +60,11 @@ A integração da linha de governança com a linha funcional deixou a documenta�
 
 ## Riscos
 
-- A migration `LimpaAuditoriaIdentity` apaga registros de auditoria de forma irreversível.
+- A migration `LimpaAuditoriaIdentity` altera registros de auditoria de forma irreversível (`Down` vazio); faça backup antes de aplicar (ver [checklist de publicação](../../../../desenvolvimento/publicacao-checklist.md)).
 - A migration `AddParecerUsuariosRtGq` não preenche pareceres já registrados; processos em andamento sem usuário de parecer precisam de nova rodada de aprovação.
-- A política de fallback bloqueia contas existentes sem perfil; um Administrador precisa atribuir perfis antes do uso.
+- A política padrão e de fallback bloqueia contas existentes sem perfil; a inicialização registra um aviso listando a quantidade de contas sem perfil e um Administrador precisa atribuir perfis antes do uso.
 - O snapshot do EF citava `SGQ.Web.Models.*` em entidades já movidas para `SGQ.Domain.Entities`; foi regenerado com as migrations desta demanda e `dotnet ef migrations has-pending-model-changes` não acusa pendências.
-- Os testes usam EF InMemory e não provam constraints do PostgreSQL.
+- Os testes de `SGQ.Web.Tests` usam EF InMemory; as restrições do PostgreSQL e a política de acesso são cobertas por `SGQ.IntegrationTests`, que simula a autenticação por esquema de teste com cabeçalhos e não exercita o fluxo de login por cookie.
 - Decisão da Qualidade pendente: matriz papel x ação, quem reabre a RC e perfis adicionais.
 
 ## Plano
@@ -88,13 +92,14 @@ npx --yes markdownlint-cli2@0.18.1
 - `dotnet test SGQ.slnx`: 51 aprovados (3 arquitetura, 48 Web, dos quais 26 novos desta demanda).
 - `dotnet ef migrations has-pending-model-changes`: sem pendências.
 - `npx markdownlint-cli2@0.18.1`: 0 erros em 54 arquivos.
-- Limitação: não havia PostgreSQL local; o SQL das migrations foi gerado e inspecionado (`dotnet ef migrations script`), mas não executado contra um banco.
+- `SGQ.IntegrationTests` (PostgreSQL 17.11 real, variável `SGQ_TEST_PG`): 31 testes cobrindo acesso por perfil e banco; as migrations `AddParecerUsuariosRtGq` e `LimpaAuditoriaIdentity` foram executadas em banco vazio (todas as migrations) e em banco existente com auditoria contendo `PasswordHash`, `SecurityStamp`, `ConcurrencyStamp` e tokens: os segredos foram mascarados, as linhas de `IdentityUserToken` e `IdentityUserLogin` apagadas, o restante da auditoria preservado e as 4 colunas `UsuarioParecer*` criadas.
+- Limitação: a autenticação dos testes de integração é simulada; o fluxo de login por cookie não é exercitado.
 - Capturas ou gravações sem dados reais: _a preencher_
 - PR: _a preencher_
 
 ## Bloqueios e decisões
 
-- Matriz papel x ação, perfis adicionais e quem reabre a RC aguardam a Qualidade; não foram inventados.
+- Matriz papel x ação, perfis adicionais, quem reabre a RC e demais pendências aguardam a Qualidade e o time; ver [decisões pendentes](../../../decisoes-pendentes.md). Nada foi inventado.
 
 ## Encerramento
 

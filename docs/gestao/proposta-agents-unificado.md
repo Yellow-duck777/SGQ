@@ -1,6 +1,6 @@
 # Proposta de AGENTS.md unificado
 
-Este documento propõe a estrutura de um único `AGENTS.md`, combinando a versão de governança (daily obrigatória, requisitos `Validado`, commits com confirmação) com a versão didática do `origin/main` (explicar tudo, uma etapa por vez). Ele não substitui o `AGENTS.md`: serve para revisão do responsável técnico e do Caio antes da aplicação.
+Este documento propõe a estrutura de um único `AGENTS.md`, combinando a versão de governança (daily obrigatória, requisitos `Validado`, commits com confirmação) com a versão didática do `origin/main` (explicar tudo, uma etapa por vez). Esta proposta já foi aplicada no [AGENTS.md](../../AGENTS.md) (PR de integração com PostgreSQL e CI); o documento fica como registro das decisões de unificação. O responsável técnico e o Caio devem revisar o `AGENTS.md` resultante.
 
 ## O que cada versão tem de útil
 

@@ -23,6 +23,7 @@ Este diretório é a fonte versionada de produto, arquitetura, desenvolvimento, 
 ## Desenvolvimento
 
 - [Ambiente local](desenvolvimento/ambiente-local.md)
+- [Checklist de publicação](desenvolvimento/publicacao-checklist.md)
 - [Usuários de teste em Development](usuarios-teste-development.md)
 - [Padrões de código](desenvolvimento/padroes-codigo.md)
 - [Tutorial de commit](desenvolvimento/tutorial-commit.md)
@@ -32,6 +33,7 @@ Este diretório é a fonte versionada de produto, arquitetura, desenvolvimento, 
 
 - [Roadmap](gestao/roadmap.md)
 - [Backlog](gestao/backlog.md)
+- [Decisões pendentes (Qualidade e time)](gestao/decisoes-pendentes.md)
 - [Planejamento histórico de entregas](03-planejamento-desenvolvimento.md)
 - [Proposta de AGENTS.md unificado](gestao/proposta-agents-unificado.md)
 - [Desenho do programa de evolução](gestao/planos/2026-09-22-evolucao-completa-sgq-design.md)

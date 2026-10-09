@@ -54,12 +54,16 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Toda rota exige usuário autenticado COM perfil reconhecido. Uma conta recém-cadastrada fica sem acesso
-// até que um Administrador atribua um perfil. Páginas públicas precisam de [AllowAnonymous] explícito.
+// até que um Administrador atribua um perfil. A mesma política vale como padrão (para [Authorize] simples,
+// usado pelos controllers) e como fallback (para rotas sem atributo). Páginas públicas precisam de
+// [AllowAnonymous] explícito; [Authorize(Roles = ...)] continua restringindo por perfil específico.
+var politicaPerfilReconhecido = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .RequireRole(Roles.Todos)
+    .Build();
 builder.Services.AddAuthorizationBuilder()
-    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .RequireRole(Roles.Todos)
-        .Build());
+    .SetDefaultPolicy(politicaPerfilReconhecido)
+    .SetFallbackPolicy(politicaPerfilReconhecido);
 
 var app = builder.Build();
 
@@ -90,6 +94,12 @@ await using (var scope = app.Services.CreateAsyncScope())
             if (user is not null) await userManager.AddToRoleAsync(user, Roles.Administrador);
         }
     }
+
+    // Contas sem perfil não acessam nada (política global). Avisa na inicialização para o Administrador agir.
+    var contasSemPerfil = await db.Users.CountAsync(usuario => !db.UserRoles.Any(papel => papel.UserId == usuario.Id));
+    if (contasSemPerfil > 0)
+        scope.ServiceProvider.GetRequiredService<ILogger<Program>>().LogWarning(
+            "{Quantidade} conta(s) sem perfil estão bloqueadas. Um Administrador deve atribuir perfis em Usuários.", contasSemPerfil);
 }
 
 if (app.Environment.IsDevelopment())
@@ -121,3 +131,6 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+
+// Necessário para que os testes de integração (WebApplicationFactory) enxerguem o ponto de entrada.
+public partial class Program;

@@ -16,4 +16,4 @@ Cada ADR contém contexto, decisão, alternativas, consequências e data. ADR ac
 - [ADR 0008 — Decisão do CQ em divergência](0008-decisao-cq-divergencia.md)
 - [ADR 0009 — Vínculos múltiplos de anexos](0009-vinculos-multiplos-anexos.md)
 - [ADR 0010 — Auditoria via SaveChanges](0010-auditoria-savechanges.md)
-- [ADR 0011 — Autorização por perfis, política de fallback e segregação RT/GQ](0011-autorizacao-perfis-segregacao.md)
+- [ADR 0011 — Autorização por perfis, política padrão e de fallback e segregação RT/GQ](0011-autorizacao-perfis-segregacao.md)

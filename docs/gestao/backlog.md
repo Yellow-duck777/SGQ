@@ -4,6 +4,8 @@ Use identificadores `DEM-AAAA-NNN`. Uma demanda só entra em desenvolvimento qua
 
 Numeração: 001–009 fundação e correções; 010–060 módulos; 101 em diante pendências identificadas na auditoria de 2026-10-08.
 
+Decisões que dependem da Qualidade e do time estão consolidadas em [decisões pendentes](decisoes-pendentes.md) (D1 a D10).
+
 ## Lembrete: reverificar armazenamento de anexos
 
 Antes de qualquer publicação em produção, reverificar com o Caio e o time a decisão entre disco (`App_Data/uploads`, atual), `bytea` no PostgreSQL (intenção original) e armazenamento de objetos. Medir backup, restauração e crescimento. Ver DEM-2026-102 e o [ADR 0002](../arquitetura/decisoes/0002-anexos-postgresql.md).
@@ -14,12 +16,12 @@ Antes de qualquer publicação em produção, reverificar com o Caio e o time a 
 | --- | --- | --- | --- |
 | DEM-2026-001 | Organizar documentação e governança | Implementado | Nenhuma |
 | DEM-2026-002 | Separar solução em camadas (primeira fatia) | Implementado | DEM-2026-001 |
-| DEM-2026-003 | Criar pirâmide de testes e CI | Parcial (testes de fluxo e arquitetura existem; sem CI, sem PostgreSQL real) | DEM-2026-002 |
+| DEM-2026-003 | Criar pirâmide de testes e CI | Parcial (CI com build, testes e markdownlint, e testes de integração em PostgreSQL real criados; faltam cobertura, varredura de segredos e dependências e E2E) | DEM-2026-002 |
 | DEM-2026-004 | Consolidar modelo e migrations (FK de usuário, auditoria imutável, `snake_case`) | Proposto | DEM-2026-002 |
-| DEM-2026-005 | Endurecer autenticação e autorização | Parcial (perfis, lockout, fallback e segregação feitos; faltam aprovação de conta e confirmação de e-mail) | DEM-2026-003 e 004 |
+| DEM-2026-005 | Endurecer autenticação e autorização | Parcial (perfis, lockout, política padrão e de fallback e segregação feitos; faltam aprovação de conta e confirmação de e-mail) | DEM-2026-003 e 004 |
 | DEM-2026-006 | Criar design system, login e sidebar | Implementado | DEM-2026-005 |
 | DEM-2026-007 | Concluir a separação em camadas (casos de uso e persistência; hoje `Application` e `Infrastructure` estão vazios e 10 controllers usam o `DbContext`) | Proposto | DEM-2026-002 e 003 |
-| DEM-2026-008 | Correções de segurança e fluxos e atualização da documentação (esta branch) | Em andamento | Nenhuma |
+| DEM-2026-008 | Correções de segurança e fluxos e atualização da documentação (PRs #2 e #3 mesclados; errata da política padrão corrigida na branch de testes de integração) | Implementado | Nenhuma |
 
 ## Módulos
 
@@ -57,7 +59,8 @@ Antes de qualquer publicação em produção, reverificar com o Caio e o time a 
 | DEM-2026-114 | Consolidação de migrations antes da produção, preservando `Ativo = true` dos anexos (risco de `AddAnexoCriticalidade`) | Proposto |
 | DEM-2026-115 | MFA (TOTP) e autenticação recente para ações críticas | Proposto |
 | DEM-2026-116 | CD e publicação (Docker, proxy HTTPS, homologação) | Proposto |
-| DEM-2026-117 | Testes com PostgreSQL real (Testcontainers), autorização via HTTP e E2E | Proposto |
+| DEM-2026-118 | Classificação alterada após a validação: justificativa obrigatória e propagação para a NC vinculada (decisão D9) | Proposto |
+| DEM-2026-117 | Testes com PostgreSQL real, autorização via HTTP e E2E | Parcial (`SGQ.IntegrationTests` com acesso por perfil e banco, autenticação simulada; faltam concorrência, carga, login por cookie e E2E com navegador) |
 
 ## Entrada de ideias
 

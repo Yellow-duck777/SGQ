@@ -17,7 +17,7 @@ Perfis implementados: Administrador, GQ, RT, CQ e Auditor. Os requisitos e o des
 
 | Controle | Estado |
 | --- | --- |
-| autenticação obrigatória por padrão (política de fallback; conta sem perfil recebe 403) | Implementado (DEM-2026-008) |
+| autenticação obrigatória por padrão (política padrão e de fallback; conta sem perfil recebe 403) | Implementado (DEM-2026-008) |
 | autorização no backend em transições críticas | Implementado |
 | autorização por perfil em todas as ações de escrita | Planejado (DEM-2026-101) |
 | segregação RT/GQ com usuário de cada parecer registrado | Implementado (DEM-2026-008) |

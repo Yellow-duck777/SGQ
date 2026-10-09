@@ -16,7 +16,7 @@ A documentação está indexada em [docs/README.md](docs/README.md). A situaçã
 
 O estado por requisito, incluindo lacunas, está na matriz de rastreabilidade.
 
-- Autenticação com ASP.NET Identity, bloqueio após cinco falhas e perfis Administrador, GQ, RT, CQ e Auditor. Contas sem perfil não acessam o sistema até que um Administrador atribua um perfil.
+- Autenticação com ASP.NET Identity, bloqueio após cinco falhas e perfis Administrador, GQ, RT, CQ e Auditor. Contas sem perfil não acessam o sistema até que um Administrador atribua um perfil (política padrão e de fallback).
 - Administração de usuários e perfis (somente Administrador).
 - Cadastros de clientes, produtos e lotes.
 - Numeração anual automática: `RC-AAAA-000001`, `NC-AAAA-000001` e `REC-AAAA-000001`.
@@ -46,7 +46,7 @@ Configure a conexão PostgreSQL por User Secrets:
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=sgq_dev;Username=postgres;Password=<senha-local>" --project src/SGQ.Web
 ```
 
-Primeiro administrador (qualquer ambiente): cadastre a conta pela tela de login e informe o e-mail dela. Na inicialização, a conta recebe o perfil Administrador somente se ainda não existir nenhum Administrador.
+Primeiro administrador (qualquer ambiente): cadastre a conta pela tela de login e informe o e-mail dela antes do primeiro start. Na inicialização, a conta recebe o perfil Administrador somente se ainda não existir nenhum Administrador.
 
 ```powershell
 dotnet user-secrets set "InitialAdminEmail" "<e-mail-da-conta>" --project src/SGQ.Web
@@ -76,7 +76,11 @@ Execute a aplicação:
 dotnet run --project src/SGQ.Web
 ```
 
-> Atenção: as migrations são aplicadas automaticamente na inicialização, em qualquer ambiente. Isso é aceitável apenas enquanto não houver produção; consulte o item de hardening no [backlog](docs/gestao/backlog.md). Para apresentar o sistema localmente, veja [ambiente local](docs/desenvolvimento/ambiente-local.md).
+> Atenção: as migrations são aplicadas automaticamente na inicialização, em qualquer ambiente. Isso é aceitável apenas enquanto não houver produção; consulte o item de hardening no [backlog](docs/gestao/backlog.md) e o [checklist de publicação](docs/desenvolvimento/publicacao-checklist.md). Para apresentar o sistema localmente, veja [ambiente local](docs/desenvolvimento/ambiente-local.md).
+
+## Primeiro acesso e contas sem perfil
+
+O cadastro é aberto, mas uma conta sem perfil não acessa nenhuma tela de negócio (403) até que um Administrador atribua um perfil em **Usuários**. Para o primeiro Administrador, defina `InitialAdminEmail` antes do primeiro start (promove a conta somente se ainda não existir nenhum Administrador) ou atribua o perfil pelo banco. Na inicialização, a aplicação registra um aviso com a quantidade de contas sem perfil. Detalhes em [ambiente local](docs/desenvolvimento/ambiente-local.md) e no [checklist de publicação](docs/desenvolvimento/publicacao-checklist.md).
 
 ## Desenvolvimento
 
@@ -89,13 +93,15 @@ dotnet test SGQ.slnx --no-build
 npx --yes markdownlint-cli2@0.18.1
 ```
 
+Os testes de integração usam um PostgreSQL real indicado pela variável `SGQ_TEST_PG` (conexão sem nome de banco; veja [ambiente local](docs/desenvolvimento/ambiente-local.md)); sem ela aparecem como ignorados. O CI (`.github/workflows/ci.yml`) executa build, testes com PostgreSQL 17 e `markdownlint-cli2` em cada PR.
+
 Para criar ou desativar contas locais de teste com segurança, consulte [a documentação de usuários de teste](docs/usuarios-teste-development.md). Regras de contribuição: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Próximas evoluções
 
 As demandas pendentes têm identificador no [backlog](docs/gestao/backlog.md). As principais:
 
-- integração contínua (CI) e testes de integração com PostgreSQL real;
+- testes de concorrência, carga e E2E com navegador (CI e testes de integração com PostgreSQL já existem), varredura de segredos e dependências;
 - hardening de produção (política de senha, cabeçalhos, MFA, Data Protection, migrations fora da inicialização);
 - validação de conteúdo de anexos, SHA-256, antimalware e limite de 20 anexos por registro;
 - inativação de cadastros, paginação e concorrência otimista;
