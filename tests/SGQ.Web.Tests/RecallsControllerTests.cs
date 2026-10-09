@@ -108,6 +108,22 @@ public class RecallsControllerTests
         return recall;
     }
 
+    [Fact]
+    public async Task Index_ExpoeContagemPorSituacaoSemAplicarFiltros()
+    {
+        await using var context = CriarContexto();
+        await AdicionarRecallAsync(context, StatusRecall.EmAvaliacao);
+        await AdicionarRecallAsync(context, StatusRecall.EmAvaliacao);
+        await AdicionarRecallAsync(context, StatusRecall.Encerrado);
+        var controller = CriarController(context, "gq", "GQ");
+
+        await controller.Index(null, StatusRecall.Encerrado, null, null, null, null, null, null);
+
+        var contagem = Assert.IsType<Dictionary<StatusRecall, int>>(controller.ViewBag.ContagemPorSituacao);
+        Assert.Equal(2, contagem[StatusRecall.EmAvaliacao]);
+        Assert.Equal(1, contagem[StatusRecall.Encerrado]);
+    }
+
     private static RecallsController CriarController(ApplicationDbContext context, string usuario, string perfil)
     {
         var httpContext = new DefaultHttpContext

@@ -1,6 +1,111 @@
-@model IEnumerable<SGQ.Web.ViewModels.UsuarioPerfilViewModel>
+@using Microsoft.AspNetCore.Html
 @using SGQ.Web.Security
-@{ ViewData["Title"] = "Usuários e perfis"; }
-@if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
-<div class="page-heading mb-4"><p class="eyebrow mb-1">Administração</p><h1>Usuários e perfis</h1><p class="text-muted mb-0">Atribua as responsabilidades que controlam os processos do SGQ.</p></div>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Usuário</th><th>Perfis atuais</th><th>Atualizar perfis</th></tr></thead><tbody>@foreach (var user in Model) { <tr><td><strong>@user.Email</strong><br /><small class="text-muted">@user.NomeUsuario</small></td><td>@(user.Perfis.Any() ? string.Join(", ", user.Perfis) : "Sem perfil")</td><td><form asp-action="AtualizarPerfis" method="post"><input type="hidden" name="id" value="@user.Id" /><div class="d-flex flex-wrap gap-2">@foreach (var perfil in Roles.Todos) { <div class="form-check"><input class="form-check-input" type="checkbox" name="perfis" value="@perfil" id="@($"{user.Id}-{perfil}")" checked="@user.Perfis.Contains(perfil)" /><label class="form-check-label" for="@($"{user.Id}-{perfil}")">@perfil</label></div> }<button class="btn btn-sm btn-primary">Salvar</button></div></form></td></tr> }@if (!Model.Any()) { <tr><td colspan="3" class="text-center text-muted py-4">Nenhum usuário cadastrado.</td></tr> }</tbody></table></div></div>
+@model IEnumerable<SGQ.Web.ViewModels.UsuarioPerfilViewModel>
+@{
+    ViewData["Title"] = "Usuários e perfis";
+    var usuarios = Model.ToList();
+    var semPerfil = usuarios.Where(u => u.Perfis.Count == 0).ToList();
+    var comPerfil = usuarios.Where(u => u.Perfis.Count > 0).ToList();
+
+    string Nome(string perfil) => perfil switch
+    {
+        Roles.Administrador => "Administrador",
+        Roles.GarantiaQualidade => "Garantia da Qualidade (GQ)",
+        Roles.ResponsavelTecnico => "Responsável Técnico (RT)",
+        Roles.ControleQualidade => "Controle de Qualidade (CQ)",
+        Roles.Auditor => "Auditor",
+        _ => perfil
+    };
+    string Tom(string perfil) => perfil switch
+    {
+        Roles.Administrador => "perigo",
+        Roles.GarantiaQualidade => "info",
+        Roles.ResponsavelTecnico => "sucesso",
+        Roles.ControleQualidade => "alerta",
+        _ => "neutro"
+    };
+
+    Func<SGQ.Web.ViewModels.UsuarioPerfilViewModel, IHtmlContent> formulario = @<form asp-action="AtualizarPerfis" method="post" class="usr-form" data-usr-form>
+        <input type="hidden" name="id" value="@item.Id" />
+        <fieldset class="usr-fields">
+            <legend class="visually-hidden">Perfis de @item.Email</legend>
+            @foreach (var perfil in Roles.Todos)
+            {
+                <label class="usr-check" for="@($"{item.Id}-{perfil}")"><input class="form-check-input mt-0" type="checkbox" name="perfis" value="@perfil" id="@($"{item.Id}-{perfil}")" checked="@item.Perfis.Contains(perfil)" />@Nome(perfil)</label>
+            }
+        </fieldset>
+        <button class="btn btn-primary" type="submit">Salvar perfis</button>
+    </form>;
+}
+@section Styles { <link rel="stylesheet" href="~/css/modulos/usuarios.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/modulos/usuarios.js" asp-append-version="true"></script> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Administração</p>
+        <h1>Usuários e perfis</h1>
+        <p class="page-header-lead">Perfis definem o que cada pessoa pode fazer nos processos. Quem não tem perfil não consegue usar o sistema.</p>
+    </div>
+</header>
+
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+@if (TempData["Error"] is string erro) { <div class="usr-alert-error" role="alert"><strong>Não foi possível salvar.</strong> @erro</div> }
+
+@if (semPerfil.Count > 0)
+{
+    <section class="usr-pending" aria-labelledby="titulo-pendentes">
+        <h2 id="titulo-pendentes">Aguardando atribuição de perfil (@semPerfil.Count)</h2>
+        <p>Estas contas já foram criadas, mas ficam bloqueadas até que você marque ao menos um perfil e salve.</p>
+        @foreach (var user in semPerfil)
+        {
+            <div class="usr-pending-item">
+                <div class="usr-id"><strong>@user.Email</strong>@if (!string.Equals(user.Email, user.NomeUsuario, StringComparison.OrdinalIgnoreCase)) { <small>@user.NomeUsuario</small> }</div>
+                @formulario(user)
+            </div>
+        }
+    </section>
+}
+
+<details class="panel usr-legend">
+    <summary>O que cada perfil pode fazer</summary>
+    <div class="usr-legend-body">
+        <div><h3>Administrador</h3><p>Gerencia usuários e perfis, valida e encerra reclamações, encerra não conformidades e recalls, reabre reclamações, mantém o calendário, vê os relatórios e pode decidir divergências entre RT e GQ. Não emite parecer como RT nem como GQ e não prorroga prazos.</p></div>
+        <div><h3>Garantia da Qualidade (GQ)</h3><p>Valida e classifica reclamações, abre não conformidades, emite o parecer da GQ, prorroga prazos, encerra e reabre processos, mantém o calendário e vê os relatórios.</p></div>
+        <div><h3>Responsável Técnico (RT)</h3><p>Emite o parecer técnico (aprova ou reprova) em não conformidades e recalls, prorroga prazos e reabre não conformidades e recalls.</p></div>
+        <div><h3>Controle de Qualidade (CQ)</h3><p>Decide quando RT e GQ divergem em uma não conformidade ou recall. Acompanha os processos, mas não vê os relatórios.</p></div>
+        <div><h3>Auditor</h3><p>Consulta processos e relatórios. Pode reabrir não conformidades.</p></div>
+        <p class="usr-legend-note">Todos os perfis acompanham os processos, os cadastros e os anexos. Uma pessoa pode ter mais de um perfil, mas RT e GQ precisam aprovar em contas distintas. O sistema sempre mantém ao menos um Administrador.</p>
+    </div>
+</details>
+
+@if (usuarios.Count == 0)
+{
+    <div class="panel empty-state"><span aria-hidden="true">+</span><h3>Nenhum usuário cadastrado</h3><p>Os usuários aparecem aqui assim que criarem uma conta.</p></div>
+}
+else if (comPerfil.Count > 0)
+{
+    <div class="table-wrap">
+        <table class="table-modern table-cards">
+            <thead><tr><th scope="col">Usuário</th><th scope="col">Situação</th><th scope="col">Perfis</th><th scope="col">Alterar perfis</th></tr></thead>
+            <tbody>
+                @foreach (var user in comPerfil)
+                {
+                    <tr>
+                        <td data-label="Usuário"><span class="usr-id"><strong>@user.Email</strong>@if (!string.Equals(user.Email, user.NomeUsuario, StringComparison.OrdinalIgnoreCase)) { <small>@user.NomeUsuario</small> }</span></td>
+                        <td data-label="Situação">
+                            @if (user.Bloqueado) { <span class="status-badge" data-tom="perigo" title="Acesso bloqueado temporariamente">Bloqueado</span> }
+                            else { <span class="status-badge" data-tom="sucesso">Ativo</span> }
+                        </td>
+                        <td data-label="Perfis"><span class="usr-badges">@foreach (var perfil in user.Perfis.OrderBy(p => Array.IndexOf(Roles.Todos, p))) { <span class="status-badge" data-tom="@Tom(perfil)">@Nome(perfil)</span> }</span></td>
+                        <td data-label="Alterar">
+                            <details class="usr-edit">
+                                <summary>Editar perfis</summary>
+                                @formulario(user)
+                            </details>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

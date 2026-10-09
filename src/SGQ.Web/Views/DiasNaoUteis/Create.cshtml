@@ -1,5 +1,16 @@
 @model SGQ.Web.Models.DiaNaoUtil
 @{ ViewData["Title"] = "Novo dia não útil"; }
-<div class="page-heading mb-4"><p class="eyebrow mb-1">Calendário</p><h1>Novo dia não útil</h1></div>
+@section Styles { <link rel="stylesheet" href="~/css/modulos/cadastros.css" asp-append-version="true" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/modulos/cadastros.js" asp-append-version="true"></script>
+}
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Calendário</p>
+        <h1>Novo dia não útil</h1>
+        <p class="page-header-lead">Os campos marcados com * são obrigatórios. A data cadastrada deixa de contar como dia útil nos novos prazos.</p>
+    </div>
+</header>
 <partial name="_Form" model="Model" />
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }

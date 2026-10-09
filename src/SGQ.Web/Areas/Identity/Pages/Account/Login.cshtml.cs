@@ -55,7 +55,7 @@ public class LoginModel : PageModel
         if (result.Succeeded)
         {
             _logger.LogInformation("Usuário autenticado.");
-            return LocalRedirect(ReturnUrl);
+            return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl : "~/");
         }
 
         if (result.RequiresTwoFactor)

@@ -1,0 +1,27 @@
+/* Relatório de processos. Prefixo: rel- */
+.rel-filters { margin-bottom: 1.25rem; padding: 1rem 1.25rem; }
+.rel-filters .filter-bar { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+.rel-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .9rem; margin-bottom: 1.25rem; }
+.rel-kpi { display: flex; flex-direction: column; gap: .15rem; padding: 1rem 1.15rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+.rel-kpi-label { color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.rel-kpi-value { color: var(--green-950); font-size: 2rem; font-weight: 740; letter-spacing: -.04em; line-height: 1.1; }
+.rel-kpi-value small { margin-left: .2rem; color: var(--muted); font-size: .9rem; font-weight: 600; letter-spacing: 0; }
+.rel-kpi-hint { color: var(--muted); font-size: .76rem; }
+.rel-kpi[data-tom="perigo"] { background: #fff6f5; border-color: #f6cdc9; }
+.rel-kpi[data-tom="perigo"] .rel-kpi-value { color: var(--danger); }
+.rel-kpi[data-tom="ok"] .rel-kpi-value { color: var(--green-700); }
+.rel-export { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; margin-bottom: .9rem; }
+.rel-export-text strong { display: block; font-size: .95rem; }
+.rel-export-text span { color: var(--muted); font-size: .8rem; }
+.rel-export-group { display: inline-flex; flex-wrap: wrap; gap: .5rem; }
+.rel-export-group .btn { display: inline-flex; align-items: center; gap: .45rem; }
+.rel-export-group svg { width: 1rem; height: 1rem; flex: 0 0 auto; }
+.rel-tipo { font-family: "IBM Plex Mono", Consolas, monospace; font-size: .74rem; font-weight: 800; }
+.rel-sub { display: block; color: var(--muted); font-size: .74rem; }
+.rel-code a { color: inherit; text-decoration: none; }
+.rel-code a:hover { color: var(--green-700); text-decoration: underline; }
+.rel-row-late { background: #fffafa; }
+@media (max-width: 767.98px) {
+  .table-cards .col-code::before, .table-cards .cad-date::before { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
+  .table-cards .cad-date { flex-wrap: wrap; }
+}

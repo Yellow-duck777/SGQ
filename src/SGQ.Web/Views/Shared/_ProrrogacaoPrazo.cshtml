@@ -1,6 +1,6 @@
 @model (string Action, int Id, DateOnly? DataAlvo)
 @using SGQ.Web.Security
-@if (Model.DataAlvo.HasValue && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.ResponsavelTecnico) || User.IsInRole(Roles.Administrador)))
+@if (Model.DataAlvo.HasValue && (User.IsInRole(Roles.GarantiaQualidade) || User.IsInRole(Roles.ResponsavelTecnico)))
 {
     <section class="card shadow-sm border-0 p-4 mt-4">
         <h2 class="h5">Prorrogar prazo</h2>

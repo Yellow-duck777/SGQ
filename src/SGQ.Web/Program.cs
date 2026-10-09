@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
+using SGQ.Web.Presentation;
 using SGQ.Web.Security;
 using SGQ.Web.Services;
 
@@ -26,7 +27,14 @@ if (builder.Environment.IsDevelopment())
 
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
-    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    // Aceita "150.5" (campos number do navegador) e "150,5" (digitação em pt-BR) sem depender da cultura do servidor.
+    options.ModelBinderProviders.Insert(0, new DecimalFlexivelBinderProvider());
+    // Mensagens de validação e de model binding em português, inclusive os "obrigatórios implícitos".
+    options.ModelMetadataDetailsProviders.Add(new ValidacaoEmPortuguesProvider());
+    ValidacaoEmPortuguesProvider.ConfigurarMensagensDeBinding(options);
+});
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPrazoService, PrazoService>();
@@ -51,6 +59,7 @@ builder.Services
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddRoles<IdentityRole>()
+    .AddErrorDescriber<PortugueseIdentityErrorDescriber>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Toda rota exige usuário autenticado COM perfil reconhecido. Uma conta recém-cadastrada fica sem acesso
@@ -70,6 +79,12 @@ var app = builder.Build();
 if (DevelopmentTestUsers.HasRequestedOperation(args))
 {
     await DevelopmentTestUsers.ExecuteAsync(args, app.Services, app.Environment, app.Configuration);
+    return;
+}
+
+if (DevelopmentDemoData.HasRequestedOperation(args))
+{
+    await DevelopmentDemoData.ExecuteAsync(app.Services, app.Environment, app.Configuration);
     return;
 }
 

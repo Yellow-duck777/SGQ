@@ -1,24 +1,129 @@
 @model IEnumerable<SGQ.Domain.Entities.ReclamacaoCliente>
 @{
-    ViewData["Title"] = "Reclamações";
+    ViewData["Title"] = "Reclamações de cliente";
+    var contagens = ViewBag.ContagensStatus as IDictionary<StatusReclamacao, int> ?? new Dictionary<StatusReclamacao, int>();
+    var total = contagens.Values.Sum();
+    var consulta = Context.Request.Query;
+    var statusAtual = consulta["status"].ToString();
+    var itens = Model.ToList();
+    var atalhos = new[]
+    {
+        StatusReclamacao.AguardandoValidacaoGq, StatusReclamacao.EmInvestigacao, StatusReclamacao.AguardandoLaboratorioExterno,
+        StatusReclamacao.AguardandoConclusao, StatusReclamacao.Encerrada
+    };
+    var filtrosExtras = new[] { "classificacao", "produtoId", "responsavel", "inicio", "fim" }.Count(c => !string.IsNullOrWhiteSpace(consulta[c]));
+    var haFiltro = filtrosExtras > 0 || !string.IsNullOrWhiteSpace(consulta["busca"]) || !string.IsNullOrWhiteSpace(statusAtual);
+    // Mantém os demais filtros ao trocar de situação pelos atalhos.
+    string LinkSituacao(string? situacao)
+    {
+        var valores = new Dictionary<string, string?> { ["busca"] = consulta["busca"], ["classificacao"] = consulta["classificacao"], ["produtoId"] = consulta["produtoId"],
+            ["responsavel"] = consulta["responsavel"], ["inicio"] = consulta["inicio"], ["fim"] = consulta["fim"], ["status"] = situacao };
+        var partes = valores.Where(v => !string.IsNullOrWhiteSpace(v.Value)).Select(v => $"{v.Key}={Uri.EscapeDataString(v.Value!)}");
+        var qs = string.Join("&", partes);
+        return Url.Action("Index", "Reclamacoes") + (qs.Length > 0 ? "?" + qs : "");
+    }
 }
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4">
-    <div><p class="eyebrow mb-1">Processos de qualidade</p><h1>Reclamações de Cliente</h1><p class="text-muted mb-0">Registre e acompanhe reclamações desde a abertura.</p></div>
-    <a class="btn btn-primary" asp-action="Create">Nova reclamação</a>
-</div>
-<form method="get" class="card shadow-sm border-0 p-3 mb-4">
-    <div class="row g-2">
-        <div class="col-md-4"><label class="form-label" for="busca">Pesquisar</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" placeholder="Código, cliente, produto ou lote" /></div>
-        <div class="col-md-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos</option>@foreach (var item in Enum.GetValues<StatusReclamacao>()) { <option value="@item" selected="@(Context.Request.Query["status"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-2"><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<ClassificacaoOcorrencia>()) { <option value="@item" selected="@(Context.Request.Query["classificacao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-2"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
-        <div class="col-md-2"><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Usuário de abertura" /></div>
-        <div class="col-md-1"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
-        <div class="col-md-1"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Context.Request.Query["fim"]" /></div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/modulos/reclamacoes.css" asp-append-version="true" />
+}
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Processos de qualidade</p>
+        <h1>Reclamações de cliente <span class="rc-total" aria-label="@total reclamações no total">@total</span></h1>
+        <p class="page-header-lead">Registre e acompanhe cada reclamação, da abertura ao encerramento pela Garantia da Qualidade.</p>
     </div>
-    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary">Aplicar filtros</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+    <div class="page-header-actions">
+        <a class="btn btn-primary" asp-action="Create">Nova reclamação</a>
+    </div>
+</header>
+
+<nav class="rc-list-head" aria-label="Atalhos por situação">
+    <div class="chip-row">
+        <a class="chip @(string.IsNullOrWhiteSpace(statusAtual) ? "is-active" : "")" href="@LinkSituacao(null)" aria-current="@(string.IsNullOrWhiteSpace(statusAtual) ? "true" : null)">Todas <span class="chip-count">@total</span></a>
+        @foreach (var atalho in atalhos)
+        {
+            var ativo = statusAtual == atalho.ToString();
+            <a class="chip @(ativo ? "is-active" : "")" href="@LinkSituacao(atalho.ToString())" aria-current="@(ativo ? "true" : null)">@atalho.Rotulo() <span class="chip-count">@(contagens.TryGetValue(atalho, out var qtd) ? qtd : 0)</span></a>
+        }
+    </div>
+</nav>
+
+<form method="get" class="panel mb-3" role="search" aria-label="Buscar reclamações">
+    @if (!string.IsNullOrWhiteSpace(statusAtual)) { <input type="hidden" name="status" value="@statusAtual" /> }
+    <div class="rc-search">
+        <div class="rc-search-field">
+            <label class="form-label" for="busca">Buscar</label>
+            <input class="form-control" id="busca" name="busca" type="search" value="@consulta["busca"]" placeholder="Código, cliente, produto ou lote" />
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+            @if (haFiltro) { <a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a> }
+        </div>
+    </div>
+    <details class="rc-more" open="@(filtrosExtras > 0)">
+        <summary>Mais filtros @if (filtrosExtras > 0) { <span class="rc-filter-count">@filtrosExtras ativo(s)</span> }</summary>
+        <div class="filter-bar">
+            <div>
+                <label class="form-label" for="classificacao">Classificação</label>
+                <select class="form-select" id="classificacao" name="classificacao">
+                    <option value="">Todas</option>
+                    @foreach (var item in Enum.GetValues<ClassificacaoOcorrencia>()) { <option value="@item" selected="@(consulta["classificacao"] == item.ToString())">@item.Rotulo()</option> }
+                </select>
+            </div>
+            <div><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
+            <div><label class="form-label" for="responsavel">Aberta por</label><input class="form-control" id="responsavel" name="responsavel" value="@consulta["responsavel"]" placeholder="Nome ou e-mail do usuário" /></div>
+            <div><label class="form-label" for="inicio">Recebida a partir de</label><input class="form-control" id="inicio" name="inicio" type="date" value="@consulta["inicio"]" /></div>
+            <div><label class="form-label" for="fim">Recebida até</label><input class="form-control" id="fim" name="fim" type="date" value="@consulta["fim"]" /></div>
+            <div class="filter-actions"><button class="btn btn-outline-primary" type="submit">Aplicar filtros</button></div>
+        </div>
+    </details>
 </form>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Cliente</th><th>Produto</th><th>Status</th><th class="text-end">Ação</th></tr></thead><tbody>
-@foreach (var item in Model) { <tr><td class="fw-semibold">@item.Codigo</td><td>@item.Cliente.Nome</td><td>@item.Produto.Nome</td><td><span class="badge text-bg-secondary">@item.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Ver</a></td></tr> }
-@if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Nenhuma reclamação registrada.</td></tr> }
-</tbody></table></div></div>
+
+@if (!itens.Any())
+{
+    <section class="panel empty-state" aria-live="polite">
+        <span aria-hidden="true">RC</span>
+        @if (haFiltro)
+        {
+            <h3>Nenhuma reclamação encontrada</h3>
+            <p>Nenhum registro combina com a busca ou os filtros escolhidos. Tente outros termos ou limpe os filtros.</p>
+            <div class="rc-empty-actions"><a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a></div>
+        }
+        else
+        {
+            <h3>Nenhuma reclamação registrada ainda</h3>
+            <p>Quando um cliente relatar um problema com um produto, registre aqui para que a Garantia da Qualidade valide e investigue.</p>
+            <div class="rc-empty-actions"><a class="btn btn-primary" asp-action="Create">Registrar a primeira reclamação</a></div>
+        }
+    </section>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="table-modern table-cards rc-table">
+            <thead>
+                <tr><th scope="col">Código</th><th scope="col">Cliente e produto</th><th scope="col">Classificação</th><th scope="col">Situação</th><th scope="col">Prazo</th><th scope="col">Recebida em</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var item in itens)
+            {
+                var lotes = string.Join(", ", item.Lotes.Select(l => l.Lote.Numero));
+                <tr data-href="@Url.Action("Details", new { id = item.Id })">
+                    <td class="col-code" data-label="Código"><a asp-action="Details" asp-route-id="@item.Id" aria-label="Abrir reclamação @item.Codigo">@item.Codigo</a></td>
+                    <td data-label="Cliente e produto">
+                        <strong>@item.Cliente.Nome</strong>
+                        <span class="cell-sub">@item.Produto.Nome@(lotes.Length > 0 ? $" · lote {lotes}" : "")</span>
+                    </td>
+                    <td data-label="Classificação">@Html.StatusBadge(item.Classificacao)</td>
+                    <td data-label="Situação">@Html.StatusBadge(item.Status)</td>
+                    <td data-label="Prazo">@Html.PrazoChipHtml(item.DataAlvo, item.Status == StatusReclamacao.Encerrada)</td>
+                    <td data-label="Recebida em">@item.DataRecebimento.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <p class="rc-result-info" aria-live="polite">Exibindo @itens.Count reclamação(ões).</p>
+}
+

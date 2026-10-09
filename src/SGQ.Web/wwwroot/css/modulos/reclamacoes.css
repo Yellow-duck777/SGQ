@@ -1,0 +1,87 @@
+/* Módulo Reclamações de Cliente (prefixo rc-) */
+
+/* Lista */
+.rc-list-head { display: grid; gap: 1rem; margin-bottom: 1rem; }
+.rc-search { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; }
+.rc-search .rc-search-field { flex: 1 1 18rem; min-width: 0; }
+.rc-more { margin-top: .9rem; }
+.rc-more > summary { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--green-700); font-size: .84rem; font-weight: 700; cursor: pointer; }
+.rc-more[open] > summary { margin-bottom: .6rem; }
+.rc-filter-count { margin-left: .4rem; padding: .05rem .5rem; color: var(--green-950); background: var(--lime-soft); border-radius: 999px; font-size: .7rem; }
+.rc-table tbody tr[data-href] { cursor: pointer; }
+.rc-table .col-code a { color: var(--green-900); text-decoration: none; }
+.rc-table .col-code a:hover { text-decoration: underline; }
+.rc-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin-top: 1rem; }
+.rc-result-info { margin: .75rem 0 0; color: var(--muted); font-size: .8rem; }
+
+/* Nova reclamação */
+.rc-form { max-width: 62rem; }
+.rc-note { margin: 0; padding: .7rem .9rem; color: var(--muted); background: #f6f9f6; border: 1px solid var(--line); border-radius: .55rem; font-size: .82rem; }
+.rc-lotes { border: 1px solid #ced4da; border-radius: .5rem; background: #fff; }
+.rc-lotes-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; padding: .5rem; border-bottom: 1px solid var(--line); }
+.rc-lotes-tools .form-control { flex: 1 1 10rem; min-height: 2.4rem; }
+.rc-lotes-count { color: var(--muted); font-size: .76rem; white-space: nowrap; }
+.rc-lotes-list { max-height: 11rem; margin: 0; padding: .25rem; overflow-y: auto; list-style: none; }
+.rc-lotes-list label { display: flex; align-items: center; gap: .6rem; min-height: 2.75rem; padding: 0 .6rem; border-radius: .4rem; font-size: .88rem; cursor: pointer; }
+.rc-lotes-list label:hover { background: #f2f7f2; }
+.rc-lotes-list input { width: 1.1rem; height: 1.1rem; }
+.rc-lotes-empty { padding: .9rem; color: var(--muted); font-size: .84rem; }
+.rc-check-field { display: flex; align-items: center; min-height: 2.75rem; }
+.rc-check-field label { display: inline-flex; align-items: center; gap: .55rem; margin: 0; font-weight: 600; }
+.rc-check-field input { width: 1.15rem; height: 1.15rem; }
+
+/* Detalhe */
+.rc-stepper-panel { margin-bottom: 1rem; padding: 1.1rem 1.4rem; }
+.rc-stepper-note { margin: .8rem 0 0; color: var(--muted); font-size: .82rem; }
+.rc-layout { display: grid; grid-template-columns: minmax(0, 1fr) 21rem; gap: 1.25rem; align-items: start; margin-top: 1.25rem; }
+.rc-main, .rc-side { display: grid; gap: 1.25rem; min-width: 0; }
+.rc-side { position: sticky; top: 1rem; }
+.rc-panel h2 { margin: 0 0 1rem; color: var(--green-950); font-size: 1.1rem; font-weight: 740; }
+.rc-panel h2 + .rc-help { margin-top: -.6rem; }
+.rc-help { margin: 0 0 1rem; color: var(--muted); font-size: .84rem; }
+.rc-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
+.rc-nc { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; padding: 1rem 1.3rem; background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--green-700); border-radius: var(--radius); }
+.rc-nc p { margin: 0; color: var(--muted); font-size: .82rem; }
+.rc-nc strong { display: block; color: var(--green-950); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 1.05rem; }
+.rc-inline-form { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; }
+.rc-inline-form .form-select { min-width: 13rem; }
+.rc-steps-inner { display: grid; gap: 1rem; }
+.rc-substep { padding: 1rem; background: #f8faf7; border: 1px solid var(--line); border-radius: .7rem; }
+.rc-substep h3 { margin: 0 0 .6rem; font-size: .92rem; font-weight: 740; }
+.rc-substep[data-feito="true"] { background: #eef8f0; border-color: #c7e8cf; }
+.rc-upload { display: grid; gap: .75rem; }
+.rc-upload .file-picker { flex-wrap: wrap; }
+.rc-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.rc-fieldset:disabled { opacity: .55; }
+.rc-details > summary { display: flex; align-items: center; justify-content: space-between; min-height: 2.75rem; color: var(--green-950); font-size: 1.05rem; font-weight: 740; cursor: pointer; }
+.rc-details[open] > summary { margin-bottom: 1rem; }
+.rc-side .dl-grid { grid-template-columns: 1fr; gap: .9rem; }
+.rc-side-change { margin-top: .5rem; }
+.rc-side-change > summary { min-height: 2.75rem; display: inline-flex; align-items: center; color: var(--green-700); font-size: .8rem; font-weight: 700; cursor: pointer; }
+.rc-danger-zone { border-color: #f0c7c2 !important; }
+.rc-lote-pill { display: inline-block; margin: 0 .3rem .3rem 0; padding: .1rem .6rem; background: #f2f7f2; border: 1px solid var(--line); border-radius: 999px; font-family: "IBM Plex Mono", Consolas, monospace; font-size: .8rem; }
+
+@media (max-width: 991.98px) {
+  .rc-layout { grid-template-columns: minmax(0, 1fr); }
+  .rc-side { position: static; }
+}
+@media (max-width: 575.98px) {
+  .rc-inline-form .form-select, .rc-inline-form .btn { width: 100%; }
+  .rc-stepper-panel { padding: .9rem 1rem; }
+}
+
+/* Ajustes de cabeçalho e recolhíveis */
+.page-header h1 .status-badge { font-size: .8rem; letter-spacing: 0; vertical-align: middle; }
+.rc-total { display: inline-grid; min-width: 2rem; height: 2rem; padding: 0 .55rem; place-items: center; color: var(--green-950); background: var(--lime-soft); border-radius: 999px; font-family: "IBM Plex Mono", Consolas, monospace; font-size: .85rem; font-weight: 700; letter-spacing: 0; }
+.rc-details > summary, .rc-more > summary, .rc-side-change > summary { list-style: none; }
+.rc-details > summary::-webkit-details-marker, .rc-more > summary::-webkit-details-marker, .rc-side-change > summary::-webkit-details-marker { display: none; }
+.rc-details > summary::after { display: grid; flex: 0 0 auto; width: 1.8rem; height: 1.8rem; place-items: center; color: var(--green-700); background: var(--lime-soft); border-radius: 50%; font-size: 1.1rem; font-weight: 800; content: "+"; }
+.rc-details[open] > summary::after { content: "−"; }
+.rc-more > summary::before, .rc-side-change > summary::before { margin-right: .4rem; font-size: .7rem; content: "▸"; }
+.rc-more[open] > summary::before, .rc-side-change[open] > summary::before { content: "▾"; }
+.rc-details > summary:focus-visible, .rc-more > summary:focus-visible, .rc-side-change > summary:focus-visible { outline: 3px solid rgba(26,103,59,.35); outline-offset: 2px; border-radius: .4rem; }
+.validation-summary.validation-summary-valid { display: none; }
+@media (max-width: 767.98px) {
+  .rc-table td[data-label="Cliente e produto"] { display: block; text-align: left; }
+  .rc-table td[data-label="Cliente e produto"]::before { display: block; margin-bottom: .15rem; }
+}

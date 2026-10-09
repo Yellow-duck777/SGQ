@@ -1,17 +1,116 @@
 @model IEnumerable<SGQ.Domain.Entities.NaoConformidade>
-@{ ViewData["Title"] = "Não Conformidades"; }
-<div class="page-heading d-flex justify-content-between align-items-end gap-3 mb-4"><div><p class="eyebrow mb-1">Processos de qualidade</p><h1>Não Conformidades</h1><p class="text-muted mb-0">Acompanhe investigações, ações e aprovações técnicas.</p></div><a class="btn btn-primary" asp-action="Create">Nova NC</a></div>
-<form method="get" class="card shadow-sm border-0 p-3 mb-4">
-    <div class="row g-2">
-        <div class="col-md-3"><label class="form-label" for="busca">Pesquisar</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" placeholder="Código, área, produto ou RC" /></div>
-        <div class="col-md-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos</option>@foreach (var item in Enum.GetValues<StatusNaoConformidade>()) { <option value="@item" selected="@(Context.Request.Query["status"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-2"><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<ClassificacaoOcorrencia>()) { <option value="@item" selected="@(Context.Request.Query["classificacao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-2"><label class="form-label" for="origem">Origem</label><select class="form-select" id="origem" name="origem"><option value="">Todas</option>@foreach (var item in Enum.GetValues<OrigemNaoConformidade>()) { <option value="@item" selected="@(Context.Request.Query["origem"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-3"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
-        <div class="col-md-3"><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Abertura ou ação" /></div>
-        <div class="col-md-2"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
-        <div class="col-md-2"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Context.Request.Query["fim"]" /></div>
+@using SGQ.Web.Security
+@{
+    ViewData["Title"] = "Não conformidades";
+    var podeCriar = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.GarantiaQualidade);
+    var contagem = ViewBag.ContagemPorStatus as Dictionary<StatusNaoConformidade, int> ?? new Dictionary<StatusNaoConformidade, int>();
+    var q = Context.Request.Query;
+    var statusAtual = q["status"].ToString();
+    var atalhos = new[]
+    {
+        StatusNaoConformidade.EmInvestigacao, StatusNaoConformidade.EmTratamento, StatusNaoConformidade.AguardandoAprovacao,
+        StatusNaoConformidade.AguardandoDecisaoCq, StatusNaoConformidade.AguardandoLaboratorioExterno, StatusNaoConformidade.Encerrada
+    };
+    var totalGeral = contagem.Values.Sum();
+    var filtrosSecundarios = new[] { "classificacao", "origem", "produtoId", "responsavel", "inicio", "fim", "status" }.Any(c => !string.IsNullOrWhiteSpace(q[c]));
+    var algumFiltro = filtrosSecundarios || !string.IsNullOrWhiteSpace(q["busca"]);
+    var lista = Model.ToList();
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/modulos/nao-conformidades.css" asp-append-version="true" />
+}
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Processos de qualidade</p>
+        <h1>Não conformidades</h1>
+        <p class="page-header-lead">Acompanhe investigações, planos de ação e aprovações técnicas até o encerramento.</p>
     </div>
-    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary">Aplicar filtros</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+    @if (podeCriar)
+    {
+        <div class="page-header-actions"><a class="btn btn-primary" asp-action="Create">Nova não conformidade</a></div>
+    }
+</header>
+
+<nav class="chip-row nc-chips" aria-label="Atalhos por situação">
+    <a class="chip @(statusAtual == "" ? "is-active" : "")" asp-action="Index" aria-current="@(statusAtual == "" ? "true" : null)">Todas <span class="chip-count">@totalGeral</span></a>
+    @foreach (var situacao in atalhos)
+    {
+        var ativo = statusAtual == situacao.ToString();
+        <a class="chip @(ativo ? "is-active" : "")" asp-action="Index" asp-route-status="@situacao" aria-current="@(ativo ? "true" : null)">@situacao.Rotulo() <span class="chip-count">@(contagem.TryGetValue(situacao, out var n) ? n : 0)</span></a>
+    }
+</nav>
+
+<form method="get" class="panel mb-4" role="search" aria-label="Pesquisar não conformidades">
+    <div class="nc-search">
+        <div class="nc-search-field">
+            <label class="form-label" for="busca">Pesquisar</label>
+            <input class="form-control" id="busca" name="busca" value="@q["busca"]" placeholder="Código, área, produto ou reclamação (RC)" />
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary">Pesquisar</button>
+            @if (algumFiltro) { <a class="btn btn-outline-secondary" asp-action="Index">Limpar</a> }
+        </div>
+    </div>
+    <details class="nc-more" open="@(filtrosSecundarios ? "open" : null)">
+        <summary>Mais filtros</summary>
+        <div class="filter-bar">
+            <div><label class="form-label" for="status">Situação</label><select class="form-select" id="status" name="status"><option value="">Todas</option>@foreach (var item in Enum.GetValues<StatusNaoConformidade>()) { <option value="@item" selected="@(statusAtual == item.ToString() ? "selected" : null)">@item.Rotulo()</option> }</select></div>
+            <div><label class="form-label" for="classificacao">Classificação</label><select class="form-select" id="classificacao" name="classificacao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<ClassificacaoOcorrencia>()) { <option value="@item" selected="@(q["classificacao"] == item.ToString() ? "selected" : null)">@item.Rotulo()</option> }</select></div>
+            <div><label class="form-label" for="origem">Origem</label><select class="form-select" id="origem" name="origem"><option value="">Todas</option>@foreach (var item in Enum.GetValues<OrigemNaoConformidade>()) { <option value="@item" selected="@(q["origem"] == item.ToString() ? "selected" : null)">@item.Rotulo()</option> }</select></div>
+            <div><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
+            <div><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@q["responsavel"]" placeholder="Quem abriu ou responsável por ação" /></div>
+            <div><label class="form-label" for="inicio">Aberta de</label><input class="form-control" id="inicio" name="inicio" type="date" value="@q["inicio"]" /></div>
+            <div><label class="form-label" for="fim">Aberta até</label><input class="form-control" id="fim" name="fim" type="date" value="@q["fim"]" /></div>
+        </div>
+        <div class="filter-actions mt-3"><button class="btn btn-primary">Aplicar filtros</button></div>
+    </details>
 </form>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Origem</th><th>Produto</th><th>Status</th><th></th></tr></thead><tbody>@foreach (var nc in Model) { <tr><td class="fw-semibold">@nc.Codigo</td><td>@nc.Origem</td><td>@(nc.Produto?.Nome ?? "Não informado")</td><td><span class="badge text-bg-secondary">@nc.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@nc.Id">Ver</a></td></tr> }@if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Nenhuma NC registrada.</td></tr> }</tbody></table></div></div>
+
+<p class="nc-result-info" aria-live="polite">@(lista.Count == 1 ? "1 não conformidade encontrada" : $"{lista.Count} não conformidades encontradas")</p>
+
+@if (lista.Count == 0)
+{
+    <div class="panel empty-state">
+        <span aria-hidden="true">NC</span>
+        @if (algumFiltro)
+        {
+            <h3>Nenhuma não conformidade com esses filtros</h3>
+            <p>Revise a pesquisa ou limpe os filtros para ver todos os registros.</p>
+            <a class="btn btn-outline-primary" asp-action="Index">Limpar filtros</a>
+        }
+        else
+        {
+            <h3>Nenhuma não conformidade registrada</h3>
+            <p>@(podeCriar ? "Registre a primeira para iniciar a investigação." : "Quando houver registros, eles aparecerão aqui.")</p>
+            @if (podeCriar) { <a class="btn btn-primary" asp-action="Create">Nova não conformidade</a> }
+        }
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="table-modern table-cards">
+            <caption class="visually-hidden">Lista de não conformidades</caption>
+            <thead>
+                <tr><th scope="col">Código</th><th scope="col">Origem</th><th scope="col">Área e produto</th><th scope="col">Classificação</th><th scope="col">Situação</th><th scope="col">Prazo</th><th scope="col">Abertura</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var nc in lista)
+            {
+                <tr>
+                    <td class="col-code" data-label="Código"><a asp-action="Details" asp-route-id="@nc.Id">@nc.Codigo</a></td>
+                    <td data-label="Origem">@nc.Origem.Rotulo()</td>
+                    <td data-label="Área / produto"><span>@nc.Area@if (nc.Produto is not null) { <span class="cell-sub">@nc.Produto.Nome</span> }</span></td>
+                    <td data-label="Classificação">@Html.StatusBadge(nc.Classificacao)</td>
+                    <td data-label="Situação">@Html.StatusBadge(nc.Status)</td>
+                    <td data-label="Prazo">
+                        @if (nc.DataAlvo is null && nc.Status != StatusNaoConformidade.Encerrada && nc.Classificacao == ClassificacaoOcorrencia.Critica) { <span class="status-badge" data-tom="neutro" title="NC crítica sem data-alvo definida">Sem prazo fixo</span> }
+                        else { @Html.PrazoChipHtml(nc.DataAlvo, nc.Status == StatusNaoConformidade.Encerrada) }
+                    </td>
+                    <td data-label="Abertura">@nc.DataAbertura.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

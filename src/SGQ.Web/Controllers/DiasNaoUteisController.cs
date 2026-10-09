@@ -14,6 +14,9 @@ public class DiasNaoUteisController(ApplicationDbContext context) : Controller
     {
         var anoSelecionado = ano ?? DateTime.Today.Year;
         ViewBag.Ano = anoSelecionado;
+        // Apresentação: avisa quando o ano corrente não tem nenhum dia ativo cadastrado.
+        var anoCorrente = DateTime.Today.Year;
+        ViewBag.AnoCorrenteSemDias = !await context.DiasNaoUteis.AnyAsync(item => item.Ano == anoCorrente && item.Ativo);
         return View(await context.DiasNaoUteis.Where(item => item.Ano == anoSelecionado)
             .OrderBy(item => item.Data).ThenBy(item => item.Tipo).ToListAsync());
     }

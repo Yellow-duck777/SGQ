@@ -1,12 +1,115 @@
+@using System.Globalization
+@using SGQ.Web.Models
 @model IEnumerable<SGQ.Web.Models.DiaNaoUtil>
-@{ ViewData["Title"] = "Calendário de dias não úteis"; var podeGerenciar = User.IsInRole("Administrador") || User.IsInRole("GQ"); }
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4">
-    <div><p class="eyebrow mb-1">Cadastros</p><h1>Calendário de dias não úteis</h1><p class="text-muted mb-0">Datas ativas são desconsideradas no cálculo de prazos.</p></div>
-    @if (podeGerenciar) { <a class="btn btn-primary" asp-action="Create">Novo dia não útil</a> }
+@{
+    ViewData["Title"] = "Calendário de dias não úteis";
+    var podeGerenciar = User.IsInRole("Administrador") || User.IsInRole("GQ");
+    int ano = ViewBag.Ano;
+    var anoCorrente = DateTime.Today.Year;
+    var semDiasNoAnoCorrente = ViewBag.AnoCorrenteSemDias is true;
+    var hoje = DateOnly.FromDateTime(DateTime.Today);
+    var itens = Model.ToList();
+    var cultura = new CultureInfo("pt-BR");
+    var proximo = itens.Where(i => i.Ativo && i.Data >= hoje).OrderBy(i => i.Data).FirstOrDefault();
+    var meses = itens.GroupBy(i => i.Data.Month).OrderBy(g => g.Key).ToList();
+    string Tom(TipoDiaNaoUtil tipo) => tipo switch { TipoDiaNaoUtil.Nacional => "info", TipoDiaNaoUtil.Estadual => "sucesso", TipoDiaNaoUtil.Municipal => "alerta", _ => "neutro" };
+}
+@section Styles { <link rel="stylesheet" href="~/css/modulos/cadastros.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/modulos/cadastros.js" asp-append-version="true"></script> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Cadastros</p>
+        <h1>Calendário de dias não úteis</h1>
+        <p class="page-header-lead">Feriados e recessos que o sistema desconta ao calcular prazos em dias úteis (reclamações e não conformidades). Sábados e domingos já são descontados automaticamente.</p>
+    </div>
+    @if (podeGerenciar)
+    {
+        <div class="page-header-actions"><a class="btn btn-primary" asp-action="Create">Novo dia não útil</a></div>
+    }
+</header>
+
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+
+@if (semDiasNoAnoCorrente)
+{
+    <div class="cad-alert" data-tom="alerta" role="status">
+        <div>
+            <strong>Nenhum dia não útil ativo em @anoCorrente</strong>
+            Sem os feriados do ano, os prazos novos serão calculados como se todo dia de semana fosse útil, o que pode resultar em prazos mais curtos do que o devido.
+            @if (podeGerenciar) { <text> <a asp-action="Create">Cadastrar agora</a>.</text> }
+            else { <text> Peça ao Administrador ou à Garantia da Qualidade que cadastre os feriados.</text> }
+        </div>
+    </div>
+}
+
+@if (!podeGerenciar)
+{
+    <p class="cad-note">Somente Administrador ou Garantia da Qualidade (GQ) podem incluir ou alterar dias não úteis.</p>
+}
+
+<div class="cad-toolbar">
+    <form method="get" class="cad-year-form" aria-label="Escolher o ano">
+        <div>
+            <label class="form-label" for="ano">Ano</label>
+            <input id="ano" name="ano" type="number" value="@ano" class="form-control" min="2000" max="9999" />
+        </div>
+        <button class="btn btn-outline-secondary" type="submit">Ver ano</button>
+        <a class="btn btn-outline-secondary" asp-action="Index" asp-route-ano="@(ano - 1)" aria-label="Ano anterior">&larr; @(ano - 1)</a>
+        <a class="btn btn-outline-secondary" asp-action="Index" asp-route-ano="@(ano + 1)" aria-label="Próximo ano">@(ano + 1) &rarr;</a>
+    </form>
+    @if (itens.Count > 0)
+    {
+        <div class="cad-search">
+            <label class="form-label" for="busca">Buscar neste ano</label>
+            <input id="busca" type="search" class="form-control" placeholder="Descrição ou tipo" autocomplete="off" data-cad-search="#lista" />
+        </div>
+    }
 </div>
-@if (TempData["Success"] is string success) { <div class="alert alert-success" role="alert">@success</div> }
-<form method="get" class="row g-2 mb-3"><div class="col-sm-3"><label class="visually-hidden" for="ano">Ano</label><input id="ano" name="ano" type="number" value="@ViewBag.Ano" class="form-control" min="2000" max="9999" /></div><div class="col-auto"><button class="btn btn-outline-secondary">Filtrar</button></div></form>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Status</th>@if (podeGerenciar) { <th class="text-end">Ações</th> }</tr></thead><tbody>
-@foreach (var item in Model) { <tr><td>@item.Data.ToString("dd/MM/yyyy")</td><td>@item.Descricao</td><td>@item.Tipo</td><td>@(item.Ativo ? "Ativo" : "Inativo")</td>@if (podeGerenciar) { <td class="text-end"><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a></td> }</tr> }
-@if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Nenhum dia não útil cadastrado para este ano.</td></tr> }
-</tbody></table></div></div>
+
+@if (proximo is not null)
+{
+    <p class="cad-note" aria-live="polite">Próximo dia não útil: <strong>@proximo.Descricao</strong>, @proximo.Data.ToString("dddd, dd/MM/yyyy", cultura) (@proximo.Tipo.Rotulo()).</p>
+}
+
+@if (itens.Count == 0)
+{
+    <div class="panel empty-state">
+        <span aria-hidden="true">+</span>
+        <h3>Nenhum dia não útil cadastrado em @ano</h3>
+        <p>Cadastre os feriados nacionais, estaduais, municipais e os recessos internos para que os prazos sejam calculados corretamente.</p>
+        @if (podeGerenciar) { <a class="btn btn-primary" asp-action="Create">Novo dia não útil</a> }
+    </div>
+}
+else
+{
+    <div id="lista">
+        <p class="cad-count mb-2" aria-live="polite" data-cad-count="dia(s) não útil(eis)">@itens.Count dia(s) não útil(eis)</p>
+        @foreach (var mes in meses)
+        {
+            <section data-cad-group>
+                <h2 class="cad-month">@cultura.DateTimeFormat.GetMonthName(mes.Key) de @ano</h2>
+                <div class="table-wrap">
+                    <table class="table-modern table-cards cad-cal">
+                        <thead><tr><th scope="col">Data</th><th scope="col">Descrição</th><th scope="col">Tipo</th><th scope="col">Situação</th>@if (podeGerenciar) { <th scope="col"><span class="visually-hidden">Ações</span></th> }</tr></thead>
+                        <tbody>
+                            @foreach (var item in mes.OrderBy(i => i.Data).ThenBy(i => i.Tipo))
+                            {
+                                var passou = item.Data < hoje;
+                                <tr data-busca="@item.Descricao @item.Tipo.Rotulo() @item.Data.ToString("dd/MM/yyyy")" class="@(!item.Ativo ? "cad-row-inativo" : passou ? "cad-row-past" : "")">
+                                    <td data-label="Data" class="cad-date">@item.Data.ToString("dd/MM/yyyy")<span class="cad-dia-semana">@item.Data.ToString("dddd", cultura)</span></td>
+                                    <td data-label="Descrição">@item.Descricao @if (proximo is not null && proximo.Id == item.Id) { <span class="status-badge" data-tom="info">Próximo</span> }</td>
+                                    <td data-label="Tipo"><span class="status-badge" data-tom="@Tom(item.Tipo)">@item.Tipo.Rotulo()</span></td>
+                                    <td data-label="Situação">@if (item.Ativo) { <span class="status-badge" data-tom="sucesso">Ativo no cálculo</span> } else { <span class="status-badge" data-tom="neutro" title="Não é descontado no cálculo de prazos">Inativo</span> }</td>
+                                    @if (podeGerenciar) { <td class="col-actions"><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" aria-label="Editar @item.Descricao">Editar</a></td> }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
+    </div>
+    <p class="panel empty-state cad-empty-filter" data-cad-empty hidden>Nenhum dia não útil corresponde à busca.</p>
+    <p class="cad-note mt-3">Alterações no calendário valem para os prazos calculados daqui em diante. Prazos já definidos nos processos não são recalculados.</p>
+}
