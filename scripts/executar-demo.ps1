@@ -18,6 +18,9 @@
 .PARAMETER Banco      Nome do banco de demonstração (precisa terminar em _test; padrão: sgq_demo_test).
 .PARAMETER Recriar    Apaga o banco de demonstração e recomeça do zero (pede confirmação).
 .PARAMETER SomentePreparar  Prepara banco, contas e dados e NÃO inicia o sistema.
+.PARAMETER PostgresPortatil
+                      Usa um PostgreSQL próprio da demonstração (sem senha, só nesta máquina, sem Administrador), criado em
+                      %LOCALAPPDATA%\SGQ\postgres-demo. É usado automaticamente quando o PostgreSQL instalado não responde.
 .PARAMETER ComEmail   Inicia o Mailpit (se existir no Laragon) e aponta o SMTP do sistema para ele, para testar as
                       notificações por e-mail. As mensagens ficam em http://localhost:8025 e nada sai da sua máquina.
 
@@ -34,7 +37,9 @@ param(
     [string]$Banco = "sgq_demo_test",
     [switch]$Recriar,
     [switch]$SomentePreparar,
-    [switch]$ComEmail
+    [switch]$ComEmail,
+    [switch]$PostgresPortatil,
+    [int]$PortaPortatil = 54329
 )
 
 $ErrorActionPreference = "Stop"
@@ -66,17 +71,64 @@ if (-not $psql) { throw "psql não encontrado. Instale o PostgreSQL 17 ou inclua
 Write-Host "psql: $psql"
 
 # --- 2. PostgreSQL --------------------------------------------------------------------------------------------
-Escrever "Conectando ao PostgreSQL em ${Servidor}:${Porta}"
-if (-not (Test-NetConnection $Servidor -Port $Porta -WarningAction SilentlyContinue).TcpTestSucceeded) {
-    $servico = Get-Service -Name "postgresql*" -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($servico -and $servico.Status -ne "Running") {
-        Write-Host "Serviço '$($servico.Name)' está parado; tentando iniciar (pode exigir PowerShell como Administrador)..."
-        Start-Service $servico.Name
-        Start-Sleep 5
+# Ordem: (1) usa o PostgreSQL que já estiver respondendo; (2) tenta ligar o serviço (exige Administrador);
+# (3) se não der, cria um PostgreSQL próprio da demonstração, sem senha e só acessível nesta máquina, que não
+# precisa de Administrador e não mexe na sua instalação. Também pode ser forçado com -PostgresPortatil.
+$iniciouPortatil = $false
+$pastaBin = Split-Path $psql
+$pastaPortatil = Join-Path (Join-Path $env:LOCALAPPDATA "SGQ") "postgres-demo"
+
+function Postgres-Responde([string]$servidor, [int]$porta) {
+    return (Test-NetConnection $servidor -Port $porta -WarningAction SilentlyContinue).TcpTestSucceeded
+}
+
+function Iniciar-PostgresPortatil {
+    $pgctl = Join-Path $pastaBin "pg_ctl.exe"
+    $initdb = Join-Path $pastaBin "initdb.exe"
+    if (-not (Test-Path $pgctl) -or -not (Test-Path $initdb)) { throw "pg_ctl/initdb não encontrados em $pastaBin." }
+    if (-not (Test-Path (Join-Path $pastaPortatil "PG_VERSION"))) {
+        Write-Host "Criando o PostgreSQL da demonstração em $pastaPortatil (só na primeira vez)..."
+        New-Item -ItemType Directory -Force (Join-Path $env:LOCALAPPDATA "SGQ") | Out-Null
+        # Tenta ordenação em português (ICU); se esta versão não tiver ICU, usa a ordenação simples.
+        & $initdb -D $pastaPortatil -U postgres --auth=trust -E UTF8 --locale-provider=icu --icu-locale=pt-BR 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            if (Test-Path $pastaPortatil) { Remove-Item $pastaPortatil -Recurse -Force }
+            & $initdb -D $pastaPortatil -U postgres --auth=trust -E UTF8 --locale=C 2>&1 | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "Não foi possível criar o PostgreSQL da demonstração." }
+        }
     }
-    if (-not (Test-NetConnection $Servidor -Port $Porta -WarningAction SilentlyContinue).TcpTestSucceeded) {
-        throw "PostgreSQL não responde em ${Servidor}:${Porta}. Inicie o serviço e tente de novo."
+    if (-not (Postgres-Responde "127.0.0.1" $PortaPortatil)) {
+        Write-Host "Iniciando o PostgreSQL da demonstração na porta $PortaPortatil..."
+        $opcoes = "-p $PortaPortatil -c listen_addresses=127.0.0.1"
+        # Sem -Wait: o servidor nunca "termina" e o PowerShell ficaria esperando. Espera-se a porta responder.
+        Start-Process -FilePath $pgctl -ArgumentList @("-D", "`"$pastaPortatil`"", "-o", "`"$opcoes`"", "-l", "`"$(Join-Path $pastaPortatil 'servidor.log')`"", "start") -WindowStyle Hidden
+        for ($i = 0; $i -lt 30 -and -not (Postgres-Responde "127.0.0.1" $PortaPortatil); $i++) { Start-Sleep 1 }
+        if (-not (Postgres-Responde "127.0.0.1" $PortaPortatil)) { throw "O PostgreSQL da demonstração não iniciou. Veja $(Join-Path $pastaPortatil 'servidor.log')." }
+        $script:iniciouPortatil = $true
     }
+}
+
+$usarPortatil = [bool]$PostgresPortatil
+if (-not $usarPortatil) {
+    Escrever "Conectando ao PostgreSQL em ${Servidor}:${Porta}"
+    if (-not (Postgres-Responde $Servidor $Porta)) {
+        $servico = Get-Service -Name "postgresql*" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($servico -and $servico.Status -ne "Running") {
+            Write-Host "Serviço '$($servico.Name)' está parado; tentando iniciar (exige PowerShell como Administrador)..."
+            try { Start-Service $servico.Name -ErrorAction Stop; Start-Sleep 5 }
+            catch { Write-Warning "Não foi possível iniciar o serviço: $($_.Exception.Message)" }
+        }
+        if (-not (Postgres-Responde $Servidor $Porta)) {
+            Write-Warning "O PostgreSQL instalado não está respondendo. Usando um PostgreSQL próprio da demonstração (sem senha, só nesta máquina)."
+            $usarPortatil = $true
+        }
+    }
+}
+if ($usarPortatil) {
+    Escrever "Preparando o PostgreSQL da demonstração (porta $PortaPortatil)"
+    Iniciar-PostgresPortatil
+    $Servidor = "127.0.0.1"; $Porta = $PortaPortatil; $Usuario = "postgres"
+    Remove-Item Env:\PGPASSWORD -ErrorAction SilentlyContinue
 }
 
 function Executar-Psql([string]$sql, [string]$bancoAlvo = "postgres") {
@@ -193,8 +245,17 @@ Write-Host "Senha de todas as contas (gerada agora; só vale para este banco): $
 Write-Host "Cada execução gera uma senha nova e a aplica a todas as contas; os dados já criados são mantidos (use -Recriar para recomeçar do zero)." -ForegroundColor DarkYellow
 Write-Host "Roteiro de testes: docs\qualidade\roteiros\README.md"
 
-if ($SomentePreparar) { return }
+if ($SomentePreparar) {
+    if ($iniciouPortatil) { Write-Host "O PostgreSQL da demonstração continua ligado na porta $PortaPortatil. Para desligar: pg_ctl -D `"$pastaPortatil`" stop" -ForegroundColor DarkYellow }
+    return
+}
 
 Escrever "Iniciando o sistema (Ctrl+C para encerrar)"
 $env:ASPNETCORE_URLS = "http://localhost:5024"
-& dotnet run --project $projeto --no-build --no-launch-profile
+try { & dotnet run --project $projeto --no-build --no-launch-profile }
+finally {
+    if ($iniciouPortatil) {
+        Write-Host "Encerrando o PostgreSQL da demonstração..."
+        & (Join-Path $pastaBin "pg_ctl.exe") -D $pastaPortatil -m fast stop 2>&1 | Out-Null
+    }
+}
