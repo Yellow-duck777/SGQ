@@ -1,0 +1,42 @@
+/* Cadastros básicos (clientes, produtos, lotes) e calendário de dias não úteis. Prefixo: cad- */
+.cad-toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .75rem 1rem; margin-bottom: 1rem; }
+.cad-toolbar .cad-search { flex: 1 1 18rem; max-width: 28rem; }
+.cad-toolbar .cad-count { color: var(--muted); font-size: .82rem; }
+.cad-form-narrow { max-width: 46rem; }
+.cad-alert { display: flex; gap: .75rem; align-items: flex-start; margin-bottom: 1rem; padding: .85rem 1rem; border-radius: .5rem; border-left: 3px solid; font-size: .88rem; }
+.cad-alert strong { display: block; }
+.cad-alert[data-tom="alerta"] { color: #6b3a00; background: #fff8e8; border-color: #e0a100; }
+.cad-alert[data-tom="info"] { color: #0b4a8c; background: #eef5fc; border-color: #5b9bd8; }
+.cad-alert[data-tom="perigo"] { color: #8f1a12; background: #fff1f0; border-color: var(--danger); }
+.cad-note { margin: 0 0 1rem; color: var(--muted); font-size: .86rem; }
+.cad-nome { font-weight: 650; }
+.cad-lotes-list { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.cad-lotes-list li { padding: .1rem .5rem; background: #f1f5f1; border: 1px solid var(--line); border-radius: 999px; font-family: "IBM Plex Mono", Consolas, monospace; font-size: .72rem; }
+.cad-month { margin: 1.4rem 0 .5rem; color: var(--green-950); font-size: .95rem; font-weight: 740; }
+.cad-month::first-letter { text-transform: uppercase; }
+.cad-month:first-of-type { margin-top: 0; }
+.cad-row-past td { color: var(--muted); }
+.cad-row-inativo td { color: var(--muted); text-decoration: line-through; text-decoration-color: #b8c4bb; }
+.cad-row-inativo td.col-actions, .cad-row-inativo td[data-label="Situação"] { text-decoration: none; }
+.cad-date { font-family: "IBM Plex Mono", Consolas, monospace; font-weight: 700; white-space: nowrap; }
+.cad-dia-semana { display: block; color: var(--muted); font-family: "IBM Plex Sans", sans-serif; font-size: .72rem; font-weight: 500; }
+.cad-year-form { display: flex; align-items: end; gap: .5rem; flex-wrap: wrap; }
+.cad-year-form .form-control { width: 7rem; }
+.cad-empty-filter[hidden] { display: none; }
+.cad-check { display: flex; gap: .6rem; align-items: flex-start; }
+.cad-check input { margin-top: .25rem; }
+@media (max-width: 767.98px) {
+  .cad-toolbar .cad-search { max-width: none; }
+  .cad-row-inativo td { text-decoration: none; }
+}
+@media (min-width: 768px) {
+  .cad-cal { table-layout: fixed; }
+  .cad-cal th:nth-child(1) { width: 9.5rem; }
+  .cad-cal th:nth-child(3) { width: 9rem; }
+  .cad-cal th:nth-child(4) { width: 11rem; }
+  .cad-cal th:nth-child(5) { width: 6.5rem; }
+}
+@media (max-width: 767.98px) {
+  .table-cards .col-code::before, .table-cards .cad-date::before { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
+  .table-cards .cad-date { flex-wrap: wrap; }
+}
