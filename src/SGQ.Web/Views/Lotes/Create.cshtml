@@ -1,5 +1,32 @@
 @model SGQ.Domain.Entities.Lote
 @{ ViewData["Title"] = "Novo lote"; }
-<div class="page-heading mb-4"><p class="eyebrow mb-1">Cadastros básicos</p><h1>Novo lote</h1></div>
-<form method="post" class="card shadow-sm border-0 p-4 form-card"><div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div><div class="mb-3"><label asp-for="Numero" class="form-label"></label><input asp-for="Numero" class="form-control" autofocus /><span asp-validation-for="Numero" class="text-danger"></span></div><div class="mb-4"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Selecione um produto</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div><div class="d-flex gap-2"><button class="btn btn-primary" type="submit">Salvar lote</button><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div></form>
+@section Styles { <link rel="stylesheet" href="~/css/modulos/cadastros.css" asp-append-version="true" /> }
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Cadastros básicos</p>
+        <h1>Novo lote</h1>
+        <p class="page-header-lead">Os campos marcados com * são obrigatórios. O produto precisa estar cadastrado antes do lote.</p>
+    </div>
+</header>
+
+<form method="post" class="cad-form-narrow" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+    <section class="form-section">
+        <header><h2>Dados do lote</h2><p class="help">O número identifica o lote nas reclamações e recalls.</p></header>
+        <div class="form-grid">
+            <div class="span-6">
+                <label asp-for="Numero" class="form-label required">Número do lote</label>
+                <input asp-for="Numero" class="form-control" maxlength="80" autofocus autocomplete="off" />
+                <span asp-validation-for="Numero" class="field-error"></span>
+            </div>
+            <div class="span-6">
+                <label asp-for="ProdutoId" class="form-label required">Produto</label>
+                <select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Selecione um produto</option></select>
+                <span asp-validation-for="ProdutoId" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar</button><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div>
+</form>

@@ -1,0 +1,24 @@
+/* Usuários e perfis (somente Administrador). Prefixo: usr- */
+.usr-pending { margin-bottom: 1.5rem; padding: 1.1rem 1.25rem; background: #fff8e8; border: 1px solid #f5dfae; border-left: 4px solid #e0a100; border-radius: var(--radius); }
+.usr-pending h2 { margin: 0 0 .25rem; color: #6b3a00; font-size: 1.05rem; font-weight: 740; }
+.usr-pending > p { margin: 0 0 .9rem; color: #6b3a00; font-size: .86rem; }
+.usr-pending-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; padding: .85rem 0; border-top: 1px solid #f0dca8; }
+.usr-pending-item:first-of-type { border-top: 0; }
+.usr-id strong { display: block; overflow-wrap: anywhere; }
+.usr-id small { color: var(--muted); }
+.usr-form { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.1rem; }
+.usr-fields { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; margin: 0; padding: 0; border: 0; }
+.usr-check { display: inline-flex; align-items: center; gap: .45rem; min-height: 2.75rem; font-size: .86rem; cursor: pointer; }
+.usr-check input { width: 1.1rem; height: 1.1rem; }
+.usr-badges { display: flex; flex-wrap: wrap; gap: .35rem; }
+.usr-edit > summary { display: inline-flex; align-items: center; min-height: 2.75rem; cursor: pointer; color: var(--green-700); font-size: .84rem; font-weight: 700; }
+.usr-edit[open] > summary { margin-bottom: .4rem; }
+.usr-edit .usr-form { padding: .75rem; background: #f7f9f6; border: 1px solid var(--line); border-radius: .5rem; }
+.panel.usr-legend { margin-bottom: 1.25rem; padding: 0; }
+.usr-legend summary { cursor: pointer; padding: .9rem 1.25rem; font-weight: 700; }
+.usr-legend-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 1.5rem; padding: 0 1.25rem 1.25rem; }
+.usr-legend-body h3 { margin: 0 0 .25rem; font-size: .92rem; font-weight: 740; }
+.usr-legend-body p { margin: 0; color: var(--muted); font-size: .82rem; }
+.usr-legend-note { grid-column: 1 / -1; color: var(--muted); font-size: .8rem; }
+.usr-alert-error { margin-bottom: 1rem; padding: .85rem 1rem; color: #8f1a12; background: #fff1f0; border-left: 3px solid var(--danger); border-radius: .5rem; font-size: .88rem; }
+@media (max-width: 767.98px) { .usr-pending-item { align-items: flex-start; } }
