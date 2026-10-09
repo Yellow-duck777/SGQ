@@ -4,14 +4,14 @@ Estes roteiros permitem testar o SGQ **à mão**, tela por tela, sem conheciment
 
 ## 1. Preparar o ambiente (uma vez)
 
-1. Tenha o PostgreSQL 17 ligado e o SDK .NET 10 instalado.
+1. Tenha o PostgreSQL 17 e o SDK .NET 10 instalados. O PostgreSQL **não precisa estar ligado** nem ter senha conhecida: se ele não responder, o script cria um PostgreSQL próprio da demonstração (veja abaixo).
 2. Abra o PowerShell na pasta do projeto e execute:
 
    ```powershell
    powershell -ExecutionPolicy Bypass -File scripts\executar-demo.ps1
    ```
 
-   O script cria o banco de demonstração `sgq_demo_test`, aplica as migrations, carrega dados fictícios, cria **uma conta para cada perfil** e inicia o sistema em `http://localhost:5024`. Se pedir, informe a senha do usuário `postgres`.
+   O script cria o banco de demonstração `sgq_demo_test`, aplica as migrations, carrega dados fictícios, cria **uma conta para cada perfil** e inicia o sistema em `http://localhost:5024`. Se o PostgreSQL instalado estiver parado e você não for Administrador, o script usa um PostgreSQL próprio (porta 54329, sem senha, acessível só neste computador), guardado em `%LOCALAPPDATA%\SGQ\postgres-demo`; ele desliga junto com o sistema.
 3. No final o script mostra as contas e **a senha** (gerada na hora; vale para todas as contas de demonstração):
 
    | Conta | Perfil |
@@ -32,6 +32,7 @@ Opções do script:
 | `-ComEmail` | Liga o Mailpit (caixa de entrada de teste em `http://localhost:8025`) para o roteiro de notificações. |
 | `-SomentePreparar` | Prepara tudo mas não inicia o sistema. |
 | `-Servidor`, `-Porta`, `-Usuario` | Se o PostgreSQL não estiver em `localhost:5432` com o usuário `postgres`. |
+| `-PostgresPortatil`, `-PortaPortatil` | Força o uso do PostgreSQL próprio da demonstração (e muda a sua porta, padrão 54329). |
 
 O script usa variáveis de ambiente só desta janela do PowerShell: ele **não altera** seus User Secrets nem o seu banco de desenvolvimento (`sgq_dev`). Para encerrar o sistema, pressione `Ctrl + C` na janela.
 

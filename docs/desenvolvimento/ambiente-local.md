@@ -79,6 +79,8 @@ Para mostrar o SGQ neste computador:
 
 O endereço funciona apenas neste computador enquanto o servidor estiver ligado. Credenciais e configurações do banco continuam locais.
 
+Para uma demonstração com dados fictícios e uma conta por perfil, use `powershell -ExecutionPolicy Bypass -File scripts\executar-demo.ps1` (veja [os roteiros de teste](../qualidade/roteiros/README.md)). Sem Administrador ou sem a senha do PostgreSQL instalado, o script cria um PostgreSQL próprio da demonstração em `%LOCALAPPDATA%\SGQ\postgres-demo` (porta 54329, sem senha, só neste computador).
+
 ## Diagnóstico
 
 ```powershell
