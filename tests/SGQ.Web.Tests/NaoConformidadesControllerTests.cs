@@ -32,6 +32,24 @@ public class NaoConformidadesControllerTests
     }
 
     [Fact]
+    public async Task Index_ExpoeContagemPorSituacaoSemAplicarFiltros()
+    {
+        await using var context = CriarContexto();
+        await AdicionarNcAsync(context, StatusNaoConformidade.AguardandoAprovacao);
+        await AdicionarNcAsync(context, StatusNaoConformidade.AguardandoAprovacao);
+        await AdicionarNcAsync(context, StatusNaoConformidade.Encerrada);
+        var controller = CriarController(context, "gq", "GQ");
+
+        var resultado = await controller.Index(null, StatusNaoConformidade.Encerrada, null, null, null, null, null, null);
+
+        var view = Assert.IsType<ViewResult>(resultado);
+        Assert.Single((IEnumerable<NaoConformidade>)view.Model!);
+        var contagem = Assert.IsType<Dictionary<StatusNaoConformidade, int>>(controller.ViewBag.ContagemPorStatus);
+        Assert.Equal(2, contagem[StatusNaoConformidade.AguardandoAprovacao]);
+        Assert.Equal(1, contagem[StatusNaoConformidade.Encerrada]);
+    }
+
+    [Fact]
     public async Task DecidirDivergencia_Favoravel_RegistraDecisaoERetornaParaAprovacao()
     {
         await using var context = CriarContexto();
