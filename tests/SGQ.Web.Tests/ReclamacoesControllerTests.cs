@@ -93,6 +93,27 @@ public class ReclamacoesControllerTests
         Assert.NotNull(atualizada.ReabertaEm);
     }
 
+    [Fact]
+    public async Task Index_ExpoeContagemPorSituacaoSemAplicarFiltros()
+    {
+        await using var context = CriarContexto();
+        context.Clientes.Add(new Cliente { Id = 1, Nome = "Cliente teste", Contato = "contato" });
+        context.Produtos.Add(new Produto { Id = 1, Nome = "Produto teste" });
+        await context.SaveChangesAsync();
+        await AdicionarReclamacaoAsync(context, StatusReclamacao.EmInvestigacao);
+        await AdicionarReclamacaoAsync(context, StatusReclamacao.EmInvestigacao);
+        await AdicionarReclamacaoAsync(context, StatusReclamacao.Encerrada);
+        var controller = CriarController(context);
+
+        var resultado = await controller.Index(null, StatusReclamacao.Encerrada, null, null, null, null, null);
+
+        var view = Assert.IsType<ViewResult>(resultado);
+        Assert.Single((IEnumerable<ReclamacaoCliente>)view.Model!);
+        var contagens = Assert.IsType<Dictionary<StatusReclamacao, int>>(controller.ViewBag.ContagensStatus);
+        Assert.Equal(2, contagens[StatusReclamacao.EmInvestigacao]);
+        Assert.Equal(1, contagens[StatusReclamacao.Encerrada]);
+    }
+
     private static async Task<ReclamacaoCliente> AdicionarReclamacaoAsync(ApplicationDbContext context, StatusReclamacao status)
     {
         var reclamacao = new ReclamacaoCliente
