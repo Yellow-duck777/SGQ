@@ -62,6 +62,14 @@ Antes de qualquer publicação em produção, reverificar com o Caio e o time a 
 | DEM-2026-118 | Classificação alterada após a validação: justificativa obrigatória e propagação para a NC vinculada (decisão D9) | Proposto |
 | DEM-2026-117 | Testes com PostgreSQL real, autorização via HTTP e E2E | Parcial (`SGQ.IntegrationTests` com acesso por perfil e banco, autenticação simulada; faltam concorrência, carga, login por cookie e E2E com navegador) |
 
+## Rastreamento no GitHub
+
+As demandas pendentes e parciais têm issue correspondente no GitHub. A issue organiza a priorização e a discussão; este backlog continua sendo a fonte do estado e do escopo.
+
+- [MVP — Plataforma, segurança e publicação](https://github.com/Yellow-duck777/SGQ/milestone/1): [DEM-2026-003](https://github.com/Yellow-duck777/SGQ/issues/7), [004](https://github.com/Yellow-duck777/SGQ/issues/8), [005](https://github.com/Yellow-duck777/SGQ/issues/9), [007](https://github.com/Yellow-duck777/SGQ/issues/10), [050](https://github.com/Yellow-duck777/SGQ/issues/14), [103](https://github.com/Yellow-duck777/SGQ/issues/18), [104](https://github.com/Yellow-duck777/SGQ/issues/19), [105](https://github.com/Yellow-duck777/SGQ/issues/20), [112](https://github.com/Yellow-duck777/SGQ/issues/27), [113](https://github.com/Yellow-duck777/SGQ/issues/28), [114](https://github.com/Yellow-duck777/SGQ/issues/29), [115](https://github.com/Yellow-duck777/SGQ/issues/30), [116](https://github.com/Yellow-duck777/SGQ/issues/31) e [117](https://github.com/Yellow-duck777/SGQ/issues/32).
+- [MVP — Operação e experiência](https://github.com/Yellow-duck777/SGQ/milestone/2): [DEM-2026-010](https://github.com/Yellow-duck777/SGQ/issues/11), [013](https://github.com/Yellow-duck777/SGQ/issues/12), [020](https://github.com/Yellow-duck777/SGQ/issues/13), [060](https://github.com/Yellow-duck777/SGQ/issues/15), [109](https://github.com/Yellow-duck777/SGQ/issues/24), [110](https://github.com/Yellow-duck777/SGQ/issues/25), [111](https://github.com/Yellow-duck777/SGQ/issues/26) e [118](https://github.com/Yellow-duck777/SGQ/issues/33).
+- [MVP — Decisões da Qualidade](https://github.com/Yellow-duck777/SGQ/milestone/3): [DEM-2026-101](https://github.com/Yellow-duck777/SGQ/issues/16), [102](https://github.com/Yellow-duck777/SGQ/issues/17), [106](https://github.com/Yellow-duck777/SGQ/issues/21), [107](https://github.com/Yellow-duck777/SGQ/issues/22) e [108](https://github.com/Yellow-duck777/SGQ/issues/23).
+
 ## Entrada de ideias
 
 Ideias novas são registradas com problema, usuário afetado e resultado esperado. Elas não recebem código ou testes antes de virar requisito `Validado`.
