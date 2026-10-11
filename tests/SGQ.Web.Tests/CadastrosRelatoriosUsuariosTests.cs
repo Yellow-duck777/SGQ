@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using SGQ.Domain.Entities;
 using SGQ.Domain.Enums;
 using SGQ.Web.Controllers;
@@ -157,6 +158,100 @@ public class CadastrosRelatoriosUsuariosTests
         Assert.False(usuario.Bloqueado);
     }
 
+    [Fact]
+    public async Task Usuarios_Create_CriaContaComPerfil()
+    {
+        await using var context = CriarContexto();
+        var (controller, userManager) = await CriarUsuariosControllerAsync(context);
+        var model = new UsuarioCreateViewModel
+        {
+            Email = "gq@teste",
+            Password = "Senha-Forte-123!",
+            ConfirmPassword = "Senha-Forte-123!",
+            Perfis = [Roles.GarantiaQualidade]
+        };
+
+        var resultado = await controller.Create(model);
+
+        Assert.IsType<RedirectToActionResult>(resultado);
+        var usuario = await userManager.FindByEmailAsync("gq@teste");
+        Assert.NotNull(usuario);
+        Assert.Contains(Roles.GarantiaQualidade, await userManager.GetRolesAsync(usuario));
+        Assert.True(await userManager.CheckPasswordAsync(usuario, "Senha-Forte-123!"));
+    }
+
+    [Fact]
+    public async Task Usuarios_Create_RejeitaContaSemPerfil()
+    {
+        await using var context = CriarContexto();
+        var (controller, userManager) = await CriarUsuariosControllerAsync(context);
+        var model = new UsuarioCreateViewModel
+        {
+            Email = "sem-perfil@teste",
+            Password = "Senha-Forte-123!",
+            ConfirmPassword = "Senha-Forte-123!"
+        };
+
+        var resultado = await controller.Create(model);
+
+        Assert.IsType<ViewResult>(resultado);
+        Assert.Null(await userManager.FindByEmailAsync("sem-perfil@teste"));
+        Assert.True(controller.ModelState.ContainsKey(nameof(model.Perfis)));
+    }
+
+    [Fact]
+    public async Task Usuarios_RedefinirSenha_AlteraSenhaDaConta()
+    {
+        await using var context = CriarContexto();
+        var (controller, userManager) = await CriarUsuariosControllerAsync(context);
+        var usuario = await CriarUsuarioAsync(userManager, "usuario@teste", "Senha-Antiga-123!", Roles.Auditor);
+
+        var resultado = await controller.RedefinirSenha(new RedefinirSenhaUsuarioViewModel
+        {
+            Id = usuario.Id,
+            Password = "Senha-Nova-123!",
+            ConfirmPassword = "Senha-Nova-123!"
+        });
+
+        Assert.IsType<RedirectToActionResult>(resultado);
+        Assert.True(await userManager.CheckPasswordAsync(usuario, "Senha-Nova-123!"));
+        Assert.False(await userManager.CheckPasswordAsync(usuario, "Senha-Antiga-123!"));
+    }
+
+    [Fact]
+    public async Task Usuarios_AlternarBloqueio_BloqueiaEDesbloqueiaConta()
+    {
+        await using var context = CriarContexto();
+        var (controller, userManager) = await CriarUsuariosControllerAsync(context);
+        await CriarUsuarioAsync(userManager, "admin@teste", Roles.Administrador);
+        var usuario = await CriarUsuarioAsync(userManager, "auditor@teste", Roles.Auditor);
+
+        await controller.AlternarBloqueio(usuario.Id);
+
+        usuario = (await userManager.FindByIdAsync(usuario.Id))!;
+        Assert.True(usuario.LockoutEnd > DateTimeOffset.UtcNow);
+
+        await controller.AlternarBloqueio(usuario.Id);
+
+        usuario = (await userManager.FindByIdAsync(usuario.Id))!;
+        Assert.Null(usuario.LockoutEnd);
+    }
+
+    [Fact]
+    public async Task Usuarios_AlternarBloqueio_NaoBloqueiaUnicoAdministradorAtivo()
+    {
+        await using var context = CriarContexto();
+        var (controller, userManager) = await CriarUsuariosControllerAsync(context);
+        var administrador = await CriarUsuarioAsync(userManager, "admin@teste", Roles.Administrador);
+
+        var resultado = await controller.AlternarBloqueio(administrador.Id);
+
+        Assert.IsType<RedirectToActionResult>(resultado);
+        administrador = (await userManager.FindByIdAsync(administrador.Id))!;
+        Assert.Null(administrador.LockoutEnd);
+        Assert.Contains("única conta Administrador ativa", (string)controller.TempData["Error"]!);
+    }
+
     private static async Task SemearProcessosAsync(ApplicationDbContext context)
     {
         var cliente = new Cliente { Nome = "Cliente Teste", Contato = "contato@teste" };
@@ -182,8 +277,12 @@ public class CadastrosRelatoriosUsuariosTests
     private static async Task<(UsuariosController Controller, UserManager<ApplicationUser> UserManager)> CriarUsuariosControllerAsync(ApplicationDbContext context)
     {
         var store = new UserStore<ApplicationUser, IdentityRole, ApplicationDbContext>(context);
-        var userManager = new UserManager<ApplicationUser>(store, null!, new PasswordHasher<ApplicationUser>(), [], [],
-            new UpperInvariantLookupNormalizer(), new IdentityErrorDescriber(), null!, NullLogger<UserManager<ApplicationUser>>.Instance);
+        var tokenProviders = new Dictionary<string, IUserTwoFactorTokenProvider<ApplicationUser>>
+        {
+            [TokenOptions.DefaultProvider] = new TokenProvider()
+        };
+        var userManager = new UserManager<ApplicationUser>(store, Options.Create(new IdentityOptions()), new PasswordHasher<ApplicationUser>(), [], [],
+            new UpperInvariantLookupNormalizer(), new IdentityErrorDescriber(), tokenProviders, NullLogger<UserManager<ApplicationUser>>.Instance);
         foreach (var perfil in Roles.Todos)
             context.Roles.Add(new IdentityRole(perfil) { NormalizedName = perfil.ToUpperInvariant() });
         await context.SaveChangesAsync();
@@ -199,10 +298,14 @@ public class CadastrosRelatoriosUsuariosTests
         return (controller, userManager);
     }
 
-    private static async Task<ApplicationUser> CriarUsuarioAsync(UserManager<ApplicationUser> userManager, string email, params string[] perfis)
+    private static async Task<ApplicationUser> CriarUsuarioAsync(UserManager<ApplicationUser> userManager, string email, params string[] perfis) =>
+        await CriarUsuarioAsync(userManager, email, null, perfis);
+
+    private static async Task<ApplicationUser> CriarUsuarioAsync(UserManager<ApplicationUser> userManager, string email, string? senha, params string[] perfis)
     {
         var user = new ApplicationUser { UserName = email, Email = email };
-        Assert.True((await userManager.CreateAsync(user)).Succeeded);
+        var resultado = senha is null ? await userManager.CreateAsync(user) : await userManager.CreateAsync(user, senha);
+        Assert.True(resultado.Succeeded, string.Join("; ", resultado.Errors.Select(erro => erro.Description)));
         if (perfis.Length > 0) Assert.True((await userManager.AddToRolesAsync(user, perfis)).Succeeded);
         return user;
     }
@@ -215,5 +318,12 @@ public class CadastrosRelatoriosUsuariosTests
     {
         public IDictionary<string, object> LoadTempData(HttpContext context) => new Dictionary<string, object>();
         public void SaveTempData(HttpContext context, IDictionary<string, object> values) { }
+    }
+
+    private sealed class TokenProvider : IUserTwoFactorTokenProvider<ApplicationUser>
+    {
+        public Task<bool> CanGenerateTwoFactorTokenAsync(UserManager<ApplicationUser> manager, ApplicationUser user) => Task.FromResult(true);
+        public Task<string> GenerateAsync(string purpose, UserManager<ApplicationUser> manager, ApplicationUser user) => Task.FromResult("token-de-teste");
+        public Task<bool> ValidateAsync(string purpose, string token, UserManager<ApplicationUser> manager, ApplicationUser user) => Task.FromResult(token == "token-de-teste");
     }
 }

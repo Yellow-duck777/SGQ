@@ -1,0 +1,46 @@
+@using SGQ.Web.Security
+@model SGQ.Web.ViewModels.UsuarioCreateViewModel
+@{
+    ViewData["Title"] = "Criar usuário";
+}
+@section Styles { <link rel="stylesheet" href="~/css/modulos/usuarios.css" asp-append-version="true" /> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Administração</p>
+        <h1>Criar usuário</h1>
+        <p class="page-header-lead">Crie uma conta local, informe a senha inicial e selecione os perfis de acesso.</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Voltar para usuários</a>
+</header>
+
+<section class="panel usr-create" aria-labelledby="titulo-formulario">
+    <h2 id="titulo-formulario">Dados da conta</h2>
+    <form asp-action="Create" method="post" class="usr-create-form">
+        <div asp-validation-summary="ModelOnly" class="usr-alert-error" role="alert"></div>
+        <div class="form-group">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" class="form-control" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Password"></label>
+            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="ConfirmPassword"></label>
+            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+        <fieldset class="usr-create-roles">
+            <legend>Perfis de acesso</legend>
+            @foreach (var perfil in Roles.Todos)
+            {
+                <label class="usr-check"><input type="checkbox" name="Perfis" value="@perfil" checked="@Model.Perfis.Contains(perfil)" />@perfil</label>
+            }
+            <span asp-validation-for="Perfis" class="text-danger"></span>
+        </fieldset>
+        <button class="btn btn-primary" type="submit">Criar usuário</button>
+    </form>
+</section>

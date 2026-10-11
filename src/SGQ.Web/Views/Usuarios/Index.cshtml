@@ -46,6 +46,7 @@
         <h1>Usuários e perfis</h1>
         <p class="page-header-lead">Perfis definem o que cada pessoa pode fazer nos processos. Quem não tem perfil não consegue usar o sistema.</p>
     </div>
+    <a class="btn btn-primary" asp-action="Create">Criar usuário</a>
 </header>
 
 @if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
@@ -86,7 +87,7 @@ else if (comPerfil.Count > 0)
 {
     <div class="table-wrap">
         <table class="table-modern table-cards">
-            <thead><tr><th scope="col">Usuário</th><th scope="col">Situação</th><th scope="col">Perfis</th><th scope="col">Alterar perfis</th></tr></thead>
+            <thead><tr><th scope="col">Usuário</th><th scope="col">Situação</th><th scope="col">Perfis</th><th scope="col">Administrar</th></tr></thead>
             <tbody>
                 @foreach (var user in comPerfil)
                 {
@@ -97,11 +98,24 @@ else if (comPerfil.Count > 0)
                             else { <span class="status-badge" data-tom="sucesso">Ativo</span> }
                         </td>
                         <td data-label="Perfis"><span class="usr-badges">@foreach (var perfil in user.Perfis.OrderBy(p => Array.IndexOf(Roles.Todos, p))) { <span class="status-badge" data-tom="@Tom(perfil)">@Nome(perfil)</span> }</span></td>
-                        <td data-label="Alterar">
+                        <td data-label="Administrar">
                             <details class="usr-edit">
                                 <summary>Editar perfis</summary>
                                 @formulario(user)
                             </details>
+                            <details class="usr-edit">
+                                <summary>Redefinir senha</summary>
+                                <form asp-action="RedefinirSenha" method="post" class="usr-password-form">
+                                    <input type="hidden" name="Id" value="@user.Id" />
+                                    <label>Nova senha <input class="form-control" type="password" name="Password" autocomplete="new-password" required /></label>
+                                    <label>Confirmar senha <input class="form-control" type="password" name="ConfirmPassword" autocomplete="new-password" required /></label>
+                                    <button class="btn btn-outline-primary" type="submit">Salvar senha</button>
+                                </form>
+                            </details>
+                            <form asp-action="AlternarBloqueio" method="post" class="usr-lock-form" data-confirm="@(user.Bloqueado ? "Desbloquear esta conta?" : "Bloquear esta conta? Ela não poderá acessar o sistema.")">
+                                <input type="hidden" name="id" value="@user.Id" />
+                                <button class="btn @(user.Bloqueado ? "btn-outline-primary" : "btn-outline-danger")" type="submit">@(user.Bloqueado ? "Desbloquear" : "Bloquear")</button>
+                            </form>
                         </td>
                     </tr>
                 }
