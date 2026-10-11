@@ -16,6 +16,7 @@ public class RelatorioProcessosViewModel
 
 public class RelatorioProcessoItemViewModel
 {
+    public int Id { get; init; }
     public required string Tipo { get; init; }
     public required string Codigo { get; init; }
     public required DateOnly DataAbertura { get; init; }
@@ -24,6 +25,8 @@ public class RelatorioProcessoItemViewModel
     public string? Lote { get; init; }
     public required string Situacao { get; init; }
     public string? Classificacao { get; init; }
+    public string SituacaoTom { get; init; } = "neutro";
+    public string ClassificacaoTom { get; init; } = "neutro";
     public string? AreaOuCliente { get; init; }
     public DateTimeOffset? EncerradaEm { get; init; }
 }

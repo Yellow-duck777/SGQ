@@ -105,7 +105,8 @@ public class AnexosController(ApplicationDbContext context, IWebHostEnvironment 
     public async Task<IActionResult> Anular(int id, string processo, int processoId, string justificativa)
     {
         var anexo = await context.Anexos.FindAsync(id); if (anexo is null) return NotFound();
-        if (string.IsNullOrWhiteSpace(justificativa)) { TempData["Error"] = "Informe a justificativa da anulação."; return RedirectToAction("Details", processo, new { id = processoId }); }
+        justificativa = justificativa?.Trim() ?? string.Empty;
+        if (justificativa.Length is < 10 or > 1000) { TempData["Error"] = "Informe a justificativa da anulação (de 10 a 1000 caracteres)."; return RedirectToAction("Details", processo, new { id = processoId }); }
         anexo.Ativo = false; anexo.JustificativaAnulacao = justificativa; anexo.UsuarioAnulacao = User.Identity?.Name ?? "Usuário autenticado"; anexo.AnuladoEm = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync(); return RedirectToAction("Details", processo, new { id = processoId });
     }

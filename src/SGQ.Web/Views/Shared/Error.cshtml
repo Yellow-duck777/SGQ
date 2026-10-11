@@ -1,4 +1,4 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
     ViewData["Title"] = "Erro";
 }
@@ -23,3 +23,21 @@
     Para depuração local, habilite o ambiente <strong>Development</strong> definindo a variável de ambiente <strong>ASPNETCORE_ENVIRONMENT</strong> como <strong>Development</strong>
     e reinicie a aplicação.
 </p>
+    ViewData["Title"] = "Algo deu errado";
+}
+
+<div class="simple-page">
+    <div class="account-state-icon" data-tom="perigo" aria-hidden="true">!</div>
+    <p class="eyebrow">Erro inesperado</p>
+    <h1 class="h2">Algo deu errado</h1>
+    <p>Não foi possível concluir o que você pediu. Tente novamente em instantes.</p>
+    <p>Se o problema continuar, avise o responsável pelo sistema e informe o código abaixo.</p>
+    @if (Model.ShowRequestId)
+    {
+        <p class="text-muted small">Código do atendimento: <code>@Model.RequestId</code></p>
+    }
+    <p class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Ir para a visão geral</a>
+        <a class="btn btn-outline-secondary" href="~/" data-history-back>Voltar</a>
+    </p>
+</div>

@@ -1,50 +1,54 @@
 @model IEnumerable<SGQ.Domain.Entities.Cliente>
 @{
     ViewData["Title"] = "Clientes";
+    var clientes = Model.ToList();
 }
+@section Styles { <link rel="stylesheet" href="~/css/modulos/cadastros.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/modulos/cadastros.js" asp-append-version="true"></script> }
 
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4">
-    <div>
+<header class="page-header">
+    <div class="page-header-main">
         <p class="eyebrow mb-1">Cadastros básicos</p>
         <h1>Clientes</h1>
-        <p class="text-muted mb-0">Gerencie os clientes utilizados nos processos de qualidade.</p>
+        <p class="page-header-lead">Clientes que podem ser vinculados às reclamações. Mantenha o contato atualizado para facilitar o retorno ao cliente.</p>
     </div>
-    <a class="btn btn-primary" asp-action="Create">Novo cliente</a>
-</div>
+    <div class="page-header-actions"><a class="btn btn-primary" asp-action="Create">Novo cliente</a></div>
+</header>
 
-@if (TempData["Success"] is string success)
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+
+@if (clientes.Count == 0)
 {
-    <div class="alert alert-success" role="alert">@success</div>
-}
-
-<div class="card shadow-sm border-0">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Contato</th>
-                    <th class="text-end">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var cliente in Model)
-                {
-                    <tr>
-                        <td>@cliente.Nome</td>
-                        <td>@cliente.Contato</td>
-                        <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Edit"
-                                                    asp-route-id="@cliente.Id">Editar</a></td>
-                        </tr>
-                    }
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">Nenhum cliente cadastrado.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+    <div class="panel empty-state">
+        <span aria-hidden="true">+</span>
+        <h3>Nenhum cliente cadastrado</h3>
+        <p>Cadastre o primeiro cliente para poder registrar reclamações.</p>
+        <a class="btn btn-primary" asp-action="Create">Novo cliente</a>
     </div>
-
+}
+else
+{
+    <div class="cad-toolbar">
+        <div class="cad-search">
+            <label class="form-label" for="busca">Buscar cliente</label>
+            <input id="busca" type="search" class="form-control" placeholder="Nome ou contato" autocomplete="off" data-cad-search="#lista" />
+        </div>
+        <span class="cad-count" aria-live="polite" data-cad-count="cliente(s)">@clientes.Count cliente(s)</span>
+    </div>
+    <div class="table-wrap" id="lista">
+        <table class="table-modern table-cards">
+            <thead><tr><th scope="col">Nome</th><th scope="col">Contato</th><th scope="col"><span class="visually-hidden">Ações</span></th></tr></thead>
+            <tbody>
+                @foreach (var cliente in clientes)
+                {
+                    <tr data-busca="@cliente.Nome @cliente.Contato">
+                        <td data-label="Nome" class="cad-nome">@cliente.Nome</td>
+                        <td data-label="Contato">@cliente.Contato</td>
+                        <td class="col-actions"><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@cliente.Id" aria-label="Editar @cliente.Nome">Editar</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="panel empty-state cad-empty-filter" data-cad-empty hidden>Nenhum cliente corresponde à busca.</p>
+}

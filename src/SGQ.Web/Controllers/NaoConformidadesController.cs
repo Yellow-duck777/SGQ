@@ -40,6 +40,8 @@ public class NaoConformidadesController(ApplicationDbContext context, IPrazoServ
         if (fim.HasValue) query = query.Where(nc => nc.DataAbertura <= fim);
 
         ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(produto => produto.Nome).ToListAsync(), "Id", "Nome", produtoId);
+        // Apresentação: contagem total por situação (sem filtros) para os atalhos da lista.
+        ViewBag.ContagemPorStatus = await context.NaoConformidades.GroupBy(nc => nc.Status).Select(grupo => new { grupo.Key, Total = grupo.Count() }).ToDictionaryAsync(grupo => grupo.Key, grupo => grupo.Total);
         return View(await query.OrderByDescending(nc => nc.CriadaEm).ToListAsync());
     }
 

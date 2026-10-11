@@ -1,0 +1,42 @@
+@page
+@model SGQ.Web.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Solicitar acesso";
+}
+
+<div class="login-form-heading">
+    <p class="eyebrow">Primeiro acesso</p>
+    <h2 id="conta-titulo">Solicitar acesso</h2>
+    <p>Crie sua conta com o e-mail corporativo.</p>
+</div>
+<div class="account-alert" data-tom="alerta" role="note">
+    <strong>Seu acesso só é liberado por um Administrador.</strong>
+    Depois do cadastro, a conta fica sem acesso aos processos até que um Administrador atribua o seu perfil. Avise-o após concluir esta etapa.
+</div>
+<form id="registro" method="post" asp-route-returnUrl="@Model.ReturnUrl" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+    <div class="field-group">
+        <label asp-for="Input.Email">E-mail corporativo</label>
+        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="nome@empresa.com" autofocus />
+        <span asp-validation-for="Input.Email" class="field-error"></span>
+    </div>
+    <div class="field-group">
+        <label asp-for="Input.Password">Senha</label>
+        <div class="password-field">
+            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" aria-describedby="requisitos-senha" />
+            <button type="button" data-password-toggle aria-label="Mostrar senha">Mostrar</button>
+        </div>
+        <span asp-validation-for="Input.Password" class="field-error"></span>
+        <div id="requisitos-senha" class="account-help">
+            A senha precisa ter:
+            <ul class="account-list">@foreach (var requisito in Model.RequisitosSenha) { <li>@requisito</li> }</ul>
+        </div>
+    </div>
+    <div class="field-group">
+        <label asp-for="Input.ConfirmPassword">Repita a senha</label>
+        <input asp-for="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" />
+        <span asp-validation-for="Input.ConfirmPassword" class="field-error"></span>
+    </div>
+    <button type="submit" class="btn-login">Criar minha conta <span aria-hidden="true">→</span></button>
+</form>
+<p class="access-request">Já tem acesso? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Entrar</a></p>

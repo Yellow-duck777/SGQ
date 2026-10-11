@@ -33,6 +33,7 @@ Este diretório é a fonte versionada de produto, arquitetura, desenvolvimento, 
 
 - [Roadmap](gestao/roadmap.md)
 - [Backlog](gestao/backlog.md)
+- [Rastreamento das pendências no GitHub](gestao/backlog.md#rastreamento-no-github)
 - [Decisões pendentes (Qualidade e time)](gestao/decisoes-pendentes.md)
 - [Planejamento histórico de entregas](03-planejamento-desenvolvimento.md)
 - [Proposta de AGENTS.md unificado](gestao/proposta-agents-unificado.md)

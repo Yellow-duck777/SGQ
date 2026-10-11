@@ -1,19 +1,130 @@
+@using SGQ.Web.Models
 @model SGQ.Web.ViewModels.RecallCreateViewModel
-@{ ViewData["Title"] = "Novo Recall"; }
-<div class="page-heading mb-4"><p class="eyebrow mb-1">Processos de qualidade</p><h1>Novo Recall / Recolhimento</h1><p class="text-muted mb-0">Registre a avaliação e a decisão técnica inicial.</p></div>
-<form method="post" class="card shadow-sm border-0 p-4 form-card"><div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div><div class="row g-3">
-<div class="col-md-4"><label asp-for="DataAbertura" class="form-label">Data de abertura</label><input asp-for="DataAbertura" class="form-control" /><span asp-validation-for="DataAbertura" class="text-danger"></span></div>
-<div class="col-md-4"><label asp-for="DataAlvo" class="form-label">Data-alvo</label><input asp-for="DataAlvo" class="form-control" /><div class="form-text">Prazo para conclusao do recall.</div><span asp-validation-for="DataAlvo" class="text-danger"></span></div>
-<div class="col-md-8"><label asp-for="Origem" class="form-label"></label><select asp-for="Origem" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.OrigemRecall>()" class="form-select"></select></div>
-<div class="col-md-6"><label asp-for="NaoConformidadeId" class="form-label">Não Conformidade vinculada</label><select asp-for="NaoConformidadeId" asp-items="ViewBag.NaoConformidades" class="form-select"><option value="">Não aplicável</option></select></div>
-<div class="col-md-6"><label asp-for="ReclamacaoClienteId" class="form-label">Reclamação vinculada</label><select asp-for="ReclamacaoClienteId" asp-items="ViewBag.Reclamacoes" class="form-select"><option value="">Não aplicável</option></select></div>
-<div class="col-md-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Selecione</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div>
-<div class="col-md-6"><label asp-for="LoteId" class="form-label">Lote</label><select asp-for="LoteId" asp-items="ViewBag.Lotes" class="form-select"><option value="">Selecione</option></select><span asp-validation-for="LoteId" class="text-danger"></span></div>
-<div class="col-md-3"><label asp-for="DataFabricacao" class="form-label"></label><input asp-for="DataFabricacao" class="form-control" /></div><div class="col-md-3"><label asp-for="DataValidade" class="form-label"></label><input asp-for="DataValidade" class="form-control" /></div>
-<div class="col-md-2"><label asp-for="QuantidadeProduzida" class="form-label">Qtd. produzida</label><input asp-for="QuantidadeProduzida" class="form-control" /></div><div class="col-md-2"><label asp-for="QuantidadeEstoque" class="form-label">Qtd. estoque</label><input asp-for="QuantidadeEstoque" class="form-control" /></div><div class="col-md-2"><label asp-for="QuantidadeDistribuida" class="form-label">Qtd. distribuída</label><input asp-for="QuantidadeDistribuida" class="form-control" /></div>
-<div class="col-12"><label asp-for="ClientesEnvolvidos" class="form-label">Clientes envolvidos</label><textarea asp-for="ClientesEnvolvidos" rows="2" class="form-control"></textarea><span asp-validation-for="ClientesEnvolvidos" class="text-danger"></span></div>
-<div class="col-12"><label asp-for="NaturezaOcorrencia" class="form-label">Natureza da ocorrência</label><textarea asp-for="NaturezaOcorrencia" rows="3" class="form-control"></textarea><span asp-validation-for="NaturezaOcorrencia" class="text-danger"></span></div>
-<div class="col-12"><label asp-for="RiscoPotencial" class="form-label">Risco potencial</label><textarea asp-for="RiscoPotencial" rows="3" class="form-control"></textarea><span asp-validation-for="RiscoPotencial" class="text-danger"></span></div>
-<div class="col-md-4"><label asp-for="Decisao" class="form-label">Decisão</label><select asp-for="Decisao" asp-items="Html.GetEnumSelectList<SGQ.Web.Models.DecisaoRecall>()" class="form-select"></select></div><div class="col-md-8"><label asp-for="JustificativaDecisao" class="form-label">Justificativa da decisão</label><textarea asp-for="JustificativaDecisao" rows="2" class="form-control"></textarea><span asp-validation-for="JustificativaDecisao" class="text-danger"></span></div>
-</div><div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Registrar avaliação</button><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div></form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@{ ViewData["Title"] = "Novo recall"; }
+@section Styles { <link rel="stylesheet" href="~/css/modulos/recalls.css" asp-append-version="true" /> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow">Recall e recolhimento</p>
+        <h1>Novo recall</h1>
+        <p class="page-header-lead">Registre o que aconteceu, o produto e o lote envolvidos e a decisão inicial. Campos com <span class="required" aria-hidden="true"></span><span class="visually-hidden">asterisco</span> são obrigatórios.</p>
+    </div>
+    <div class="page-header-actions"><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a></div>
+</header>
+
+<form method="post" class="rec-form" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="validation-summary" role="alert">Revise os campos destacados abaixo para registrar o recall.</div>
+    }
+
+    <section class="form-section" aria-labelledby="sec-origem">
+        <header><h2 id="sec-origem">1. Origem e vínculos</h2><p class="help">De onde veio a suspeita e, se houver, qual registro já existe no sistema.</p></header>
+        <div class="form-grid">
+            <div class="span-4"><label asp-for="DataAbertura" class="form-label required">Data de abertura</label><input asp-for="DataAbertura" class="form-control" /><span asp-validation-for="DataAbertura" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="DataAlvo" class="form-label">Prazo para concluir</label><input asp-for="DataAlvo" class="form-control" aria-describedby="ajuda-prazo" /><div id="ajuda-prazo" class="form-text">Opcional. Pode ser prorrogado depois.</div><span asp-validation-for="DataAlvo" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="Origem" class="form-label required">Origem da suspeita</label><select asp-for="Origem" asp-items="Html.GetEnumSelectList<OrigemRecall>()" class="form-select"></select></div>
+            <div class="span-6"><label asp-for="NaoConformidadeId" class="form-label">Não conformidade vinculada</label><select asp-for="NaoConformidadeId" asp-items="ViewBag.NaoConformidades" class="form-select"><option value="">Sem vínculo</option></select><span asp-validation-for="NaoConformidadeId" class="field-error"></span></div>
+            <div class="span-6"><label asp-for="ReclamacaoClienteId" class="form-label">Reclamação de cliente vinculada</label><select asp-for="ReclamacaoClienteId" asp-items="ViewBag.Reclamacoes" class="form-select"><option value="">Sem vínculo</option></select><span asp-validation-for="ReclamacaoClienteId" class="field-error"></span></div>
+        </div>
+    </section>
+
+    <section class="form-section" aria-labelledby="sec-produto">
+        <header><h2 id="sec-produto">2. Produto e lote</h2><p class="help">Escolha o produto primeiro; a lista de lotes mostra somente os lotes dele.</p></header>
+        <div class="form-grid">
+            <div class="span-6"><label asp-for="ProdutoId" class="form-label required">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Selecione o produto</option></select><span asp-validation-for="ProdutoId" class="field-error"></span></div>
+            <div class="span-6"><label asp-for="LoteId" class="form-label required">Lote</label><select asp-for="LoteId" asp-items="ViewBag.Lotes" class="form-select"><option value="">Selecione o lote</option></select><span asp-validation-for="LoteId" class="field-error"></span></div>
+            <div class="span-6"><label asp-for="DataFabricacao" class="form-label">Data de fabricação</label><input asp-for="DataFabricacao" class="form-control" /><span asp-validation-for="DataFabricacao" class="field-error"></span></div>
+            <div class="span-6"><label asp-for="DataValidade" class="form-label">Data de validade</label><input asp-for="DataValidade" class="form-control" /><span asp-validation-for="DataValidade" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="QuantidadeProduzida" class="form-label">Quantidade produzida</label><input asp-for="QuantidadeProduzida" class="form-control" type="number" step="any" min="0" inputmode="decimal" /><span asp-validation-for="QuantidadeProduzida" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="QuantidadeEstoque" class="form-label">Quantidade em estoque</label><input asp-for="QuantidadeEstoque" class="form-control" type="number" step="any" min="0" inputmode="decimal" /><span asp-validation-for="QuantidadeEstoque" class="field-error"></span></div>
+            <div class="span-4"><label asp-for="QuantidadeDistribuida" class="form-label">Quantidade distribuída</label><input asp-for="QuantidadeDistribuida" class="form-control" type="number" step="any" min="0" inputmode="decimal" /><span asp-validation-for="QuantidadeDistribuida" class="field-error"></span></div>
+            <div class="rec-quantidades" id="rec-quantidades" role="status" aria-live="polite" data-tom="neutro">Informe as quantidades para conferir se estoque e distribuição fecham com o total produzido.</div>
+            <div><label asp-for="ClientesEnvolvidos" class="form-label required">Clientes envolvidos</label><textarea asp-for="ClientesEnvolvidos" rows="2" class="form-control" placeholder="Quem recebeu o lote. Se não houve distribuição, escreva isso."></textarea><span asp-validation-for="ClientesEnvolvidos" class="field-error"></span></div>
+        </div>
+    </section>
+
+    <section class="form-section" aria-labelledby="sec-risco">
+        <header><h2 id="sec-risco">3. Ocorrência e risco</h2><p class="help">Descreva com clareza: estas informações embasam a decisão de recolher o produto.</p></header>
+        <div class="form-grid">
+            <div><label asp-for="NaturezaOcorrencia" class="form-label required">O que aconteceu</label><textarea asp-for="NaturezaOcorrencia" rows="3" class="form-control"></textarea><span asp-validation-for="NaturezaOcorrencia" class="field-error"></span></div>
+            <div><label asp-for="RiscoPotencial" class="form-label required">Risco potencial para o consumidor</label><textarea asp-for="RiscoPotencial" rows="3" class="form-control"></textarea><span asp-validation-for="RiscoPotencial" class="field-error"></span></div>
+        </div>
+    </section>
+
+    <section class="form-section" aria-labelledby="sec-decisao">
+        <header><h2 id="sec-decisao">4. Decisão e justificativa</h2><p class="help">Diga se o caso exige recolhimento e por quê.</p></header>
+        <fieldset class="border-0 p-0 m-0">
+            <legend class="form-label required">Decisão</legend>
+            <div class="rec-decisao-opcoes">
+                <label class="rec-opcao"><input type="radio" asp-for="Decisao" value="@DecisaoRecall.Aplicavel" /><strong>Aplicável</strong><span>Há risco: o recall segue para avaliação, aprovação e recolhimento.</span></label>
+                <label class="rec-opcao"><input type="radio" asp-for="Decisao" value="@DecisaoRecall.NaoAplicavel" /><strong>Não aplicável</strong><span>Não há necessidade de recolher o produto. O registro é encerrado na hora.</span></label>
+            </div>
+        </fieldset>
+        <div class="rec-aviso" id="rec-aviso-na" role="status" aria-live="polite"><strong>Atenção:</strong> com a decisão "Não aplicável" o recall é encerrado assim que for registrado, em seu nome e na data de hoje. Explique abaixo, com clareza, por que o recolhimento não é necessário. Só GQ ou RT podem reabri-lo depois.</div>
+        <div class="mt-3"><label asp-for="JustificativaDecisao" class="form-label required">Justificativa da decisão</label><textarea asp-for="JustificativaDecisao" rows="3" class="form-control"></textarea><span asp-validation-for="JustificativaDecisao" class="field-error"></span></div>
+    </section>
+
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit" id="rec-enviar">Registrar recall</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+    (() => {
+        const produto = document.getElementById("ProdutoId");
+        const lote = document.getElementById("LoteId");
+        const todosLotes = Array.from(lote.options).filter(o => o.value !== "").map(o => ({ valor: o.value, texto: o.text }));
+        const marcador = lote.options[0];
+        const filtrarLotes = () => {
+            const atual = lote.value;
+            const nome = produto.value ? produto.options[produto.selectedIndex].text : null;
+            lote.innerHTML = "";
+            lote.appendChild(marcador);
+            todosLotes.filter(l => !nome || l.texto.endsWith(" — " + nome)).forEach(l => {
+                const op = new Option(l.texto, l.valor, false, l.valor === atual);
+                lote.appendChild(op);
+            });
+            if (!Array.from(lote.options).some(o => o.value === atual)) lote.value = "";
+        };
+        produto.addEventListener("change", filtrarLotes);
+        lote.addEventListener("change", () => {
+            if (!lote.value) return;
+            const texto = lote.options[lote.selectedIndex].text;
+            const alvo = Array.from(produto.options).find(o => o.value && texto.endsWith(" — " + o.text));
+            if (alvo && produto.value !== alvo.value) { produto.value = alvo.value; filtrarLotes(); lote.value = todosLotes.find(l => l.texto === texto)?.valor ?? ""; }
+        });
+        filtrarLotes();
+
+        const campos = ["QuantidadeProduzida", "QuantidadeEstoque", "QuantidadeDistribuida"].map(id => document.getElementById(id));
+        const caixa = document.getElementById("rec-quantidades");
+        const fmt = n => n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+        const conferir = () => {
+            const [prod, est, dist] = campos.map(c => parseFloat(c.value) || 0);
+            if (campos.every(c => !(parseFloat(c.value) > 0))) { caixa.dataset.tom = "neutro"; return; }
+            const soma = est + dist;
+            const diff = prod - soma;
+            if (Math.abs(diff) < 0.005) { caixa.dataset.tom = "ok"; caixa.textContent = `Fecha: estoque (${fmt(est)}) + distribuído (${fmt(dist)}) = produzido (${fmt(prod)}).`; }
+            else if (diff < 0) { caixa.dataset.tom = "alerta"; caixa.textContent = `Atenção: estoque + distribuído (${fmt(soma)}) passa em ${fmt(-diff)} o total produzido (${fmt(prod)}). Confira os números.`; }
+            else { caixa.dataset.tom = "neutro"; caixa.textContent = `Estoque + distribuído somam ${fmt(soma)} de ${fmt(prod)} produzidos; ${fmt(diff)} não estão contabilizados (consumo, perdas ou amostras). Se for o caso, tudo bem.`; }
+        };
+        campos.forEach(c => c.addEventListener("input", conferir));
+        conferir();
+
+        const aviso = document.getElementById("rec-aviso-na");
+        const botao = document.getElementById("rec-enviar");
+        const radios = document.querySelectorAll('input[name="Decisao"]');
+        const atualizarDecisao = () => {
+            const na = document.querySelector('input[name="Decisao"]:checked')?.value === "NaoAplicavel";
+            aviso.classList.toggle("is-visible", na);
+            botao.textContent = na ? "Registrar e encerrar" : "Registrar recall";
+        };
+        radios.forEach(r => r.addEventListener("change", atualizarDecisao));
+        atualizarDecisao();
+    })();
+    </script>
+}

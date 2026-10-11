@@ -38,6 +38,7 @@ public class RecallsController(ApplicationDbContext context, IFluxoNotificacaoSe
 
         ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(produto => produto.Nome).ToListAsync(), "Id", "Nome", produtoId);
         ViewBag.Lotes = new SelectList(await context.Lotes.OrderBy(lote => lote.Numero).ToListAsync(), "Id", "Numero", loteId);
+        ViewBag.ContagemPorSituacao = await context.Recalls.GroupBy(recall => recall.Status).Select(grupo => new { grupo.Key, Total = grupo.Count() }).ToDictionaryAsync(item => item.Key, item => item.Total);
         return View(await query.OrderByDescending(recall => recall.CriadaEm).ToListAsync());
     }
 

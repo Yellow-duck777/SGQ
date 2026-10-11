@@ -1,19 +1,471 @@
-@model SGQ.Web.Models.Recall
-@{ ViewData["Title"] = Model.Codigo; }
-@if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
-@if (TempData["Error"] is string error) { <div class="alert alert-danger">@error</div> }
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">Recall / Recolhimento</p><h1>@Model.Codigo</h1><span class="badge text-bg-secondary">@Model.Status</span></div><a class="btn btn-outline-secondary" asp-action="Index">Voltar</a></div>
-<div class="card shadow-sm border-0 p-4"><dl class="row mb-0"><dt class="col-sm-3">Origem</dt><dd class="col-sm-9">@Model.Origem</dd><dt class="col-sm-3">Produto / lote</dt><dd class="col-sm-9">@Model.Produto.Nome — @Model.Lote.Numero</dd><dt class="col-sm-3">NC vinculada</dt><dd class="col-sm-9">@(Model.NaoConformidade?.Codigo ?? "Não aplicável")</dd><dt class="col-sm-3">Reclamação vinculada</dt><dd class="col-sm-9">@(Model.ReclamacaoCliente?.Codigo ?? "Não aplicável")</dd><dt class="col-sm-3">Risco</dt><dd class="col-sm-9">@Model.RiscoPotencial</dd><dt class="col-sm-3">Decisão</dt><dd class="col-sm-9">@Model.Decisao — @Model.JustificativaDecisao</dd></dl></div>
-@if (Model.Status == SGQ.Web.Models.StatusRecall.EmAvaliacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Aprovação técnica</h2><p>Envie a avaliação para aprovação de RT e GQ antes de iniciar o recolhimento.</p><form asp-action="SolicitarAprovacao" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary">Solicitar aprovação</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusRecall.AguardandoAprovacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Aprovação técnica</h2><p>RT: @(Model.AprovadaRt ? "Aprovada" : "Pendente") · GQ: @(Model.AprovadaGq ? "Aprovada" : "Pendente")</p><div class="d-flex gap-2 flex-wrap"><form asp-action="Aprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="RT" /><button class="btn btn-outline-primary">Aprovar como RT</button></form><form asp-action="Aprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="GQ" /><button class="btn btn-outline-primary">Aprovar como GQ</button></form><form asp-action="Reprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="RT" /><button class="btn btn-outline-danger">Reprovar como RT</button></form><form asp-action="Reprovar" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="GQ" /><button class="btn btn-outline-danger">Reprovar como GQ</button></form></div></section> }
-@if (Model.Status == SGQ.Web.Models.StatusRecall.AguardandoDecisaoCq) { <section class="card shadow-sm border-warning p-4 mt-4"><h2 class="h5">Divergência técnica — decisão do CQ</h2><p>RT: @(Model.AprovadaRt ? "Aprovado" : "Reprovado") · GQ: @(Model.AprovadaGq ? "Aprovado" : "Reprovado")</p><form asp-action="DecidirDivergencia" method="post"><input type="hidden" name="id" value="@Model.Id" /><textarea name="justificativa" class="form-control" minlength="10" required placeholder="Fundamentação da decisão do CQ"></textarea><button name="favoravel" value="true" class="btn btn-primary mt-3">Decisão favorável</button><button name="favoravel" value="false" class="btn btn-outline-danger mt-3">Retornar para avaliação</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusRecall.EmRecolhimento) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Início do recolhimento</h2><form asp-action="RegistrarOperacao" method="post"><input type="hidden" name="id" value="@Model.Id" /><div class="row g-3"><div class="col-md-3 d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="bloqueioRegistrado" value="true" id="bloqueio" /><label class="form-check-label" for="bloqueio">Bloqueio registrado</label></div></div><div class="col-md-5"><label class="form-label">Comunicação aos clientes</label><input name="comunicacaoClientes" class="form-control" required /></div><div class="col-md-2"><label class="form-label">Autoridade sanitária</label><input name="autoridadeSanitaria" class="form-control" required /></div><div class="col-md-2"><label class="form-label">Protocolo</label><input name="protocoloAutoridade" class="form-control" /></div></div><button class="btn btn-primary mt-3">Iniciar retornos</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusRecall.AguardandoRetorno) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Retornos de produto</h2><table class="table"><thead><tr><th>Cliente</th><th>Quantidade</th><th>Data</th><th>Embalagem</th></tr></thead><tbody>@foreach (var retorno in Model.Retornos) { <tr><td>@retorno.Cliente</td><td>@retorno.Quantidade</td><td>@retorno.DataRetorno.ToString("dd/MM/yyyy")</td><td>@retorno.CondicaoEmbalagem</td></tr> }</tbody></table><form asp-action="AdicionarRetorno" method="post" class="row g-2"><input type="hidden" name="recallId" value="@Model.Id" /><div class="col-md-3"><input name="cliente" class="form-control" placeholder="Cliente" required /></div><div class="col-md-2"><input name="quantidade" type="number" step="0.01" class="form-control" placeholder="Quantidade" required /></div><div class="col-md-2"><input name="dataRetorno" type="date" class="form-control" required /></div><div class="col-md-3"><input name="condicaoEmbalagem" class="form-control" placeholder="Condição embalagem" required /></div><div class="col-md-2"><button class="btn btn-outline-primary">Registrar retorno</button></div><input type="hidden" name="condicaoLacre" /><input type="hidden" name="avarias" /><input type="hidden" name="documentoTransporte" /></form><form asp-action="AvancarDestinacao" method="post" class="mt-3"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary">Avançar para destinação</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusRecall.EmAvaliacaoDeDestinacao) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Destinação</h2><form asp-action="RegistrarDestinacao" method="post"><input type="hidden" name="id" value="@Model.Id" /><label class="form-label">Destinação</label><input name="destinacao" class="form-control" placeholder="Ex.: descarte, retrabalho" required /><label class="form-label mt-3">Evidência</label><input name="evidenciaDestinacao" class="form-control" required /><button class="btn btn-primary mt-3">Registrar destinação</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusRecall.AguardandoEncerramento) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Encerramento</h2><p><strong>Destinação:</strong> @Model.Destinacao</p><form asp-action="Encerrar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-primary">Encerrar Recall</button></form></section> }
-@if (Model.Status == SGQ.Web.Models.StatusRecall.Encerrado) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Reabertura</h2><p class="text-muted">Use apenas quando uma informação relevante exigir nova avaliação e aprovações técnicas.</p><form asp-action="Reabrir" method="post"><input type="hidden" name="Id" value="@Model.Id" /><div class="row g-3"><div class="col-md-4"><label class="form-label" for="Motivo">Motivo</label><input class="form-control" id="Motivo" name="Motivo" minlength="10" maxlength="500" required /></div><div class="col-md-8"><label class="form-label" for="Justificativa">Justificativa</label><textarea class="form-control" id="Justificativa" name="Justificativa" rows="2" minlength="10" maxlength="2000" required></textarea></div></div><button class="btn btn-outline-danger mt-3">Reabrir Recall</button></form></section> }
-@if (Model.ReabertaEm.HasValue) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Última reabertura</h2><p class="mb-1"><strong>Motivo:</strong> @Model.MotivoReabertura</p><p class="mb-1"><strong>Justificativa:</strong> @Model.JustificativaReabertura</p><p class="mb-0 text-muted">Por @Model.UsuarioReabertura em @Model.ReabertaEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"). Status anterior: @Model.StatusAnteriorReabertura.</p></section> }
-@if (Model.DecididaPeloCqEm.HasValue) { <section class="card shadow-sm border-0 p-4 mt-4"><h2 class="h5">Decisão do CQ</h2><p class="mb-1">@Model.DecisaoCq — @Model.JustificativaDecisaoCq</p><p class="mb-0 text-muted">Por @Model.UsuarioDecisaoCq em @Model.DecididaPeloCqEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p></section> }
+@using SGQ.Web.Models
+@using SGQ.Web.Presentation
+@using SGQ.Web.Security
+@using SGQ.Domain.Enums
+@model Recall
+@{
+    ViewData["Title"] = Model.Codigo;
+    var usuario = User.Identity?.Name ?? string.Empty;
+    bool Mesmo(string? outro) => outro is not null && string.Equals(outro, usuario, StringComparison.OrdinalIgnoreCase);
+    var ehGq = User.IsInRole(Roles.GarantiaQualidade);
+    var ehRt = User.IsInRole(Roles.ResponsavelTecnico);
+    var ehCq = User.IsInRole(Roles.ControleQualidade);
+    var ehAdmin = User.IsInRole(Roles.Administrador);
+    var ehAuditor = User.IsInRole(Roles.Auditor);
+    var gestao = ehGq || ehAdmin;
+    var status = Model.Status;
+    var encerrado = status == StatusRecall.Encerrado;
+    var naoAplicavel = Model.Decisao == DecisaoRecall.NaoAplicavel;
+    var podeOperar = !ehAuditor;
+
+    // Pareceres
+    (string Texto, string Tom) Parecer(bool aprovou, bool reprovou) => aprovou ? ("Aprovado", "sucesso") : reprovou ? ("Reprovado", "perigo") : ("Pendente", "neutro");
+    var parecerRt = Parecer(Model.AprovadaRt, Model.ReprovadaRt);
+    var parecerGq = Parecer(Model.AprovadaGq, Model.ReprovadaGq);
+    var rtPendente = !Model.AprovadaRt && !Model.ReprovadaRt;
+    var gqPendente = !Model.AprovadaGq && !Model.ReprovadaGq;
+    var rtBloqueadoPorGq = ehRt && Mesmo(Model.UsuarioParecerGq);
+    var gqBloqueadoPorRt = ehGq && Mesmo(Model.UsuarioParecerRt);
+    var podeVotarRt = status == StatusRecall.AguardandoAprovacao && ehRt && rtPendente && !rtBloqueadoPorGq;
+    var podeVotarGq = status == StatusRecall.AguardandoAprovacao && ehGq && gqPendente && !gqBloqueadoPorRt;
+    var temParecer = Model.AprovadaRt || Model.ReprovadaRt || Model.AprovadaGq || Model.ReprovadaGq;
+
+    // Retornos
+    var retornos = Model.Retornos.OrderBy(r => r.DataRetorno).ThenBy(r => r.Id).ToList();
+    var totalDevolvido = retornos.Sum(r => r.Quantidade);
+    var percentual = Model.QuantidadeDistribuida > 0 ? (double)Math.Min(100m, totalDevolvido / Model.QuantidadeDistribuida * 100m) : 0d;
+    string Num(decimal valor) => valor.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+
+    // Encerramento
+    var aprovacoesOk = (Model.AprovadaRt && Model.AprovadaGq) || Model.DecisaoCq == StatusDecisaoCq.Favoravel;
+    var comunicacaoOk = Model.ComunicadaAutoridadeEm is not null;
+    var destinacaoOk = !string.IsNullOrWhiteSpace(Model.Destinacao);
+    var podeEncerrar = aprovacoesOk && comunicacaoOk && destinacaoOk;
+
+    // Trilho de etapas
+    var etapas = new[] { "Avaliação", "Aprovação", "Recolhimento", "Retorno", "Destinação", "Encerramento" };
+    var etapaAtual = status switch
+    {
+        StatusRecall.EmAvaliacao => 0,
+        StatusRecall.AguardandoAprovacao or StatusRecall.AguardandoDecisaoCq => 1,
+        StatusRecall.EmRecolhimento => 2,
+        StatusRecall.AguardandoRetorno => 3,
+        StatusRecall.EmAvaliacaoDeDestinacao => 4,
+        StatusRecall.AguardandoEncerramento => 5,
+        _ => etapas.Length
+    };
+
+    // Próxima ação
+    string acaoTitulo, acaoTexto, acaoTom = "padrao", acaoLink = "";
+    switch (status)
+    {
+        case StatusRecall.EmAvaliacao:
+            acaoTitulo = "Enviar a avaliação para aprovação";
+            acaoTexto = gestao
+                ? "Confira os dados do recall. Quando a avaliação estiver completa, envie para o parecer do RT e do GQ."
+                : "Aguardando o GQ enviar a avaliação para aprovação.";
+            if (!gestao) acaoTom = "espera";
+            break;
+        case StatusRecall.AguardandoAprovacao:
+            acaoTitulo = "Aprovação técnica pendente";
+            if (podeVotarRt || podeVotarGq)
+            {
+                acaoTexto = $"Registre o seu parecer como {(podeVotarRt ? "RT" : "GQ")}. Para seguir ao recolhimento, RT e GQ precisam aprovar, em contas diferentes.";
+                acaoLink = "#bloco-aprovacao";
+            }
+            else
+            {
+                acaoTexto = "Aguardando os pareceres do RT e do GQ. Somente quem tem o perfil RT ou GQ aprova; o Administrador não aprova.";
+                acaoTom = "espera";
+            }
+            break;
+        case StatusRecall.AguardandoDecisaoCq:
+            acaoTitulo = "Decisão do CQ";
+            if (ehCq || ehAdmin) { acaoTexto = "RT e GQ divergiram. Registre a decisão do CQ com a sua fundamentação."; acaoTom = "alerta"; acaoLink = "#bloco-cq"; }
+            else { acaoTexto = "RT e GQ divergiram. Aguardando o CQ decidir se o recall segue para o recolhimento."; acaoTom = "espera"; }
+            break;
+        case StatusRecall.EmRecolhimento:
+            acaoTitulo = "Registrar o início do recolhimento";
+            acaoTexto = podeOperar ? "Registre o bloqueio do produto e as comunicações aos clientes e à autoridade sanitária. Depois disso começam os retornos." : "Aguardando o registro do início do recolhimento.";
+            if (podeOperar) acaoLink = "#bloco-recolhimento"; else acaoTom = "espera";
+            break;
+        case StatusRecall.AguardandoRetorno:
+            acaoTitulo = "Registrar os retornos de produto";
+            acaoTexto = podeOperar ? "Lance cada devolução recebida. Quando todas estiverem registradas, avance para a destinação." : "Aguardando o registro dos retornos.";
+            if (podeOperar) acaoLink = "#bloco-retornos"; else acaoTom = "espera";
+            break;
+        case StatusRecall.EmAvaliacaoDeDestinacao:
+            acaoTitulo = "Definir a destinação do produto";
+            acaoTexto = podeOperar ? "Informe o que será feito com o produto recolhido e anexe a evidência." : "Aguardando a definição da destinação.";
+            if (podeOperar) acaoLink = "#bloco-destinacao"; else acaoTom = "espera";
+            break;
+        case StatusRecall.AguardandoEncerramento:
+            acaoTitulo = "Encerrar o recall";
+            acaoTexto = gestao ? (podeEncerrar ? "Tudo foi registrado. O GQ pode encerrar o processo." : "Há pendências que impedem o encerramento; veja a lista abaixo.") : "Aguardando o GQ encerrar o processo.";
+            if (gestao) acaoLink = "#bloco-encerramento"; else acaoTom = "espera";
+            break;
+        default:
+            acaoTitulo = naoAplicavel ? "Recall encerrado sem recolhimento" : "Recall encerrado";
+            acaoTexto = (ehGq || ehRt) ? "Nada a fazer. Se surgir informação nova, GQ ou RT podem reabrir o recall." : "Nada a fazer. Somente GQ ou RT podem reabrir o recall.";
+            acaoTom = "concluido";
+            break;
+    }
+}
+@section Styles { <link rel="stylesheet" href="~/css/modulos/recalls.css" asp-append-version="true" /> }
+
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+@if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+<header class="page-header rec-topo">
+    <div class="page-header-main">
+        <p class="eyebrow">Recall e recolhimento</p>
+        <h1><span class="process-code">@Model.Codigo</span> @Html.StatusBadge(Model.Status)</h1>
+        <p class="page-header-lead">@Model.Produto.Nome · lote @Model.Lote.Numero</p>
+        <dl class="meta-row">
+            <div class="meta-item"><dt class="meta-label">Decisão</dt><dd class="meta-value">@Model.Decisao.Rotulo()</dd></div>
+            <div class="meta-item"><dt class="meta-label">Prazo</dt><dd class="meta-value">@Html.PrazoChipHtml(Model.DataAlvo, encerrado)</dd></div>
+            <div class="meta-item"><dt class="meta-label">Origem</dt><dd class="meta-value">@Model.Origem.Rotulo()</dd></div>
+            <div class="meta-item"><dt class="meta-label">Aberto por</dt><dd class="meta-value">@Model.UsuarioAbertura em @Model.DataAbertura.ToString("dd/MM/yyyy")</dd></div>
+        </dl>
+    </div>
+    <div class="page-header-actions"><a class="btn btn-outline-secondary" asp-action="Index">Voltar à lista</a></div>
+</header>
+
+@if (!(encerrado && naoAplicavel))
+{
+    <section class="panel rec-trilho" aria-label="Andamento do recall">
+        <partial name="_Stepper" model="new StepperModel(etapas, etapaAtual)" />
+        @if (status == StatusRecall.AguardandoDecisaoCq)
+        {
+            <p class="mb-0 mt-3 text-muted small">Desvio na etapa Aprovação: RT e GQ divergiram e o CQ precisa decidir.</p>
+        }
+    </section>
+}
+
+<section class="next-action rec-bloco" data-tom="@acaoTom" aria-labelledby="titulo-proxima">
+    <div>
+        <p class="eyebrow mb-1">Próxima ação</p>
+        <h2 id="titulo-proxima">@acaoTitulo</h2>
+        <p>@acaoTexto</p>
+    </div>
+    @if (status == StatusRecall.EmAvaliacao && gestao)
+    {
+        <div class="next-action-actions">
+            <form asp-action="SolicitarAprovacao" method="post" data-confirm="Enviar a avaliação para aprovação do RT e do GQ?">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button class="btn btn-primary" type="submit">Solicitar aprovação</button>
+            </form>
+        </div>
+    }
+    else if (acaoLink != "")
+    {
+        <div class="next-action-actions"><a class="btn btn-primary" href="@acaoLink">Ir para o formulário</a></div>
+    }
+</section>
+
+@* Aprovação: pareceres lado a lado (ativos, ou resumo da rodada anterior) *@
+@if (status == StatusRecall.AguardandoAprovacao || status == StatusRecall.AguardandoDecisaoCq || (status == StatusRecall.EmAvaliacao && temParecer))
+{
+    var ativa = status == StatusRecall.AguardandoAprovacao;
+    <section class="panel rec-bloco" id="bloco-aprovacao" aria-labelledby="titulo-aprovacao">
+        <header class="panel-heading"><h2 id="titulo-aprovacao">@(ativa ? "Aprovação técnica" : status == StatusRecall.EmAvaliacao ? "Pareceres da rodada anterior" : "Pareceres de RT e GQ")</h2></header>
+        @if (ativa)
+        {
+            <p class="help">O recolhimento só começa com a aprovação do RT e do GQ, dadas por pessoas (contas) diferentes. Se um aprovar e o outro reprovar, o CQ decide. Reprovação de um deles devolve o recall para avaliação.</p>
+            @if (rtBloqueadoPorGq || gqBloqueadoPorRt)
+            {
+                <p class="rec-aviso-papel" role="status">Você já deu o parecer de @(rtBloqueadoPorGq ? "GQ" : "RT") neste recall. O parecer de @(rtBloqueadoPorGq ? "RT" : "GQ") precisa ser dado por outra conta.</p>
+            }
+            else if (ehAdmin && !ehRt && !ehGq)
+            {
+                <p class="rec-aviso-papel" role="status">O Administrador não aprova recalls. Somente quem tem o perfil RT (responsável técnico) ou GQ (garantia da qualidade) registra o parecer.</p>
+            }
+            else if (!ehRt && !ehGq)
+            {
+                <p class="rec-aviso-papel" role="status">Somente RT e GQ registram o parecer de aprovação.</p>
+            }
+        }
+        <div class="rec-pareceres">
+            <article class="rec-parecer" aria-labelledby="parecer-rt">
+                <h3 id="parecer-rt">Responsável técnico (RT)</h3>
+                <span class="status-badge" data-tom="@parecerRt.Tom">@parecerRt.Texto</span>
+                @if (Model.UsuarioParecerRt is not null) { <p class="autor">Por @Model.UsuarioParecerRt</p> }
+                @if (podeVotarRt)
+                {
+                    <div class="acoes">
+                        <form asp-action="Aprovar" method="post" data-confirm="Aprovar este recall como RT?"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="RT" /><button class="btn btn-primary" type="submit">Aprovar como RT</button></form>
+                        <form asp-action="Reprovar" method="post" data-confirm="Reprovar este recall como RT? Ele volta para avaliação, ou segue para decisão do CQ se o GQ tiver aprovado."><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="RT" /><button class="btn btn-danger-outline" type="submit">Reprovar como RT</button></form>
+                    </div>
+                }
+            </article>
+            <article class="rec-parecer" aria-labelledby="parecer-gq">
+                <h3 id="parecer-gq">Garantia da qualidade (GQ)</h3>
+                <span class="status-badge" data-tom="@parecerGq.Tom">@parecerGq.Texto</span>
+                @if (Model.UsuarioParecerGq is not null) { <p class="autor">Por @Model.UsuarioParecerGq</p> }
+                @if (podeVotarGq)
+                {
+                    <div class="acoes">
+                        <form asp-action="Aprovar" method="post" data-confirm="Aprovar este recall como GQ?"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="GQ" /><button class="btn btn-primary" type="submit">Aprovar como GQ</button></form>
+                        <form asp-action="Reprovar" method="post" data-confirm="Reprovar este recall como GQ? Ele volta para avaliação, ou segue para decisão do CQ se o RT tiver aprovado."><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="perfil" value="GQ" /><button class="btn btn-danger-outline" type="submit">Reprovar como GQ</button></form>
+                    </div>
+                }
+            </article>
+        </div>
+    </section>
+}
+
+@if (status == StatusRecall.AguardandoDecisaoCq)
+{
+    <section class="panel rec-bloco" id="bloco-cq" aria-labelledby="titulo-cq">
+        <header class="panel-heading"><h2 id="titulo-cq">Decisão do CQ sobre a divergência</h2></header>
+        @if (ehCq || ehAdmin)
+        {
+            <p class="help">Decisão favorável: o recall segue para o recolhimento. Decisão desfavorável: volta para avaliação. A fundamentação (mínimo de 10 caracteres) fica registrada.</p>
+            <form asp-action="DecidirDivergencia" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <label class="form-label required" for="justificativa-cq">Fundamentação da decisão</label>
+                <textarea id="justificativa-cq" name="justificativa" class="form-control" rows="3" minlength="10" required></textarea>
+                <div class="rec-acoes-linha mt-3">
+                    <button name="favoravel" value="true" class="btn btn-primary" type="submit" data-confirm="Registrar decisão FAVORÁVEL? O recall segue para o recolhimento.">Decisão favorável: seguir para o recolhimento</button>
+                    <button name="favoravel" value="false" class="btn btn-danger-outline" type="submit" data-confirm="Registrar decisão DESFAVORÁVEL? O recall volta para a avaliação.">Decisão desfavorável: voltar para avaliação</button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <p class="rec-aviso-papel mb-0" role="status">Somente o CQ (ou o Administrador) registra esta decisão.</p>
+        }
+    </section>
+}
+
+@* Recolhimento *@
+@if (status == StatusRecall.EmRecolhimento && podeOperar)
+{
+    <section class="panel rec-bloco" id="bloco-recolhimento" aria-labelledby="titulo-recolhimento">
+        <header class="panel-heading"><h2 id="titulo-recolhimento">Início do recolhimento</h2></header>
+        <p class="help">Todos os campos marcados são obrigatórios para liberar os retornos.</p>
+        <form asp-action="RegistrarOperacao" method="post" data-confirm="Confirmar o início do recolhimento? As comunicações serão registradas e não poderão ser editadas.">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="form-grid">
+                <div><label class="check-inline"><input class="form-check-input" type="checkbox" name="bloqueioRegistrado" value="true" id="bloqueio" required /> Bloqueio do lote registrado (estoque isolado e sem expedição)</label></div>
+                <div><label class="form-label required" for="comunicacaoClientes">Comunicação aos clientes</label><textarea class="form-control" id="comunicacaoClientes" name="comunicacaoClientes" rows="2" maxlength="2000" required placeholder="Como e quando os clientes foram avisados"></textarea></div>
+                <div class="span-6"><label class="form-label required" for="autoridadeSanitaria">Autoridade sanitária comunicada</label><input class="form-control" id="autoridadeSanitaria" name="autoridadeSanitaria" maxlength="200" required placeholder="Ex.: Anvisa, vigilância sanitária estadual" /></div>
+                <div class="span-6"><label class="form-label" for="protocoloAutoridade">Protocolo da comunicação</label><input class="form-control" id="protocoloAutoridade" name="protocoloAutoridade" maxlength="200" placeholder="Número do protocolo, se houver" /></div>
+            </div>
+            <div class="form-actions mt-3"><button class="btn btn-primary" type="submit">Iniciar retornos</button></div>
+        </form>
+    </section>
+}
+
+@* Retornos *@
+@if (status == StatusRecall.AguardandoRetorno && podeOperar)
+{
+    <section class="panel rec-bloco" id="bloco-retornos" aria-labelledby="titulo-retornos">
+        <header class="panel-heading"><h2 id="titulo-retornos">Retornos de produto</h2></header>
+        <div class="rec-total" role="status">
+            <div class="meta-item"><span class="meta-label">Devolvido</span><span class="meta-value">@Num(totalDevolvido)</span></div>
+            <div class="meta-item"><span class="meta-label">Distribuído</span><span class="meta-value">@Num(Model.QuantidadeDistribuida)</span></div>
+            <div class="meta-item"><span class="meta-label">Retornos lançados</span><span class="meta-value">@retornos.Count</span></div>
+            @if (Model.QuantidadeDistribuida > 0)
+            {
+                <div class="meta-item" style="flex:1 1 12rem"><span class="meta-label">@percentual.ToString("0")% do distribuído</span><div class="rec-barra" aria-hidden="true"><span style="width:@percentual.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)%"></span></div></div>
+            }
+        </div>
+        @if (retornos.Count == 0)
+        {
+            <p class="text-muted">Nenhum retorno lançado ainda. Registre o primeiro abaixo.</p>
+        }
+        else
+        {
+            <div class="table-wrap mb-3">
+                <table class="table-modern table-cards">
+                    <caption class="visually-hidden">Retornos lançados</caption>
+                    <thead><tr><th scope="col">Cliente</th><th scope="col">Quantidade</th><th scope="col">Data</th><th scope="col">Embalagem</th><th scope="col">Lacre</th><th scope="col">Avarias</th><th scope="col">Documento</th></tr></thead>
+                    <tbody>
+                    @foreach (var retorno in retornos)
+                    {
+                        <tr>
+                            <td data-label="Cliente">@retorno.Cliente</td>
+                            <td data-label="Quantidade">@Num(retorno.Quantidade)</td>
+                            <td data-label="Data">@retorno.DataRetorno.ToString("dd/MM/yyyy")</td>
+                            <td data-label="Embalagem">@retorno.CondicaoEmbalagem</td>
+                            <td data-label="Lacre">@(string.IsNullOrWhiteSpace(retorno.CondicaoLacre) ? "—" : retorno.CondicaoLacre)</td>
+                            <td data-label="Avarias">@(string.IsNullOrWhiteSpace(retorno.Avarias) ? "—" : retorno.Avarias)</td>
+                            <td data-label="Documento">@(string.IsNullOrWhiteSpace(retorno.DocumentoTransporte) ? "—" : retorno.DocumentoTransporte)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        <form asp-action="AdicionarRetorno" method="post" class="rec-retorno-form">
+            <h3>Lançar um retorno</h3>
+            <input type="hidden" name="recallId" value="@Model.Id" />
+            <div class="form-grid">
+                <div class="span-5"><label class="form-label required" for="retorno-cliente">Cliente</label><input id="retorno-cliente" name="cliente" class="form-control" maxlength="200" required /></div>
+                <div class="span-3"><label class="form-label required" for="retorno-quantidade">Quantidade</label><input id="retorno-quantidade" name="quantidade" type="number" step="0.01" min="0.01" class="form-control" inputmode="decimal" required /></div>
+                <div class="span-4"><label class="form-label required" for="retorno-data">Data do retorno</label><input id="retorno-data" name="dataRetorno" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+                <div class="span-12"><label class="form-label required" for="retorno-embalagem">Condição da embalagem</label><input id="retorno-embalagem" name="condicaoEmbalagem" class="form-control" maxlength="500" required placeholder="Ex.: íntegra, violada, avariada" /></div>
+                <div class="span-4"><label class="form-label" for="retorno-lacre">Condição do lacre</label><input id="retorno-lacre" name="condicaoLacre" class="form-control" maxlength="500" /></div>
+                <div class="span-4"><label class="form-label" for="retorno-avarias">Avarias</label><input id="retorno-avarias" name="avarias" class="form-control" maxlength="1000" /></div>
+                <div class="span-4"><label class="form-label" for="retorno-documento">Documento de transporte</label><input id="retorno-documento" name="documentoTransporte" class="form-control" maxlength="500" /></div>
+            </div>
+            <div class="form-actions mt-3"><button class="btn btn-primary" type="submit">Registrar retorno</button></div>
+        </form>
+        <div class="rec-confirma">
+            @if (retornos.Count == 0)
+            {
+                <p class="text-muted mb-2">Registre ao menos um retorno para poder avançar.</p>
+                <button class="btn btn-outline-primary" type="button" disabled>Concluir retornos e avançar</button>
+            }
+            else
+            {
+                <p class="text-muted mb-2">Quando todas as devoluções estiverem lançadas, avance. Depois disso não será possível lançar novos retornos.</p>
+                <form asp-action="AvancarDestinacao" method="post" data-confirm="Concluir os retornos e avançar para a destinação? Novos retornos não poderão ser lançados.">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button class="btn btn-outline-primary" type="submit">Concluir retornos e avançar</button>
+                </form>
+            }
+        </div>
+    </section>
+}
+
+@* Destinação *@
+@if (status == StatusRecall.EmAvaliacaoDeDestinacao && podeOperar)
+{
+    <section class="panel rec-bloco" id="bloco-destinacao" aria-labelledby="titulo-destinacao">
+        <header class="panel-heading"><h2 id="titulo-destinacao">Destinação do produto recolhido</h2></header>
+        <form asp-action="RegistrarDestinacao" method="post" data-confirm="Registrar a destinação? O recall seguirá para o encerramento.">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="form-grid">
+                <div class="span-6"><label class="form-label required" for="destinacao">Destinação</label><input id="destinacao" name="destinacao" class="form-control" maxlength="1000" required placeholder="Ex.: descarte controlado, retrabalho" /></div>
+                <div class="span-6"><label class="form-label required" for="evidenciaDestinacao">Evidência</label><input id="evidenciaDestinacao" name="evidenciaDestinacao" class="form-control" maxlength="1000" required placeholder="Ex.: termo de descarte nº, laudo" /><div class="form-text">Você também pode anexar o documento na seção Anexos, abaixo.</div></div>
+            </div>
+            <div class="form-actions mt-3"><button class="btn btn-primary" type="submit">Registrar destinação</button></div>
+        </form>
+    </section>
+}
+
+@* Encerramento *@
+@if (status == StatusRecall.AguardandoEncerramento)
+{
+    <section class="panel rec-bloco" id="bloco-encerramento" aria-labelledby="titulo-encerramento">
+        <header class="panel-heading"><h2 id="titulo-encerramento">Encerramento</h2></header>
+        <ul class="rec-checklist">
+            <li data-ok="@(aprovacoesOk ? "sim" : "nao")">Aprovação técnica (RT e GQ ou decisão favorável do CQ)</li>
+            <li data-ok="@(comunicacaoOk ? "sim" : "nao")">Comunicação regulatória registrada</li>
+            <li data-ok="@(destinacaoOk ? "sim" : "nao")">Destinação registrada</li>
+        </ul>
+        @if (gestao)
+        {
+            <form asp-action="Encerrar" method="post" data-confirm="Encerrar o recall @Model.Codigo? Depois só GQ ou RT poderão reabri-lo.">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button class="btn btn-primary" type="submit" disabled="@(podeEncerrar ? null : "disabled")">Encerrar processo</button>
+            </form>
+        }
+        else
+        {
+            <p class="rec-aviso-papel mb-0" role="status">Somente o GQ (ou o Administrador) encerra o recall.</p>
+        }
+    </section>
+}
+
+@* Reabertura *@
+@if (encerrado && (ehGq || ehRt))
+{
+    <section class="panel rec-bloco" aria-labelledby="titulo-reabertura">
+        <header class="panel-heading"><h2 id="titulo-reabertura">Reabrir o recall</h2></header>
+        <p class="help">Use apenas quando uma informação nova exigir nova avaliação. O recall volta para "Em avaliação" e as aprovações de RT e GQ precisam ser refeitas.</p>
+        <details>
+            <summary class="btn btn-outline-secondary">Reabrir recall</summary>
+            <form asp-action="Reabrir" method="post" class="mt-3" data-confirm="Reabrir o recall @Model.Codigo? Ele voltará para a avaliação e as aprovações serão refeitas.">
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <div class="form-grid">
+                    <div><label class="form-label required" for="Motivo">Motivo</label><input class="form-control" id="Motivo" name="Motivo" minlength="10" maxlength="500" required /><div class="form-text">Mínimo de 10 caracteres.</div></div>
+                    <div><label class="form-label required" for="Justificativa">Justificativa</label><textarea class="form-control" id="Justificativa" name="Justificativa" rows="3" minlength="10" maxlength="2000" required></textarea></div>
+                </div>
+                <div class="form-actions mt-3"><button class="btn btn-danger-outline" type="submit">Confirmar reabertura</button></div>
+            </form>
+        </details>
+    </section>
+}
+
+@* Dados do recall *@
+<section class="panel rec-bloco" aria-labelledby="titulo-dados">
+    <header class="panel-heading"><h2 id="titulo-dados">Dados do recall</h2></header>
+    <dl class="dl-grid">
+        <div><dt>Produto</dt><dd>@Model.Produto.Nome</dd></div>
+        <div><dt>Lote</dt><dd>@Model.Lote.Numero</dd></div>
+        <div><dt>Fabricação</dt><dd>@(Model.DataFabricacao?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+        <div><dt>Validade</dt><dd>@(Model.DataValidade?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+        <div><dt>Produzido</dt><dd>@Num(Model.QuantidadeProduzida)</dd></div>
+        <div><dt>Em estoque</dt><dd>@Num(Model.QuantidadeEstoque)</dd></div>
+        <div><dt>Distribuído</dt><dd>@Num(Model.QuantidadeDistribuida)</dd></div>
+        <div><dt>Não conformidade vinculada</dt><dd>@if (Model.NaoConformidade is not null) { <a asp-controller="NaoConformidades" asp-action="Details" asp-route-id="@Model.NaoConformidadeId">@Model.NaoConformidade.Codigo</a> } else { <span class="text-muted">Sem vínculo</span> }</dd></div>
+        <div><dt>Reclamação vinculada</dt><dd>@if (Model.ReclamacaoCliente is not null) { <a asp-controller="Reclamacoes" asp-action="Details" asp-route-id="@Model.ReclamacaoClienteId">@Model.ReclamacaoCliente.Codigo</a> } else { <span class="text-muted">Sem vínculo</span> }</dd></div>
+        <div class="dl-wide"><dt>Clientes envolvidos</dt><dd class="rec-texto">@Model.ClientesEnvolvidos</dd></div>
+        <div class="dl-wide"><dt>O que aconteceu</dt><dd class="rec-texto">@Model.NaturezaOcorrencia</dd></div>
+        <div class="dl-wide"><dt>Risco potencial</dt><dd class="rec-texto">@Model.RiscoPotencial</dd></div>
+        <div class="dl-wide"><dt>Decisão inicial: @Model.Decisao.Rotulo()</dt><dd class="rec-texto">@Model.JustificativaDecisao</dd></div>
+    </dl>
+</section>
+
+@* Resumo somente leitura do que já foi registrado *@
+@{
+    var mostrarOperacao = Model.ComunicadaAutoridadeEm is not null;
+    var mostrarRetornosResumo = retornos.Count > 0 && status != StatusRecall.AguardandoRetorno;
+    var mostrarCq = Model.DecididaPeloCqEm.HasValue;
+    var mostrarDest = destinacaoOk;
+    var mostrarEnc = Model.EncerradaEm.HasValue;
+    var mostrarReab = Model.ReabertaEm.HasValue;
+}
+@if (mostrarCq || mostrarOperacao || mostrarRetornosResumo || mostrarDest || mostrarEnc || mostrarReab)
+{
+    <section class="panel rec-bloco" aria-labelledby="titulo-registros">
+        <header class="panel-heading"><h2 id="titulo-registros">O que já foi registrado</h2></header>
+        <dl class="dl-grid">
+            @if (mostrarReab)
+            {
+                <div class="dl-wide"><dt>Última reabertura</dt><dd class="rec-texto">@Model.MotivoReabertura&#10;@Model.JustificativaReabertura&#10;Por @Model.UsuarioReabertura em @Model.ReabertaEm!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"). Situação anterior: @Model.StatusAnteriorReabertura.Rotulo().</dd></div>
+            }
+            @if (mostrarCq)
+            {
+                <div class="dl-wide"><dt>Decisão do CQ</dt><dd>@Html.StatusBadge(Model.DecisaoCq) <span class="rec-texto d-block mt-1">@Model.JustificativaDecisaoCq&#10;Por @Model.UsuarioDecisaoCq em @Model.DecididaPeloCqEm!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span></dd></div>
+            }
+            @if (mostrarOperacao)
+            {
+                <div><dt>Bloqueio do lote</dt><dd>@(Model.BloqueioRegistrado ? "Registrado" : "Não registrado")</dd></div>
+                <div><dt>Autoridade sanitária</dt><dd>@Model.AutoridadeSanitaria</dd></div>
+                <div><dt>Protocolo</dt><dd>@(string.IsNullOrWhiteSpace(Model.ProtocoloAutoridade) ? "—" : Model.ProtocoloAutoridade)</dd></div>
+                <div><dt>Comunicada em</dt><dd>@Model.ComunicadaAutoridadeEm!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd></div>
+                <div class="dl-wide"><dt>Comunicação aos clientes</dt><dd class="rec-texto">@Model.ComunicacaoClientes</dd></div>
+            }
+            @if (mostrarRetornosResumo)
+            {
+                <div class="dl-wide"><dt>Retornos</dt><dd>
+                    <p class="mb-2">Devolvido <strong>@Num(totalDevolvido)</strong> de @Num(Model.QuantidadeDistribuida) distribuídos (@retornos.Count retorno(s)).</p>
+                    <div class="table-wrap"><table class="table-modern table-cards"><caption class="visually-hidden">Retornos lançados</caption>
+                        <thead><tr><th scope="col">Cliente</th><th scope="col">Quantidade</th><th scope="col">Data</th><th scope="col">Embalagem</th><th scope="col">Lacre</th><th scope="col">Avarias</th><th scope="col">Documento</th></tr></thead>
+                        <tbody>@foreach (var retorno in retornos) { <tr><td data-label="Cliente">@retorno.Cliente</td><td data-label="Quantidade">@Num(retorno.Quantidade)</td><td data-label="Data">@retorno.DataRetorno.ToString("dd/MM/yyyy")</td><td data-label="Embalagem">@retorno.CondicaoEmbalagem</td><td data-label="Lacre">@(string.IsNullOrWhiteSpace(retorno.CondicaoLacre) ? "—" : retorno.CondicaoLacre)</td><td data-label="Avarias">@(string.IsNullOrWhiteSpace(retorno.Avarias) ? "—" : retorno.Avarias)</td><td data-label="Documento">@(string.IsNullOrWhiteSpace(retorno.DocumentoTransporte) ? "—" : retorno.DocumentoTransporte)</td></tr> }</tbody>
+                    </table></div></dd></div>
+            }
+            @if (mostrarDest)
+            {
+                <div><dt>Destinação</dt><dd class="rec-texto">@Model.Destinacao</dd></div>
+                <div><dt>Evidência da destinação</dt><dd class="rec-texto">@Model.EvidenciaDestinacao</dd></div>
+            }
+            @if (mostrarEnc)
+            {
+                <div><dt>Encerrado por</dt><dd>@Model.UsuarioEncerramento</dd></div>
+                <div><dt>Encerrado em</dt><dd>@Model.EncerradaEm!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd></div>
+            }
+        </dl>
+    </section>
+}
+
 <partial name="_Anexos" model='("Recalls", Model.Id)' />
-<partial name="_ProrrogacaoPrazo" model='("Prorrogar", Model.Id, Model.DataAlvo)' />
+@if (!encerrado)
+{
+    <partial name="_ProrrogacaoPrazo" model='("Prorrogar", Model.Id, Model.DataAlvo)' />
+}
 <partial name="_HistoricoAuditoria" model='(IEnumerable<SGQ.Web.Models.HistoricoAuditoria>)ViewBag.HistoricoAuditoria' />

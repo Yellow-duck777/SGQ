@@ -1,28 +1,124 @@
+@using System.Globalization
 @model SGQ.Web.ViewModels.RelatorioProcessosViewModel
 @{
     ViewData["Title"] = "Relatórios";
+    var hoje = DateOnly.FromDateTime(DateTime.Today);
+    var encerrados = Model.Itens.Count - Model.ProcessosAbertos;
+    var temFiltro = Model.Inicio.HasValue || Model.Fim.HasValue || Model.ProdutoId.HasValue || !string.IsNullOrEmpty(Model.Tipo);
+    string Controlador(string tipo) => tipo switch { "RC" => "Reclamacoes", "NC" => "NaoConformidades", _ => "Recalls" };
+    string NomeTipo(string tipo) => tipo switch { "RC" => "Reclamação de Cliente", "NC" => "Não Conformidade", _ => "Recall" };
 }
-<div class="page-heading mb-4">
-    <p class="eyebrow mb-1">Indicadores e rastreabilidade</p>
-    <h1>Relatório de processos</h1>
-    <p class="text-muted mb-0">Consulte RC, NC e Recalls por período e produto. A exportação preserva os filtros aplicados.</p>
-</div>
-<form method="get" class="card shadow-sm border-0 p-3 mb-4">
-    <div class="row g-2 align-items-end">
-        <div class="col-md-3"><label class="form-label" for="tipo">Processo</label><select class="form-select" id="tipo" name="tipo"><option value="">Todos</option><option value="RC" selected="@(Model.Tipo == "RC")">Reclamações de Cliente</option><option value="NC" selected="@(Model.Tipo == "NC")">Não Conformidades</option><option value="Recall" selected="@(Model.Tipo == "Recall")">Recalls</option></select></div>
-        <div class="col-md-3"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
-        <div class="col-md-2"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Model.Inicio" /></div>
-        <div class="col-md-2"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Model.Fim" /></div>
-        <div class="col-md-2 d-flex gap-2"><button class="btn btn-primary">Aplicar</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+@section Styles { <link rel="stylesheet" href="~/css/modulos/relatorios.css" asp-append-version="true" /> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Indicadores e rastreabilidade</p>
+        <h1>Relatório de processos</h1>
+        <p class="page-header-lead">Consulte reclamações, não conformidades e recalls por processo, produto e período. Os indicadores e a exportação seguem os filtros aplicados.</p>
+    </div>
+</header>
+
+<form method="get" class="panel rel-filters" aria-label="Filtros do relatório">
+    <div class="filter-bar">
+        <div>
+            <label class="form-label" for="tipo">Processo</label>
+            <select class="form-select" id="tipo" name="tipo">
+                <option value="">Todos</option>
+                <option value="RC" selected="@(Model.Tipo == "RC")">Reclamações de Cliente</option>
+                <option value="NC" selected="@(Model.Tipo == "NC")">Não Conformidades</option>
+                <option value="Recall" selected="@(Model.Tipo == "Recall")">Recalls</option>
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="produtoId">Produto</label>
+            <select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select>
+        </div>
+        <div>
+            <label class="form-label" for="inicio">Aberto a partir de</label>
+            <input class="form-control" id="inicio" name="inicio" type="date" value="@Model.Inicio" />
+        </div>
+        <div>
+            <label class="form-label" for="fim">Aberto até</label>
+            <input class="form-control" id="fim" name="fim" type="date" value="@Model.Fim" />
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+            @if (temFiltro) { <a class="btn btn-outline-secondary" asp-action="Index">Limpar</a> }
+        </div>
     </div>
 </form>
-<div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Processos no período</small><strong class="display-6">@Model.Itens.Count</strong></div></div>
-    <div class="col-md-4"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Processos abertos</small><strong class="display-6">@Model.ProcessosAbertos</strong></div></div>
-    <div class="col-md-4"><div class="card shadow-sm border-0 p-3"><small class="text-muted">Em atraso</small><strong class="display-6 text-danger">@Model.ProcessosAtrasados</strong></div></div>
+
+<section class="rel-kpis" aria-label="Indicadores do período">
+    <div class="rel-kpi">
+        <span class="rel-kpi-label">Processos no período</span>
+        <span class="rel-kpi-value">@Model.Itens.Count</span>
+        <span class="rel-kpi-hint">@encerrados encerrado(s)</span>
+    </div>
+    <div class="rel-kpi">
+        <span class="rel-kpi-label">Em andamento</span>
+        <span class="rel-kpi-value">@Model.ProcessosAbertos</span>
+        <span class="rel-kpi-hint">Ainda não encerrados</span>
+    </div>
+    <div class="rel-kpi" data-tom="@(Model.ProcessosAtrasados > 0 ? "perigo" : "ok")">
+        <span class="rel-kpi-label">Em atraso</span>
+        <span class="rel-kpi-value">@Model.ProcessosAtrasados</span>
+        <span class="rel-kpi-hint">@(Model.ProcessosAtrasados > 0 ? "Prazo vencido e sem encerramento" : "Nenhum prazo vencido")</span>
+    </div>
+    <div class="rel-kpi">
+        <span class="rel-kpi-label">Tempo médio até encerrar</span>
+        <span class="rel-kpi-value">@(Model.TempoMedioEncerramentoDias?.ToString("N1", new CultureInfo("pt-BR")) ?? "—")@if (Model.TempoMedioEncerramentoDias.HasValue) { <small>dias</small> }</span>
+        <span class="rel-kpi-hint">@(Model.TempoMedioEncerramentoDias.HasValue ? "Entre abertura e encerramento" : "Sem processos encerrados no período")</span>
+    </div>
+</section>
+
+<div class="panel rel-filters rel-export">
+    <div class="rel-export-text">
+        <strong>Exportar com os filtros atuais</strong>
+        <span>@Model.Itens.Count processo(s) serão incluídos no arquivo.</span>
+    </div>
+    <div class="rel-export-group" role="group" aria-label="Formatos de exportação">
+        <a class="btn btn-outline-primary" asp-action="ExportarCsv" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo" title="Texto separado por ponto e vírgula, abre no Excel">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 3v10m0 0-3.5-3.5M10 13l3.5-3.5M4 16h12" stroke-linecap="round" stroke-linejoin="round" /></svg>CSV
+        </a>
+        <a class="btn btn-outline-primary" asp-action="ExportarXlsx" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo" title="Planilha do Excel formatada">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 3v10m0 0-3.5-3.5M10 13l3.5-3.5M4 16h12" stroke-linecap="round" stroke-linejoin="round" /></svg>Excel (XLSX)
+        </a>
+        <a class="btn btn-outline-primary" asp-action="ExportarPdf" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo" title="Documento para impressão">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 3v10m0 0-3.5-3.5M10 13l3.5-3.5M4 16h12" stroke-linecap="round" stroke-linejoin="round" /></svg>PDF
+        </a>
+    </div>
 </div>
-<div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3"><p class="mb-0 text-muted">Tempo médio de encerramento: <strong>@(Model.TempoMedioEncerramentoDias?.ToString("N1") ?? "—") dias</strong></p><div class="d-flex gap-2"><a class="btn btn-outline-primary" asp-action="ExportarCsv" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo">CSV</a><a class="btn btn-outline-primary" asp-action="ExportarXlsx" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo">XLSX</a><a class="btn btn-outline-primary" asp-action="ExportarPdf" asp-route-inicio="@Model.Inicio" asp-route-fim="@Model.Fim" asp-route-produtoId="@Model.ProdutoId" asp-route-tipo="@Model.Tipo">PDF</a></div></div>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Tipo</th><th>Código</th><th>Abertura</th><th>Produto / lote</th><th>Classificação</th><th>Situação</th><th>Prazo</th></tr></thead><tbody>
-@foreach (var item in Model.Itens) { <tr><td>@item.Tipo</td><td class="fw-semibold">@item.Codigo</td><td>@item.DataAbertura.ToString("dd/MM/yyyy")</td><td>@item.Produto @(item.Lote is null ? "" : $"/ {item.Lote}")</td><td>@item.Classificacao</td><td>@item.Situacao</td><td class="@(item.DataAlvo.HasValue && item.DataAlvo < DateOnly.FromDateTime(DateTime.Today) && !item.EncerradaEm.HasValue ? "text-danger fw-semibold" : "")">@(item.DataAlvo?.ToString("dd/MM/yyyy") ?? "—")</td></tr> }
-@if (!Model.Itens.Any()) { <tr><td colspan="7" class="text-center text-muted py-4">Nenhum processo encontrado para os filtros informados.</td></tr> }
-</tbody></table></div></div>
+
+@if (!Model.Itens.Any())
+{
+    <div class="panel empty-state">
+        <span aria-hidden="true">0</span>
+        <h3>Nenhum processo encontrado</h3>
+        <p>Não há processos para os filtros informados. Ajuste o período ou o produto.</p>
+        @if (temFiltro) { <a class="btn btn-outline-primary" asp-action="Index">Limpar filtros</a> }
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="table-modern table-cards">
+            <thead><tr><th scope="col">Processo</th><th scope="col">Código</th><th scope="col">Abertura</th><th scope="col">Produto / lote</th><th scope="col">Classificação</th><th scope="col">Situação</th><th scope="col">Prazo</th></tr></thead>
+            <tbody>
+                @foreach (var item in Model.Itens)
+                {
+                    var encerrado = item.EncerradaEm.HasValue;
+                    var atrasado = !encerrado && item.DataAlvo.HasValue && item.DataAlvo < hoje;
+                    <tr class="@(atrasado ? "rel-row-late" : null)">
+                        <td data-label="Processo"><span class="rel-tipo" title="@NomeTipo(item.Tipo)">@item.Tipo</span></td>
+                        <td data-label="Código" class="col-code rel-code"><a asp-controller="@Controlador(item.Tipo)" asp-action="Details" asp-route-id="@item.Id">@item.Codigo</a></td>
+                        <td data-label="Abertura">@item.DataAbertura.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Produto / lote">@(item.Produto ?? "—")@if (item.Lote is not null) { <span class="rel-sub">Lote @item.Lote</span> }</td>
+                        <td data-label="Classificação">@if (item.Classificacao is null) { <span class="text-muted">Não classificado</span> } else { <span class="status-badge" data-tom="@item.ClassificacaoTom">@item.Classificacao</span> }</td>
+                        <td data-label="Situação"><span class="status-badge" data-tom="@item.SituacaoTom">@item.Situacao</span></td>
+                        <td data-label="Prazo">@Html.PrazoChipHtml(item.DataAlvo, encerrado)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

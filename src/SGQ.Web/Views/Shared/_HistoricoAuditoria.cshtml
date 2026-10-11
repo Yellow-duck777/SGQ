@@ -1,27 +1,72 @@
 @model IEnumerable<SGQ.Web.Models.HistoricoAuditoria>
-<section class="card shadow-sm border-0 p-4 mt-4">
-    <h2 class="h5">Histórico de auditoria</h2>
+<section class="panel mt-4" aria-labelledby="titulo-historico">
+    <header class="panel-heading">
+        <div>
+            <p class="eyebrow mb-1">Rastreabilidade</p>
+            <h2 id="titulo-historico">Histórico de alterações</h2>
+        </div>
+    </header>
     @if (Model.Any())
     {
-        <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
-                <thead><tr><th>Data e hora</th><th>Usuário</th><th>Ação</th><th>Alterações</th></tr></thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.OcorridaEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@item.Usuario</td>
-                        <td>@item.Acao</td>
-                        <td class="text-break">@(string.IsNullOrWhiteSpace(item.Alteracoes) ? "Não informado" : item.Alteracoes)</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+        <ol class="timeline">
+            @foreach (var item in Model.OrderByDescending(registro => registro.OcorridaEm))
+            {
+                var criacao = item.Acao == "Added";
+                var alteracoes = AuditoriaFormatador.Interpretar(item.Alteracoes, criacao);
+                <li class="timeline-item" data-acao="@item.Acao">
+                    <span class="timeline-marker" aria-hidden="true"></span>
+                    <div class="timeline-body">
+                        <div class="timeline-head">
+                            <strong>@AuditoriaFormatador.DescreverAcao(item.Acao)</strong>
+                            <span class="text-muted">por @item.Usuario</span>
+                            <time class="timeline-time" datetime="@item.OcorridaEm.ToString("O")">@item.OcorridaEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</time>
+                        </div>
+                        @if (alteracoes.Count > 0)
+                        {
+                            var visiveis = alteracoes.Take(6).ToList();
+                            var restantes = alteracoes.Skip(6).ToList();
+                            <ul class="change-list">
+                                @foreach (var alteracao in visiveis)
+                                {
+                                    <li>
+                                        <span class="change-field">@alteracao.Campo</span>
+                                        @if (!criacao && alteracao.De is not null)
+                                        {
+                                            <span class="change-old">@alteracao.De</span>
+                                            <span aria-hidden="true">→</span>
+                                        }
+                                        <span class="change-new">@(alteracao.Para ?? "(vazio)")</span>
+                                    </li>
+                                }
+                            </ul>
+                            @if (restantes.Count > 0)
+                            {
+                                <details class="change-more">
+                                    <summary>Mais @restantes.Count alteração(ões)</summary>
+                                    <ul class="change-list">
+                                        @foreach (var alteracao in restantes)
+                                        {
+                                            <li>
+                                                <span class="change-field">@alteracao.Campo</span>
+                                                @if (!criacao && alteracao.De is not null)
+                                                {
+                                                    <span class="change-old">@alteracao.De</span>
+                                                    <span aria-hidden="true">→</span>
+                                                }
+                                                <span class="change-new">@(alteracao.Para ?? "(vazio)")</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </details>
+                            }
+                        }
+                    </div>
+                </li>
+            }
+        </ol>
     }
     else
     {
-        <p class="text-muted mb-0">Nenhuma alteração auditada para este processo.</p>
+        <p class="empty-state mb-0">Nenhuma alteração registrada para este processo.</p>
     }
 </section>
