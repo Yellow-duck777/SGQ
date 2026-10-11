@@ -2,55 +2,33 @@
 @model SGQ.Web.Areas.Identity.Pages.Account.LoginModel
 @{
     ViewData["Title"] = "Acesso ao sistema";
+    ViewData["Compacto"] = false;
 }
 
-<section class="login-shell" aria-labelledby="login-title">
-    <div class="login-brand-panel">
-        <div class="login-brand">
-            <span class="brand-symbol brand-symbol-light" aria-hidden="true">S</span>
-            <span><strong>SGQ.</strong><small>Sistema de Gestão da Qualidade</small></span>
-        </div>
-        <div class="login-statement">
-            <p class="login-kicker"><span></span> Qualidade sob controle</p>
-            <h1>Decisões confiáveis começam com processos rastreáveis.</h1>
-            <p>Centralize reclamações, não conformidades e evidências em um fluxo pensado para a rotina industrial.</p>
-        </div>
-        <div class="login-process" aria-label="Etapas do processo de qualidade"><span>Registrar</span><i></i><span>Investigar</span><i></i><span>Resolver</span></div>
-        <p class="login-version">SGQ · Ambiente de desenvolvimento</p>
+<div class="login-form-heading">
+    <p class="eyebrow">Área restrita</p>
+    <h2 id="conta-titulo">Acesse sua conta</h2>
+    <p>Informe suas credenciais para continuar.</p>
+</div>
+<form id="account" method="post" asp-route-returnUrl="@Model.ReturnUrl" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+    <div class="field-group">
+        <label asp-for="Input.Email">E-mail corporativo</label>
+        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="nome@empresa.com" autofocus />
+        <span asp-validation-for="Input.Email" class="field-error"></span>
     </div>
-    <div class="login-form-panel">
-        <div class="login-form-wrap">
-            <div class="login-form-heading">
-                <p class="eyebrow">Área restrita</p>
-                <h2 id="login-title">Acesse sua conta</h2>
-                <p>Informe suas credenciais para continuar.</p>
-            </div>
-            <form id="account" method="post" asp-route-returnUrl="@Model.ReturnUrl" novalidate>
-                <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
-                <div class="field-group">
-                    <label asp-for="Input.Email">E-mail corporativo</label>
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="nome@empresa.com" autofocus />
-                    <span asp-validation-for="Input.Email" class="field-error"></span>
-                </div>
-                <div class="field-group">
-                    <div class="field-label-row"><label asp-for="Input.Password">Senha</label><a asp-page="./ForgotPassword">Esqueci minha senha</a></div>
-                    <div class="password-field">
-                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Digite sua senha" />
-                        <button type="button" data-password-toggle aria-label="Mostrar senha">Mostrar</button>
-                    </div>
-                    <span asp-validation-for="Input.Password" class="field-error"></span>
-                </div>
-                <div class="login-options">
-                    <label class="check-control"><input asp-for="Input.RememberMe" /> <span>Manter meu acesso</span></label>
-                    <span>Uso interno autorizado</span>
-                </div>
-                <button id="login-submit" type="submit" class="btn-login">Entrar no SGQ <span aria-hidden="true">→</span></button>
-            </form>
-            <p class="access-request">Ainda não possui acesso? <a asp-page="./Register">Solicitar cadastro</a></p>
+    <div class="field-group">
+        <div class="field-label-row"><label asp-for="Input.Password">Senha</label><a asp-page="./ForgotPassword">Esqueci minha senha</a></div>
+        <div class="password-field">
+            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Digite sua senha" />
+            <button type="button" data-password-toggle aria-label="Mostrar senha">Mostrar</button>
         </div>
+        <span asp-validation-for="Input.Password" class="field-error"></span>
     </div>
-</section>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+    <div class="login-options">
+        <label class="check-control"><input asp-for="Input.RememberMe" /> <span>Manter meu acesso</span></label>
+        <span>Uso interno autorizado</span>
+    </div>
+    <button id="login-submit" type="submit" class="btn-login">Entrar no SGQ <span aria-hidden="true">→</span></button>
+</form>
+<p class="access-request">Ainda não possui acesso? <a asp-page="./Register">Solicitar acesso</a></p>

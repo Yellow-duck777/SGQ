@@ -1,0 +1,11 @@
+@* Trilho de etapas do fluxo. Uso: <partial name="_Stepper" model="new StepperModel(new[] { "Abertura", "Validação" }, indiceDaEtapaAtual)" /> *@
+@model StepperModel
+<ol class="stepper" aria-label="Etapas do processo">
+    @for (var i = 0; i < Model.Etapas.Count; i++)
+    {
+        var estado = i < Model.Atual ? "feito" : i == Model.Atual ? "atual" : "pendente";
+        <li data-estado="@estado" aria-current="@(estado == "atual" ? "step" : null)">
+            <span>@Model.Etapas[i]</span>
+        </li>
+    }
+</ol>

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SGQ.Domain.Entities;
 using SGQ.Domain.Enums;
 using SGQ.Web.Models;
+using SGQ.Web.Presentation;
 using Microsoft.AspNetCore.Http;
 
 namespace SGQ.Web.Data;
@@ -41,7 +42,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         ChangeTracker.DetectChanges();
         var pendentes = ChangeTracker.Entries().Where(item => item.Entity is not HistoricoAuditoria && !EntidadeSemAuditoria(item.Metadata.ClrType) && item.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
-            .Select(item => new { Entry = item, Estado = item.State, Alteracoes = string.Join("; ", item.Properties.Where(p => !PropriedadesSensiveis.Contains(p.Metadata.Name) && (item.State == EntityState.Added || item.State == EntityState.Deleted || p.IsModified)).Select(p => $"{p.Metadata.Name}: {p.OriginalValue} → {p.CurrentValue}")) }).ToList();
+            .Select(item => new { Entry = item, Estado = item.State, Alteracoes = AuditoriaSerializador.Serializar(item.Properties.Where(p => !PropriedadesSensiveis.Contains(p.Metadata.Name) && (item.State == EntityState.Added || item.State == EntityState.Deleted || p.IsModified)).Select(p => (p.Metadata.Name, p.OriginalValue, p.CurrentValue))) }).ToList();
         var result = await base.SaveChangesAsync(cancellationToken);
         if (pendentes.Count == 0) return result;
         var usuario = httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "Sistema";

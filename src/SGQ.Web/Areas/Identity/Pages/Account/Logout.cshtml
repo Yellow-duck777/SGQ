@@ -1,0 +1,15 @@
+@page
+@model SGQ.Web.Areas.Identity.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Sair do sistema";
+}
+
+<div class="login-form-heading">
+    <p class="eyebrow">Encerrar sessão</p>
+    <h2 id="conta-titulo">Deseja sair do sistema?</h2>
+    <p>Sua sessão será encerrada neste navegador.</p>
+</div>
+<form method="post" asp-route-returnUrl="@Model.ReturnUrl" class="account-actions">
+    <button type="submit" class="btn-account">Sair do sistema</button>
+    <a class="btn-account btn-account-secondary" asp-area="" asp-controller="Home" asp-action="Index">Continuar no sistema</a>
+</form>

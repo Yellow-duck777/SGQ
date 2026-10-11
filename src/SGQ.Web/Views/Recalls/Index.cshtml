@@ -1,20 +1,99 @@
-@model IEnumerable<SGQ.Web.Models.Recall>
-@{ ViewData["Title"] = "Recalls"; }
-<div class="page-heading d-flex justify-content-between align-items-end gap-3 mb-4"><div><p class="eyebrow mb-1">Processos de qualidade</p><h1>Recall / Recolhimento</h1><p class="text-muted mb-0">Avalie riscos e acompanhe o recolhimento de produtos.</p></div><a class="btn btn-primary" asp-action="Create">Novo Recall</a></div>
-<form method="get" class="card shadow-sm border-0 p-3 mb-4">
-    <div class="row g-2">
-        <div class="col-md-3"><label class="form-label" for="busca">Pesquisar</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" placeholder="Código, produto ou lote" /></div>
-        <div class="col-md-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.StatusRecall>()) { <option value="@item" selected="@(Context.Request.Query["status"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-2"><label class="form-label" for="decisao">Decisão</label><select class="form-select" id="decisao" name="decisao"><option value="">Todas</option>@foreach (var item in Enum.GetValues<SGQ.Web.Models.DecisaoRecall>()) { <option value="@item" selected="@(Context.Request.Query["decisao"] == item.ToString() ? "selected" : null)">@item</option> }</select></div>
-        <div class="col-md-2"><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
-        <div class="col-md-3"><label class="form-label" for="loteId">Lote</label><select class="form-select" id="loteId" name="loteId" asp-items="ViewBag.Lotes"><option value="">Todos</option></select></div>
-        <div class="col-md-2"><label class="form-label" for="responsavel">Responsável</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Usuário de abertura" /></div>
-        <div class="col-md-2"><label class="form-label" for="inicio">De</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
-        <div class="col-md-2"><label class="form-label" for="fim">Até</label><input class="form-control" id="fim" name="fim" type="date" value="@Context.Request.Query["fim"]" /></div>
+@using SGQ.Web.Models
+@using SGQ.Web.Presentation
+@model IEnumerable<Recall>
+@{
+    ViewData["Title"] = "Recalls";
+    var contagem = ViewBag.ContagemPorSituacao as Dictionary<StatusRecall, int> ?? new Dictionary<StatusRecall, int>();
+    var statusAtual = Context.Request.Query["status"].ToString();
+    var busca = Context.Request.Query["busca"].ToString();
+    var temFiltroAvancado = new[] { "decisao", "produtoId", "loteId", "responsavel", "inicio", "fim" }.Any(chave => !string.IsNullOrWhiteSpace(Context.Request.Query[chave]));
+    var temFiltro = temFiltroAvancado || !string.IsNullOrWhiteSpace(statusAtual) || !string.IsNullOrWhiteSpace(busca);
+    var totalGeral = contagem.Values.Sum();
+    var atalhos = new (StatusRecall Situacao, string Nome)[]
+    {
+        (StatusRecall.EmAvaliacao, "Em avaliação"), (StatusRecall.AguardandoAprovacao, "Aguardando aprovação"),
+        (StatusRecall.AguardandoDecisaoCq, "Aguardando decisão do CQ"), (StatusRecall.EmRecolhimento, "Em recolhimento"),
+        (StatusRecall.AguardandoRetorno, "Aguardando retorno"), (StatusRecall.EmAvaliacaoDeDestinacao, "Em destinação"),
+        (StatusRecall.AguardandoEncerramento, "Aguardando encerramento"), (StatusRecall.Encerrado, "Encerrados")
+    };
+}
+@section Styles { <link rel="stylesheet" href="~/css/modulos/recalls.css" asp-append-version="true" /> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow">Processos de qualidade</p>
+        <h1>Recall e recolhimento</h1>
+        <p class="page-header-lead">Avalie o risco, decida pelo recolhimento e acompanhe cada etapa até o encerramento.</p>
     </div>
-    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary">Aplicar filtros</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+    <div class="page-header-actions"><a class="btn btn-primary" asp-action="Create">Novo recall</a></div>
+</header>
+
+<nav class="chip-row rec-atalhos" aria-label="Atalhos por situação">
+    <a class="chip @(statusAtual == "" ? "is-active" : "")" asp-action="Index" aria-current="@(statusAtual == "" ? "page" : null)">Todos <span class="chip-count">@totalGeral</span></a>
+    @foreach (var (situacao, nome) in atalhos)
+    {
+        var ativo = statusAtual == situacao.ToString();
+        <a class="chip @(ativo ? "is-active" : "")" asp-action="Index" asp-route-status="@situacao" aria-current="@(ativo ? "page" : null)">@nome <span class="chip-count">@(contagem.TryGetValue(situacao, out var total) ? total : 0)</span></a>
+    }
+</nav>
+
+<form method="get" class="panel rec-filtros" role="search">
+    @if (!string.IsNullOrWhiteSpace(statusAtual)) { <input type="hidden" name="status" value="@statusAtual" /> }
+    <div class="filter-bar">
+        <div class="filter-search"><label class="form-label" for="busca">Buscar recall</label><input class="form-control" id="busca" name="busca" type="search" value="@busca" placeholder="Código, produto ou lote" /></div>
+        <div class="filter-actions"><button class="btn btn-primary" type="submit">Buscar</button>@if (temFiltro) { <a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a> }</div>
+    </div>
+    <details class="rec-mais-filtros" open="@(temFiltroAvancado ? "open" : null)">
+        <summary>Mais filtros</summary>
+        <div class="filter-bar rec-filtros-avancados">
+            <div><label class="form-label" for="decisao">Decisão</label><select class="form-select" id="decisao" name="decisao" asp-items="Html.GetEnumSelectList<DecisaoRecall>()"><option value="">Todas</option></select></div>
+            <div><label class="form-label" for="produtoId">Produto</label><select class="form-select" id="produtoId" name="produtoId" asp-items="ViewBag.Produtos"><option value="">Todos</option></select></div>
+            <div><label class="form-label" for="loteId">Lote</label><select class="form-select" id="loteId" name="loteId" asp-items="ViewBag.Lotes"><option value="">Todos</option></select></div>
+            <div><label class="form-label" for="responsavel">Aberto por</label><input class="form-control" id="responsavel" name="responsavel" value="@Context.Request.Query["responsavel"]" placeholder="Nome do usuário" /></div>
+            <div><label class="form-label" for="inicio">Aberto de</label><input class="form-control" id="inicio" name="inicio" type="date" value="@Context.Request.Query["inicio"]" /></div>
+            <div><label class="form-label" for="fim">Aberto até</label><input class="form-control" id="fim" name="fim" type="date" value="@Context.Request.Query["fim"]" /></div>
+        </div>
+    </details>
 </form>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Produto</th><th>Lote</th><th>Decisão</th><th>Status</th><th></th></tr></thead><tbody>
-@foreach (var recall in Model) { <tr><td class="fw-semibold">@recall.Codigo</td><td>@recall.Produto.Nome</td><td>@recall.Lote.Numero</td><td>@recall.Decisao</td><td><span class="badge text-bg-secondary">@recall.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@recall.Id">Ver</a></td></tr> }
-@if (!Model.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">Nenhum Recall registrado.</td></tr> }
-</tbody></table></div></div>
+
+@if (!Model.Any())
+{
+    <div class="panel empty-state">
+        <span aria-hidden="true">R</span>
+        @if (temFiltro)
+        {
+            <h3>Nenhum recall encontrado</h3>
+            <p>Nenhum registro corresponde aos filtros aplicados. Ajuste a busca ou limpe os filtros.</p>
+            <a class="btn btn-outline-primary" asp-action="Index">Limpar filtros</a>
+        }
+        else
+        {
+            <h3>Nenhum recall registrado</h3>
+            <p>Quando houver risco de recolhimento de um produto, registre a avaliação aqui.</p>
+            <a class="btn btn-primary" asp-action="Create">Novo recall</a>
+        }
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="table-modern table-cards">
+            <caption class="visually-hidden">Lista de recalls</caption>
+            <thead><tr><th scope="col">Código</th><th scope="col">Produto e lote</th><th scope="col">Decisão</th><th scope="col">Situação</th><th scope="col">Prazo</th><th scope="col">Abertura</th><th scope="col"><span class="visually-hidden">Ações</span></th></tr></thead>
+            <tbody>
+            @foreach (var recall in Model)
+            {
+                <tr>
+                    <td class="col-code" data-label="Código"><a class="process-code" asp-action="Details" asp-route-id="@recall.Id">@recall.Codigo</a></td>
+                    <td data-label="Produto e lote"><span class="rec-produto">@recall.Produto.Nome<span class="cell-sub">Lote @recall.Lote.Numero</span></span></td>
+                    <td data-label="Decisão">@recall.Decisao.Rotulo()</td>
+                    <td data-label="Situação">@Html.StatusBadge(recall.Status)</td>
+                    <td data-label="Prazo">@Html.PrazoChipHtml(recall.DataAlvo, recall.Status == StatusRecall.Encerrado)</td>
+                    <td data-label="Abertura">@recall.DataAbertura.ToString("dd/MM/yyyy")</td>
+                    <td class="col-actions"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@recall.Id" aria-label="Abrir @recall.Codigo">Abrir</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

@@ -9,6 +9,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using SGQ.Web.Data;
 using SGQ.Web.Models;
+using SGQ.Web.Presentation;
 using SGQ.Web.Security;
 using SGQ.Web.ViewModels;
 
@@ -145,12 +146,14 @@ public class RelatoriosController(ApplicationDbContext context) : Controller
             if (inicio.HasValue) query = query.Where(item => item.DataRecebimento >= inicio);
             if (fim.HasValue) query = query.Where(item => item.DataRecebimento <= fim);
             if (produtoId.HasValue) query = query.Where(item => item.ProdutoId == produtoId);
-            itens.AddRange(await query.Select(item => new RelatorioProcessoItemViewModel
+            var linhas = await query.Select(item => new { item.Id, item.Codigo, item.DataRecebimento, item.DataAlvo, Produto = item.Produto.Nome, item.Status, item.Classificacao, Cliente = item.Cliente.Nome, item.EncerradaEm }).ToListAsync();
+            itens.AddRange(linhas.Select(item => new RelatorioProcessoItemViewModel
             {
-                Tipo = "RC", Codigo = item.Codigo, DataAbertura = item.DataRecebimento, DataAlvo = item.DataAlvo,
-                Produto = item.Produto.Nome, Situacao = item.Status.ToString(), Classificacao = item.Classificacao.ToString(),
-                AreaOuCliente = item.Cliente.Nome, EncerradaEm = item.EncerradaEm
-            }).ToListAsync());
+                Id = item.Id, Tipo = "RC", Codigo = item.Codigo, DataAbertura = item.DataRecebimento, DataAlvo = item.DataAlvo,
+                Produto = item.Produto, Situacao = item.Status.Rotulo(), SituacaoTom = item.Status.Tom(),
+                Classificacao = item.Classificacao?.Rotulo(), ClassificacaoTom = item.Classificacao?.Tom() ?? "neutro",
+                AreaOuCliente = item.Cliente, EncerradaEm = item.EncerradaEm
+            }));
         }
 
         if (tipo is null or "NC")
@@ -159,12 +162,14 @@ public class RelatoriosController(ApplicationDbContext context) : Controller
             if (inicio.HasValue) query = query.Where(item => item.DataAbertura >= inicio);
             if (fim.HasValue) query = query.Where(item => item.DataAbertura <= fim);
             if (produtoId.HasValue) query = query.Where(item => item.ProdutoId == produtoId);
-            itens.AddRange(await query.Select(item => new RelatorioProcessoItemViewModel
+            var linhas = await query.Select(item => new { item.Id, item.Codigo, item.DataAbertura, item.DataAlvo, Produto = item.Produto == null ? null : item.Produto.Nome, item.Status, item.Classificacao, item.Area, item.EncerradaEm }).ToListAsync();
+            itens.AddRange(linhas.Select(item => new RelatorioProcessoItemViewModel
             {
-                Tipo = "NC", Codigo = item.Codigo, DataAbertura = item.DataAbertura, DataAlvo = item.DataAlvo,
-                Produto = item.Produto == null ? null : item.Produto.Nome, Situacao = item.Status.ToString(),
-                Classificacao = item.Classificacao.ToString(), AreaOuCliente = item.Area, EncerradaEm = item.EncerradaEm
-            }).ToListAsync());
+                Id = item.Id, Tipo = "NC", Codigo = item.Codigo, DataAbertura = item.DataAbertura, DataAlvo = item.DataAlvo,
+                Produto = item.Produto, Situacao = item.Status.Rotulo(), SituacaoTom = item.Status.Tom(),
+                Classificacao = item.Classificacao?.Rotulo(), ClassificacaoTom = item.Classificacao?.Tom() ?? "neutro",
+                AreaOuCliente = item.Area, EncerradaEm = item.EncerradaEm
+            }));
         }
 
         if (tipo is null or "Recall")
@@ -173,12 +178,14 @@ public class RelatoriosController(ApplicationDbContext context) : Controller
             if (inicio.HasValue) query = query.Where(item => item.DataAbertura >= inicio);
             if (fim.HasValue) query = query.Where(item => item.DataAbertura <= fim);
             if (produtoId.HasValue) query = query.Where(item => item.ProdutoId == produtoId);
-            itens.AddRange(await query.Select(item => new RelatorioProcessoItemViewModel
+            var linhas = await query.Select(item => new { item.Id, item.Codigo, item.DataAbertura, item.DataAlvo, Produto = item.Produto.Nome, Lote = item.Lote.Numero, item.Status, item.Decisao, item.Origem, item.EncerradaEm }).ToListAsync();
+            itens.AddRange(linhas.Select(item => new RelatorioProcessoItemViewModel
             {
-                Tipo = "Recall", Codigo = item.Codigo, DataAbertura = item.DataAbertura, DataAlvo = item.DataAlvo,
-                Produto = item.Produto.Nome, Lote = item.Lote.Numero, Situacao = item.Status.ToString(),
-                Classificacao = item.Decisao.ToString(), AreaOuCliente = item.Origem.ToString(), EncerradaEm = item.EncerradaEm
-            }).ToListAsync());
+                Id = item.Id, Tipo = "Recall", Codigo = item.Codigo, DataAbertura = item.DataAbertura, DataAlvo = item.DataAlvo,
+                Produto = item.Produto, Lote = item.Lote, Situacao = item.Status.Rotulo(), SituacaoTom = item.Status.Tom(),
+                Classificacao = item.Decisao.Rotulo(), ClassificacaoTom = item.Decisao.Tom(),
+                AreaOuCliente = item.Origem.Rotulo(), EncerradaEm = item.EncerradaEm
+            }));
         }
 
         var hoje = DateOnly.FromDateTime(DateTime.Today);

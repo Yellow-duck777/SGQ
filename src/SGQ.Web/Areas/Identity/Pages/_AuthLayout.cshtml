@@ -1,0 +1,39 @@
+@using SGQ.Web.Security
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    var compacto = ViewData["Compacto"] as bool? ?? true;
+    // Quem já tem perfil vê estas páginas dentro do sistema (menu lateral); os demais, no visual de acesso.
+    var dentroDoSistema = User.Identity?.IsAuthenticated == true && Roles.Todos.Any(User.IsInRole);
+}
+@if (dentroDoSistema)
+{
+    <div class="account-page">@RenderBody()</div>
+}
+else
+{
+<section class="login-shell @(compacto ? "is-compact" : null)" aria-labelledby="conta-titulo">
+    <div class="login-brand-panel">
+        <div class="login-brand">
+            <span class="brand-symbol brand-symbol-light" aria-hidden="true">S</span>
+            <span><strong>SGQ.</strong><small>Sistema de Gestão da Qualidade</small></span>
+        </div>
+        <div class="login-statement">
+            <p class="login-kicker"><span></span> Qualidade sob controle</p>
+            <h1>Decisões confiáveis começam com processos rastreáveis.</h1>
+            <p>Centralize reclamações, não conformidades e evidências em um fluxo pensado para a rotina industrial.</p>
+        </div>
+        <div class="login-process" aria-label="Etapas do processo de qualidade"><span>Registrar</span><i></i><span>Investigar</span><i></i><span>Resolver</span></div>
+        <p class="login-version">SGQ · Uso interno autorizado</p>
+    </div>
+    <div class="login-form-panel">
+        <div class="login-form-wrap">
+            @RenderBody()
+        </div>
+    </div>
+</section>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @await RenderSectionAsync("Scripts", required: false)
+}

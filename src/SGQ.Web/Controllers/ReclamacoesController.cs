@@ -21,6 +21,7 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         var query = context.ReclamacoesClientes
             .Include(reclamacao => reclamacao.Cliente)
             .Include(reclamacao => reclamacao.Produto)
+            .Include(reclamacao => reclamacao.Lotes).ThenInclude(reclamacaoLote => reclamacaoLote.Lote)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(busca))
@@ -41,6 +42,10 @@ public class ReclamacoesController(ApplicationDbContext context, IPrazoService p
         if (inicio.HasValue) query = query.Where(reclamacao => reclamacao.DataRecebimento >= inicio);
         if (fim.HasValue) query = query.Where(reclamacao => reclamacao.DataRecebimento <= fim);
 
+        ViewBag.ContagensStatus = await context.ReclamacoesClientes
+            .GroupBy(reclamacao => reclamacao.Status)
+            .Select(grupo => new { Status = grupo.Key, Total = grupo.Count() })
+            .ToDictionaryAsync(grupo => grupo.Status, grupo => grupo.Total);
         ViewBag.Produtos = new SelectList(await context.Produtos.OrderBy(produto => produto.Nome).ToListAsync(), nameof(Produto.Id), nameof(Produto.Nome), produtoId);
         var reclamacoes = await query.OrderByDescending(reclamacao => reclamacao.CriadaEm).ToListAsync();
 

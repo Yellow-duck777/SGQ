@@ -1,8 +1,59 @@
 @model IEnumerable<SGQ.Domain.Entities.Lote>
-@{ ViewData["Title"] = "Lotes"; }
-<div class="page-heading d-flex justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">Cadastros básicos</p><h1>Lotes</h1><p class="text-muted mb-0">Vincule cada lote ao respectivo produto.</p></div><a class="btn btn-primary" asp-action="Create">Novo lote</a></div>
-@if (TempData["Success"] is string success) { <div class="alert alert-success" role="alert">@success</div> }
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Número</th><th>Produto</th><th class="text-end">Ações</th></tr></thead><tbody>
-@foreach (var lote in Model) { <tr><td>@lote.Numero</td><td>@lote.Produto.Nome</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@lote.Id">Editar</a></td></tr> }
-@if (!Model.Any()) { <tr><td colspan="3" class="text-center text-muted py-4">Nenhum lote cadastrado.</td></tr> }
-</tbody></table></div></div>
+@{
+    ViewData["Title"] = "Lotes";
+    var lotes = Model.ToList();
+    var emUso = ViewBag.LotesEmUso as HashSet<int> ?? new HashSet<int>();
+}
+@section Styles { <link rel="stylesheet" href="~/css/modulos/cadastros.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/modulos/cadastros.js" asp-append-version="true"></script> }
+
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Cadastros básicos</p>
+        <h1>Lotes</h1>
+        <p class="page-header-lead">Cada lote pertence a um produto. Lotes vinculados a reclamações ou recalls aparecem como &ldquo;Em uso&rdquo;.</p>
+    </div>
+    <div class="page-header-actions"><a class="btn btn-primary" asp-action="Create">Novo lote</a></div>
+</header>
+
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+
+@if (lotes.Count == 0)
+{
+    <div class="panel empty-state">
+        <span aria-hidden="true">+</span>
+        <h3>Nenhum lote cadastrado</h3>
+        <p>Cadastre um lote e vincule-o ao produto correspondente.</p>
+        <a class="btn btn-primary" asp-action="Create">Novo lote</a>
+    </div>
+}
+else
+{
+    <div class="cad-toolbar">
+        <div class="cad-search">
+            <label class="form-label" for="busca">Buscar lote</label>
+            <input id="busca" type="search" class="form-control" placeholder="Número do lote ou produto" autocomplete="off" data-cad-search="#lista" />
+        </div>
+        <span class="cad-count" aria-live="polite" data-cad-count="lote(s)">@lotes.Count lote(s)</span>
+    </div>
+    <div class="table-wrap" id="lista">
+        <table class="table-modern table-cards">
+            <thead><tr><th scope="col">Lote</th><th scope="col">Produto</th><th scope="col">Uso</th><th scope="col"><span class="visually-hidden">Ações</span></th></tr></thead>
+            <tbody>
+                @foreach (var lote in lotes)
+                {
+                    <tr data-busca="@lote.Numero @lote.Produto.Nome">
+                        <td data-label="Lote" class="col-code">@lote.Numero</td>
+                        <td data-label="Produto">@lote.Produto.Nome</td>
+                        <td data-label="Uso">
+                            @if (emUso.Contains(lote.Id)) { <span class="status-badge" data-tom="info" title="Vinculado a pelo menos uma reclamação ou recall">Em uso</span> }
+                            else { <span class="status-badge" data-tom="neutro">Sem processos</span> }
+                        </td>
+                        <td class="col-actions"><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@lote.Id" aria-label="Editar lote @lote.Numero">Editar</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="panel empty-state cad-empty-filter" data-cad-empty hidden>Nenhum lote corresponde à busca.</p>
+}

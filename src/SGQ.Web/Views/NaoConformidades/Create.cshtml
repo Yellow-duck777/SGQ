@@ -1,17 +1,90 @@
 @model SGQ.Web.ViewModels.NaoConformidadeCreateViewModel
-@{ ViewData["Title"] = "Nova Não Conformidade"; }
-<div class="page-heading mb-4"><p class="eyebrow mb-1">Processos de qualidade</p><h1>Nova Não Conformidade</h1></div>
-<form method="post" class="card shadow-sm border-0 p-4 form-card">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-    <div class="row g-3">
-        <div class="col-md-4"><label asp-for="DataAbertura" class="form-label">Data de abertura</label><input asp-for="DataAbertura" class="form-control" /><span asp-validation-for="DataAbertura" class="text-danger"></span></div>
-        <div class="col-md-4"><label asp-for="DataAlvo" class="form-label">Data-alvo</label><input asp-for="DataAlvo" class="form-control" /><div class="form-text">Prazo para conclusão da NC.</div><span asp-validation-for="DataAlvo" class="text-danger"></span></div>
-        <div class="col-md-4"><label asp-for="Origem" class="form-label"></label><select asp-for="Origem" asp-items="Html.GetEnumSelectList<OrigemNaoConformidade>()" class="form-select"></select></div>
-        <div class="col-md-6"><label asp-for="Classificacao" class="form-label">Classificação</label><select asp-for="Classificacao" asp-items="Html.GetEnumSelectList<ClassificacaoOcorrencia>()" class="form-select"></select></div>
-        <div class="col-md-6"><label asp-for="Area" class="form-label">Área</label><input asp-for="Area" class="form-control" /><span asp-validation-for="Area" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Não aplicável</option></select><span asp-validation-for="ProdutoId" class="text-danger"></span></div>
-        <div class="col-12"><label asp-for="Descricao" class="form-label">Descrição</label><textarea asp-for="Descricao" rows="4" class="form-control"></textarea><span asp-validation-for="Descricao" class="text-danger"></span></div>
+@using SGQ.Web.Security
+@{
+    ViewData["Title"] = "Nova não conformidade";
+    var podeCriar = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.GarantiaQualidade);
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/modulos/nao-conformidades.css" asp-append-version="true" />
+}
+<header class="page-header">
+    <div class="page-header-main">
+        <p class="eyebrow mb-1">Processos de qualidade</p>
+        <h1>Nova não conformidade</h1>
+        <p class="page-header-lead">Registre o desvio identificado. A investigação, o plano de ação e as aprovações acontecem depois, na tela da não conformidade.</p>
     </div>
-    <div class="mt-4"><button class="btn btn-primary">Criar NC</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
-</form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+</header>
+
+@if (!podeCriar)
+{
+    <section class="panel" role="alert">
+        <h2 class="h5">Você não tem permissão para abrir uma não conformidade</h2>
+        <p class="text-muted">Somente a Garantia da Qualidade (GQ) ou o Administrador registram novas não conformidades.</p>
+        <a class="btn btn-outline-secondary" asp-action="Index">Voltar para a lista</a>
+    </section>
+}
+else
+{
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+        <p class="text-muted small">Os campos marcados com <span class="required" aria-hidden="true"></span><span class="visually-hidden">asterisco</span> são obrigatórios.</p>
+
+        <section class="form-section" aria-labelledby="sec-ident">
+            <header><h2 id="sec-ident">Identificação</h2><p class="help">Quando e onde o desvio ocorreu.</p></header>
+            <div class="form-grid">
+                <div class="span-4"><label asp-for="DataAbertura" class="form-label required">Data de abertura</label><input asp-for="DataAbertura" class="form-control" /><span asp-validation-for="DataAbertura" class="field-error"></span></div>
+                <div class="span-4"><label asp-for="Origem" class="form-label required">Origem</label><select asp-for="Origem" asp-items="Html.GetEnumSelectList<OrigemNaoConformidade>()" class="form-select"></select><div class="form-text">De onde veio a informação do desvio (auditoria, inspeção, reclamação etc.).</div></div>
+                <div class="span-4"><label asp-for="Area" class="form-label required">Área</label><input asp-for="Area" class="form-control" maxlength="150" placeholder="Ex.: Envase, Laboratório" /><span asp-validation-for="Area" class="field-error"></span></div>
+                <div class="span-6"><label asp-for="ProdutoId" class="form-label">Produto</label><select asp-for="ProdutoId" asp-items="ViewBag.Produtos" class="form-select"><option value="">Não se aplica</option></select><span asp-validation-for="ProdutoId" class="field-error"></span></div>
+            </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="sec-class">
+            <header><h2 id="sec-class">Classificação e prazo</h2><p class="help">A classificação define como o prazo de conclusão é obtido.</p></header>
+            <div class="form-grid">
+                <div class="span-4"><label asp-for="Classificacao" class="form-label required">Classificação</label><select asp-for="Classificacao" asp-items="Html.GetEnumSelectList<ClassificacaoOcorrencia>()" class="form-select" id="nc-classificacao"></select></div>
+                <div class="span-4" id="nc-grupo-alvo"><label asp-for="DataAlvo" class="form-label" id="nc-rotulo-alvo">Data-alvo</label><input asp-for="DataAlvo" class="form-control" /><span asp-validation-for="DataAlvo" class="field-error"></span></div>
+                <div>
+                    <ul class="mb-0 small text-muted" id="nc-regras-prazo">
+                        <li data-classe="Critica"><strong>Crítica:</strong> não há prazo automático. A GQ deve informar a data-alvo.</li>
+                        <li data-classe="Maior"><strong>Maior:</strong> prazo calculado automaticamente, 15 dias úteis a partir da abertura.</li>
+                        <li data-classe="Menor"><strong>Menor:</strong> prazo calculado automaticamente, 30 dias úteis a partir da abertura.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="sec-desc">
+            <header><h2 id="sec-desc">Descrição</h2><p class="help">Descreva o que aconteceu, onde foi percebido e o que foi afetado. Evite dados pessoais.</p></header>
+            <div class="form-grid">
+                <div><label asp-for="Descricao" class="form-label required">Descrição do desvio</label><textarea asp-for="Descricao" rows="5" class="form-control" maxlength="4000"></textarea><span asp-validation-for="Descricao" class="field-error"></span></div>
+            </div>
+        </section>
+
+        <div class="form-actions">
+            <button class="btn btn-primary">Abrir não conformidade</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+}
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var sel = document.getElementById('nc-classificacao');
+            if (!sel) return;
+            var grupo = document.getElementById('nc-grupo-alvo');
+            var rotulo = document.getElementById('nc-rotulo-alvo');
+            var regras = document.querySelectorAll('#nc-regras-prazo li');
+            function atualizar() {
+                var texto = sel.options[sel.selectedIndex].text.trim();
+                var valor = texto === 'Crítica' ? 'Critica' : texto;
+                var critica = valor === 'Critica';
+                grupo.hidden = !critica;
+                rotulo.className = 'form-label' + (critica ? ' required' : '');
+                regras.forEach(function (li) { li.style.fontWeight = li.getAttribute('data-classe') === valor ? '700' : '400'; li.style.color = li.getAttribute('data-classe') === valor ? 'var(--ink)' : ''; });
+            }
+            sel.addEventListener('change', atualizar); atualizar();
+        })();
+    </script>
+}
